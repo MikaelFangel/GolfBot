@@ -1,0 +1,13 @@
+bazil.org/fuse v0.0.0-20200117225306-7b5117fecadc h1:utDghgcjE8u+EBjHOgYT+dJPcnDF05KqWMBcjuJy510=
+bazil.org/fuse v0.0.0-20200117225306-7b5117fecadc/go.mod h1:FbcW6z/2VytnFDhZfumh8Ss8zxHE6qpMP5sHTRe0EaM=
+github.com/ev3go/ev3 v0.0.0-20180809222216-71c98163af71 h1:Z/91t3Mco51yJ8FeHONLHhTk557H2vfIdp5afTOqmZo=
+github.com/ev3go/ev3 v0.0.0-20180809222216-71c98163af71/go.mod h1:YBb2YEFMxoLDpwFOG9ZGhmvQp049IwkdzVw+xoBUpCc=
+github.com/ev3go/ev3dev v0.0.0-20230218223055-ac0bd47ba218 h1:0CbMwLi0VWA/8jfXAokm90rSnszRxUecnqnkiF7tnjY=
+github.com/ev3go/ev3dev v0.0.0-20230218223055-ac0bd47ba218/go.mod h1:czHG1yhHZUpy8SATZBm9bD9mhhfzXJaa2MnG5auKgTM=
+github.com/ev3go/sisyphus v0.0.0-20230218220525-74fbc3041f9b h1:ZuvSyvd1RJ1G4np3Jg1ecyayaAR4cug9vUG40h2XUN4=
+github.com/ev3go/sisyphus v0.0.0-20230218220525-74fbc3041f9b/go.mod h1:hQZTnPqrj8UG7cF8ch0soSKV9yCUqI7jSsdk25AX+sM=
+github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c/go.mod h1:hzIxponao9Kjc7aWznkXaL4U4TWaDSs8zcsY4Ka08nM=
+golang.org/x/sys v0.0.0-20191210023423-ac6580df4449/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.5.0 h1:MUK/U/4lj1t1oPg0HfuXDN/Z1wv31ZJ/YcPiGccS4DU=
+golang.org/x/sys v0.5.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+periph.io/x/periph v3.4.0+incompatible/go.mod h1:EWr+FCIU2dBWz5/wSWeiIUJTriYv9v2j2ENBmgYyy7Y=
