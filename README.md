@@ -8,7 +8,7 @@ A description of how the project is structured
 All configuration for setting up the ev3dev environment, so it reproducible.
 
 ### remote
-The project for controlling the robot using a remote machine to do all the heavy calculations. This is in it own a java maven project.
+The project for controlling the robot using a remote machine to do all the heavy calculations. This is in its own a java maven project.
 
 ### robot
-THe software written for the robot. The software written for the robot is a small go project and is communicated with using gRPC.
+The software written for the robot. The software written for the robot is a small go project and is communicated with using gRPC.
