@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package proto;
+option go_package = "main/proto";
+
+
+service Motors {
+  rpc RunMotor(MotorRequest) returns (StatusReply)  {}
+  rpc StopMotor(MotorRequest) returns (StatusReply) {}
+}
+
+message MotorRequest {
+  string motor = 1;
+}
+
+message StatusReply {
+  string message = 1;
+}
