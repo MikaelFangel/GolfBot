@@ -7,8 +7,12 @@ import proto.MotorsGrpc;
 import java.util.concurrent.TimeUnit;
 
 public class RPCClient {
-    public static void main(String[] args) throws InterruptedException {
-        ManagedChannel channel = Grpc.newChannelBuilder("192.168.0.97:50051", InsecureChannelCredentials.create()).build();
+    public static void main(String[] args) throws InterruptedException, MissingArgumentException {
+        if (args.length < 1) {
+            throw new MissingArgumentException("Please provide an IP and port number (e.g 192.168.0.97:50051)");
+        }
+
+        ManagedChannel channel = Grpc.newChannelBuilder(args[0], InsecureChannelCredentials.create()).build();
 
         MotorRequest reqA = MotorRequest.newBuilder().setMotor("A").build();
         MotorRequest reqB = MotorRequest.newBuilder().setMotor("D").build();
@@ -26,6 +30,12 @@ public class RPCClient {
 
         } finally {
             channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
+        }
+    }
+
+    static class MissingArgumentException extends Exception {
+        public MissingArgumentException(String errMsg) {
+            super(errMsg);
         }
     }
 }
