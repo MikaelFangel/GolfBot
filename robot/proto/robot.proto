@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package proto;
+option go_package = "main/proto";
+
+// Java Configuration
+option java_multiple_files = true;
+option java_outer_classname = "EV3Client";
+
+
+service Motors {
+  rpc RunMotor(MotorRequest) returns (StatusReply)  {}
+  rpc StopMotor(MotorRequest) returns (StatusReply) {}
+}
+
+message MotorRequest {
+  string motor = 1;
+}
+
+message StatusReply {
+  string message = 1;
+}
