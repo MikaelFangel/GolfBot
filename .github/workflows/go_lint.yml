@@ -18,6 +18,13 @@ jobs:
         go-version: ^1
         
     - uses: actions/checkout@v3
+    - uses: wizhi/setup-buf@v1
+      with:
+        version: '0.36.0'
+    - uses: arduino/setup-protoc@v1
+      with:
+        version: '3.x'
+        
     - name: Installing protoc-gen-go
       run: |
         go install github.com/golang/protobuf/protoc-gen-go@latest
