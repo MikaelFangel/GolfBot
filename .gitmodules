@@ -1,0 +1,3 @@
+[submodule "ev3dev/DTUConnect"]
+	path = ev3dev/DTUConnect
+	url = https://github.com/MikaelFangel/DTUConnect
