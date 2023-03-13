@@ -1,4 +1,5 @@
 name: go_lint
+
 on:
   pull_request:
     branches: [ "main" ]
