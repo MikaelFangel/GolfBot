@@ -2,10 +2,6 @@ name: go_lint
 on:
   pull_request:
     branches: [ "main" ]
-    
-  # For testing
-  push:
-    branches: [ "ci" ]
 
 jobs:
   golangci:
