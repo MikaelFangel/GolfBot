@@ -68,13 +68,13 @@ func (s *motorServer) StopMotor(ctx context.Context, in *pBuff.MotorRequest) (*p
 	return &pBuff.StatusReply{ReplyMessage: true}, err
 }
 
-func (s *motorServer) DriveStraight(ctx context.Context, in *pBuff.MultipleMotors) *pBuff.StatusReply {
+func (s *motorServer) DriveStraight(ctx context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
 	var motors [3]*ev3dev.TachoMotor
 
 	for i, request := range in.Motor {
 		motor, err := getMotorHandle(request.GetMotorType())
 		if err == nil {
-			return &pBuff.StatusReply{ReplyMessage: false, ErrorMsg: err.Error()}
+			return &pBuff.StatusReply{ReplyMessage: false}, err
 		}
 		motors[i] = motor
 		motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
@@ -84,26 +84,36 @@ func (s *motorServer) DriveStraight(ctx context.Context, in *pBuff.MultipleMotor
 		motor.Command(run)
 	}
 
-	return &pBuff.StatusReply{ReplyMessage: true}
+	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
-func (s *motorServer) Turn(ctx context.Context, in *pBuff.MultipleMotors) *pBuff.StatusReply {
-	for _, request := range in.Motor {
+func (s *motorServer) Turn(ctx context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
+	var motors [3]*ev3dev.TachoMotor
+
+	for i, request := range in.Motor {
 		motor, err := getMotorHandle(request.GetMotorType())
+		if err == nil {
+			return &pBuff.StatusReply{ReplyMessage: false}, err
+		}
+		motors[i] = motor
 		motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
+	}
+
+	for _, motor := range motors {
 		motor.Command(run)
 	}
 
-	return &pBuff.StatusReply{ReplyMessage: true, ErrorMsg: err}
-
+	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
-func (s *motorServer) StopMultiple(ctx context.Context, in *pBuff.MultipleMotors) *pBuff.StatusReply {
+func (s *motorServer) StopMultiple(ctx context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
 	for _, request := range in.Motor {
 		motor, err := getMotorHandle(request.GetMotorType())
-		motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
-		motor.Command(run)
+		if err == nil {
+			return &pBuff.StatusReply{ReplyMessage: false}, err
+		}
+		motor.Command(stop)
 	}
 
-	return &pBuff.StatusReply{ReplyMessage: true, ErrorMsg: err}
+	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
