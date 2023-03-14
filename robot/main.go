@@ -41,13 +41,8 @@ func main() {
 	}
 }
 
-func getMotorHandle(port string) *ev3dev.TachoMotor {
-	out, err := ev3dev.TachoMotorFor("ev3-ports:out"+port, largeMotor)
-	if err != nil {
-		log.Printf("%v", err)
-	}
-
-	return out
+func getMotorHandle(port string) (*ev3dev.TachoMotor, error) {
+	return ev3dev.TachoMotorFor("ev3-ports:out"+port, largeMotor)
 }
 
 func isRunning(motor *ev3dev.TachoMotor) bool {
