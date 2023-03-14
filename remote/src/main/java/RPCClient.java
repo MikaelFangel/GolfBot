@@ -13,8 +13,8 @@ public class RPCClient {
 
         ManagedChannel channel = Grpc.newChannelBuilder(args[0], InsecureChannelCredentials.create()).build();
 
-        MotorRequest reqA = MotorRequest.newBuilder().setMotor("A").build();
-        MotorRequest reqB = MotorRequest.newBuilder().setMotor("D").build();
+        MotorRequest reqA = MotorRequest.newBuilder().setMotorPort("A").build();
+        MotorRequest reqB = MotorRequest.newBuilder().setMotorPort("B").build();
 
         MotorsGrpc.MotorsBlockingStub client = MotorsGrpc.newBlockingStub(channel);
 
