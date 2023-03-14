@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"net"
 
 	"github.com/ev3go/ev3dev"
@@ -27,29 +28,39 @@ type motorServer struct {
 }
 
 func main() {
-	lis, _ := net.Listen("tcp", ":50051")
+	lis, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		log.Printf("%v", err)
+	}
+
 	server := grpc.NewServer()
 	pBuff.RegisterMotorsServer(server, &motorServer{})
-	server.Serve(lis)
+	err = server.Serve(lis)
+	if err != nil {
+		log.Printf("%v", err)
+	}
 }
 
 func getMotorHandle(port string) *ev3dev.TachoMotor {
-	out, _ := ev3dev.TachoMotorFor("ev3-ports:out"+port, largeMotor)
+	out, err := ev3dev.TachoMotorFor("ev3-ports:out"+port, largeMotor)
+	if err != nil {
+		log.Printf("%v", err)
+	}
 
 	return out
 }
 
 func (s *motorServer) RunMotor(ctx context.Context, in *pBuff.MotorRequest) (*pBuff.StatusReply, error) {
-	motor := getMotorHandle(in.GetMotor())
-	motor.SetSpeedSetpoint(motor.MaxSpeed())
+	motor := getMotorHandle(in.GetMotorType())
+	motor.SetSpeedSetpoint(int(in.GetMotorSpeed()))
 	motor.Command(run)
 
-	return &pBuff.StatusReply{Message: in.GetMotor() + " Running"}, nil
+	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
 func (s *motorServer) StopMotor(ctx context.Context, in *pBuff.MotorRequest) (*pBuff.StatusReply, error) {
-	motor := getMotorHandle(in.GetMotor())
+	motor := getMotorHandle(in.GetMotorType())
 	motor.Command(stop)
 
-	return &pBuff.StatusReply{Message: in.GetMotor() + " Motor stopped"}, nil
+	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }

@@ -3,7 +3,6 @@ import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
 import proto.MotorRequest;
 import proto.MotorsGrpc;
-
 import java.util.concurrent.TimeUnit;
 
 public class RPCClient {
