@@ -50,6 +50,14 @@ func getMotorHandle(port string) *ev3dev.TachoMotor {
 	return out
 }
 
+func isRunning(motor *ev3dev.TachoMotor) bool {
+	speed, _ := motor.Speed()
+	if speed != 0 {
+		return true
+	}
+	return false
+}
+
 func (s *motorServer) RunMotor(ctx context.Context, in *pBuff.MotorRequest) (*pBuff.StatusReply, error) {
 	motor, err := getMotorHandle(in.GetMotorType())
 	motor.SetSpeedSetpoint(int(in.GetMotorSpeed()))
