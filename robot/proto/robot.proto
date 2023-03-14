@@ -31,4 +31,5 @@ message MotorRequest {
 
 message StatusReply {
   bool replyMessage = 1; // Success
+  string errorMsg = 2;
 }
