@@ -1,11 +1,49 @@
 import numpy as np
 import cv2 as cv
 
-# https://docs.opencv.org/4.x/da/d53/tutorial_py_houghcircles.html
-
 video = cv.VideoCapture(0)
 
 
+def getCourseFromFramesWithContours(frame):
+    # Convert to hsv color space to better detect the red color
+    hsvFrame = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+
+    # Lower and upper RGB values for detection
+    lower = np.array([0, 150, 150])
+    upper = np.array([10, 255, 255])
+
+    red_mask = cv.inRange(hsvFrame, lower, upper)
+
+    # Remove everything other than the mask
+    courseFrame = cv.bitwise_and(frame, frame, mask=red_mask)
+
+    # Apply grayframe and blurs for noise reduction
+    grayFrame = cv.cvtColor(courseFrame, cv.COLOR_BGR2GRAY)
+    blurFrame = cv.GaussianBlur(grayFrame, (9, 9), 0)
+
+    contours, _ = cv.findContours(blurFrame, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
+
+    # Check if inner rectangle is detected
+    inner_rectangle = False
+
+    for contour in contours:
+
+        # Check if inner rectangle is detected
+        if inner_rectangle is True:
+            continue
+
+        # Approximate contour to a polygon
+        approx = cv.approxPolyDP(contour, 0.01 * cv.arcLength(contour, True), True)
+
+        # Check if polygon has four vertices (i.e., is a rectangle)
+        if len(approx) == 4:
+            # The inner rectangle is the first rectangle detected with 4 vertices
+            inner_rectangle = True
+            # Draw rectangle around the polygon
+            cv.drawContours(frame, [approx], 0, (0, 255, 0), 2)
+
+
+# https://docs.opencv.org/4.x/da/d53/tutorial_py_houghcircles.html
 def getCirclesFromFrames(frame):
     # TODO: Explore different blurs
     blurFrame = cv.GaussianBlur(frame, (9, 9), 0)
