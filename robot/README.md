@@ -1,9 +1,14 @@
 # The Robot
 
+## Prerequisites 
+1. Get protobuf compiler
+2. Run `go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28`
+3. Run `go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2`
+
 ## How to build and run
 1. Build the proto files for go using the below command in the proto directory.  
 ```
-rotoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative robot.proto
+protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative robot.proto
 ```
 2. Build the project when standing at the robot root
 ```
