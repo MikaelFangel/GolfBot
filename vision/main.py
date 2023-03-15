@@ -110,8 +110,7 @@ while True:
         break
 
     getCirclesFromFrames(frame)
-    #getCourseFromFramesWithContours(frame)
-    #getCourseFromFramesWithHoughP(frame)
+    getCourseFromFramesWithContours(frame)
 
     cv.imshow("frame", frame)
     if cv.waitKey(1) & 0xFF == ord('q'):
