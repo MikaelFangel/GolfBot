@@ -9,14 +9,32 @@ option java_outer_classname = "EV3Client";
 
 
 service Motors {
-  rpc RunMotor(MotorRequest) returns (StatusReply)  {} // One motor at a time, e.g. ball retrieving mechanism
-  rpc StopMotor(MotorRequest) returns (StatusReply) {}
-  rpc DriveStraight(MultipleMotors) returns (StatusReply) {}
-  rpc Turn(MultipleMotors) returns (StatusReply) {}
-  rpc StopMultiple(MultipleMotors) returns (StatusReply) {}
+  rpc RunMotors(MultipleMotors) returns (StatusReply) {} // Takes an array. Usable for all amounts of motors at a time
+  rpc StopMotors(MultipleMotors) returns (StatusReply) {}
+  rpc Rotate(RotateRequest) returns (StatusReply) {}
 }
 
-// MultipleMotors uses the message MotorRequest
+// Motortypes
+enum Type {
+  large = 0;
+  medium = 1;
+  small = 2; // For possible future needs - not used
+}
+
+// Ports on EV3
+enum Port {
+  a = 0;
+  b = 1;
+  c = 2;
+  d = 3;
+}
+
+message RotateRequest {
+  MultipleMotors multipleMotors = 1; // Or: repeated MotorRequest motor = 1;
+  int32 rotate = 2; // For specifying for how long a motor should run
+}
+
+// MultipleMotors reuses the message MotorRequest
 // The 'repeated' keyword makes it an array of motors, which can be handled with standard array syntax
 // Note that '1' is a tag, as the default value of repeated fields is empty
 message MultipleMotors {
@@ -24,9 +42,9 @@ message MultipleMotors {
 }
 
 message MotorRequest {
-  int32 motorSpeed = 1; // Unsure about rules of tags/fields numbers: Reusing same tag number in different message?
-  string motorType = 2; //"medium";
-  string motorPort = 3; //"a";
+  int32 motorSpeed = 1;
+  Type motorType = 2; // E.g. "medium"
+  Port motorPort = 3; // E.g. "a"
 }
 
 message StatusReply {
