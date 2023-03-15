@@ -9,10 +9,7 @@ option java_outer_classname = "EV3Client";
 
 
 service Motors {
-  rpc RunMotor(MotorRequest) returns (StatusReply)  {} // One motor at a time, e.g. ball retrieving mechanism
-  rpc StopMotor(MotorRequest) returns (StatusReply) {}
-  rpc DriveStraight(MultipleMotors) returns (StatusReply) {}
-  rpc Turn(MultipleMotors) returns (StatusReply) {}
+  rpc RunMotors(MultipleMotors) returns (StatusReply) {}
   rpc StopMultiple(MultipleMotors) returns (StatusReply) {}
 }
 
