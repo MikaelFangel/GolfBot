@@ -4,6 +4,40 @@ import cv2 as cv
 video = cv.VideoCapture(0)
 
 
+def getCourseFromFramesWithHoughP(frame):
+    hsvFrame = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+
+    lower = np.array([0, 170, 170])
+    upper = np.array([10, 255, 255])
+    red_mask = cv.inRange(hsvFrame, lower, upper)
+
+    courseFrame = cv.bitwise_and(frame, frame, mask=red_mask)
+    grayFrame = cv.cvtColor(courseFrame, cv.COLOR_BGR2GRAY)
+    blurFrame = cv.GaussianBlur(grayFrame, (9, 9), 0)
+
+    cv.imshow('blurframe', blurFrame)
+
+    lines = cv.HoughLinesP(blurFrame, 1, np.pi / 180, 10, minLineLength=300, maxLineGap=50)
+
+    # Merge the detected lines that are close to each other into a single line
+    merged_lines = []
+    for line in lines:
+        x1, y1, x2, y2 = line[0]
+        if len(merged_lines) == 0:
+            merged_lines.append(line[0])
+        else:
+            last_x1, last_y1, last_x2, last_y2 = merged_lines[-1]
+            if abs(x1 - last_x2) < 50 and abs(y1 - last_y2) < 50:
+                merged_lines[-1] = [last_x1, last_y1, x2, y2]
+            else:
+                merged_lines.append(line[0])
+
+    # Draw the detected lines on the original image
+    for line in merged_lines:
+        x1, y1, x2, y2 = line
+        cv.line(frame, (x1, y1), (x2, y2), (0, 255, 0), 1)
+
+
 def getCourseFromFramesWithContours(frame):
     # Convert to hsv color space to better detect the red color
     hsvFrame = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
