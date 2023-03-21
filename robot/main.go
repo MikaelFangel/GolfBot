@@ -61,7 +61,7 @@ func (s *motorServer) RunMotors(ctx context.Context, in *pBuff.MultipleMotors) (
 	// var motors [3]*ev3dev.TachoMotor
 	var motorRequests [2]motorRequest
 	for i, request := range in.GetMotor() {
-		motor, err := getMotorHandle(request.GetMotorPort())
+		motor, err := getMotorHandle(string(request.GetMotorPort()))
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err
 		}
@@ -80,13 +80,42 @@ func (s *motorServer) RunMotors(ctx context.Context, in *pBuff.MultipleMotors) (
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
-func (s *motorServer) StopMultiple(ctx context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
+func (s *motorServer) StopMotors(ctx context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
 	for _, request := range in.Motor {
-		motor, err := getMotorHandle(request.GetMotorPort())
+		motor, err := getMotorHandle(string(request.GetMotorPort()))
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err
 		}
 		motor.Command(stop)
+	}
+
+	return &pBuff.StatusReply{ReplyMessage: true}, nil
+}
+
+func (s *motorServer) Rotate(ctx context.Context, in *pBuff.RotateRequest) (*pBuff.StatusReply, error) {
+
+	// var motors [3]*ev3dev.TachoMotor // Copied from func RunMotors
+	var motorRequests [2]motorRequest // for keeping track of motors
+	// check whether motors are available
+	for i, request := range in.MultipleMotors.GetMotor() {
+		motor, err := getMotorHandle(string(request.GetMotorPort()))
+		if err != nil {
+			return &pBuff.StatusReply{ReplyMessage: false}, err
+		}
+		motorRequests[i] = motorRequest{request: request, motor: motor}
+		if i == 0 {
+			motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
+		} else {
+			motor.SetSpeedSetpoint(int(-request.GetMotorSpeed()))
+		}
+	}
+
+	for _, motorRequest := range motorRequests {
+		motorRequest.motor.Command(run)
+		isRunning := isRunning(motorRequest.motor)
+		if !isRunning {
+			return &pBuff.StatusReply{ReplyMessage: false}, fmt.Errorf("motor %s is not running", motorRequest.request.MotorType)
+		}
 	}
 
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
