@@ -34,7 +34,11 @@ public class RPCClient {
 
             client.stopMotors(motors);
 
-        } finally {
+        } catch (StatusRuntimeException e) {
+            System.out.println(e.getMessage());
+            System.exit(20);
+        }
+        finally {
             channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
         }
     }
