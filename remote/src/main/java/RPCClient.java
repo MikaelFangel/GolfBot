@@ -1,10 +1,7 @@
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
-import proto.MotorRequest;
-import proto.MotorsGrpc;
-import proto.MultipleMotors;
-import proto.StatusReply;
+import proto.*;
 
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
@@ -17,8 +14,8 @@ public class RPCClient {
 
         ManagedChannel channel = Grpc.newChannelBuilder(args[0], InsecureChannelCredentials.create()).build();
 
-        MotorRequest reqA = MotorRequest.newBuilder().setMotorPort("A").setMotorSpeed(500).setMotorType("medium").build();
-        MotorRequest reqB = MotorRequest.newBuilder().setMotorPort("B").setMotorSpeed(500).setMotorType("medium").build();
+        MotorRequest reqA = MotorRequest.newBuilder().setMotorPort(Port.A).setMotorSpeed(500).setMotorType(Type.medium).build();
+        MotorRequest reqB = MotorRequest.newBuilder().setMotorPort(Port.A).setMotorSpeed(500).setMotorType(Type.medium).build();
 
         ArrayList<MotorRequest> requests = new ArrayList<>();
         requests.add(reqA);
@@ -33,7 +30,7 @@ public class RPCClient {
 
             Thread.sleep(1000);
 
-            client.stopMultiple(motors);
+            client.stopMotors(motors);
 
         } finally {
             channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
