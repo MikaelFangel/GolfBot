@@ -23,10 +23,10 @@ enum Type {
 
 // Ports on EV3
 enum Port {
-  a = 0;
-  b = 1;
-  c = 2;
-  d = 3;
+  A = 0;
+  B = 1;
+  C = 2;
+  D = 3;
 }
 
 message RotateRequest {
