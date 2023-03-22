@@ -93,8 +93,6 @@ func (s *motorServer) StopMotors(ctx context.Context, in *pBuff.MultipleMotors) 
 }
 
 func (s *motorServer) Rotate(ctx context.Context, in *pBuff.RotateRequest) (*pBuff.StatusReply, error) {
-
-	// var motors [3]*ev3dev.TachoMotor // Copied from func RunMotors
 	var motorRequests [2]motorRequest // for keeping track of motors
 	// check whether motors are available
 	for i, request := range in.MultipleMotors.GetMotor() {
