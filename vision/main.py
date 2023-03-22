@@ -57,24 +57,19 @@ def getCourseFromFramesWithContours(frame):
 
     contours, _ = cv.findContours(blurFrame, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
 
-    # Check if inner rectangle is detected
-    inner_rectangle = False
-
     for contour in contours:
-
-        # Check if inner rectangle is detected
-        if inner_rectangle is True:
-            continue
 
         # Approximate contour to a polygon
         approx = cv.approxPolyDP(contour, 0.01 * cv.arcLength(contour, True), True)
 
         # Check if polygon has four vertices (i.e., is a rectangle)
         if len(approx) == 4:
-            # The inner rectangle is the first rectangle detected with 4 vertices
-            inner_rectangle = True
             # Draw rectangle around the polygon
             cv.drawContours(frame, [approx], 0, (0, 255, 0), 2)
+            # Return the array of lines with x and y coordinates
+            return approx
+        else:
+            raise CourseFrameNotFoundException([approx])
 
 
 # https://docs.opencv.org/4.x/da/d53/tutorial_py_houghcircles.html
