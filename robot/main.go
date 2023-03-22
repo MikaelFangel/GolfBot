@@ -68,14 +68,10 @@ func (s *motorServer) RunMotors(ctx context.Context, in *pBuff.MultipleMotors) (
 		motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
 	}
 
-	for i, motorRequest := range motorRequests {
+	for _, motorRequest := range motorRequests {
 		motorRequest.motor.Command(run)
-		_, b, _ := ev3dev.Wait(motorRequests[i].motor, ev3dev.Running, ev3dev.Running, ev3dev.Stalled, false, -1)
-		if !b {
-			return &pBuff.StatusReply{ReplyMessage: false}, fmt.Errorf("motor %s is not running", motorRequest.request.MotorType)
-		}
-		// isRunning := isRunning(motorRequest.motor)
-		// if !isRunning {
+		// _, b, _ := ev3dev.Wait(motorRequests[i].motor, ev3dev.Running, ev3dev.Running, ev3dev.Stalled, false, -1)
+		// if !b {
 		// 	return &pBuff.StatusReply{ReplyMessage: false}, fmt.Errorf("motor %s is not running", motorRequest.request.MotorType)
 		// }
 	}
