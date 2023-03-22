@@ -4,6 +4,20 @@ import cv2 as cv
 video = cv.VideoCapture(0)
 
 
+class CourseFrameNotFoundException(Exception):
+    """Camera Exception raised for errors detecting the course frame.
+
+        Attributes:
+            data -- the intercepted data of the camera
+            message -- explanation of the error
+        """
+
+    def __init__(self, data,
+                 message="Camera expected to detect 4 lines from the course frame to be able to calculate a coordinate system"):
+        self.data = data
+        self.message = message
+
+
 def getCourseFromFramesWithHoughP(frame):
     hsvFrame = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
