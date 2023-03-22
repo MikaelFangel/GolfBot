@@ -84,14 +84,27 @@ func (s *motorServer) RunMotors(ctx context.Context, in *pBuff.MultipleMotors) (
 }
 
 func (s *motorServer) StopMotors(ctx context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
-	for _, request := range in.Motor {
+	var motorRequests [2]motorRequest
+	for i, request := range in.GetMotor() {
 		motor, err := getMotorHandle(request.GetMotorPort().String())
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err
 		}
-		motor.Command(stop)
+		motorRequests[i] = motorRequest{request: request, motor: motor}
 	}
 
+	for i := 0; i < len(in.Motor); i++ {
+		motorRequests[i].motor.Command(stop)
+	}
+
+	for i := 0; i < len(in.Motor); i++ {
+		for {
+			if !isRunning(motorRequests[i].motor) {
+				break
+			}
+			motorRequests[i].motor.Command(stop)
+		}
+	}
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
