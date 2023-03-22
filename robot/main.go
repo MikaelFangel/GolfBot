@@ -94,3 +94,30 @@ func (s *motorServer) StopMotors(ctx context.Context, in *pBuff.MultipleMotors) 
 
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
+
+func (s *motorServer) Rotate(ctx context.Context, in *pBuff.RotateRequest) (*pBuff.StatusReply, error) {
+	var motorRequests [2]motorRequest // for keeping track of motors
+	// check whether motors are available
+	for i, request := range in.MultipleMotors.GetMotor() {
+		motor, err := getMotorHandle(string(request.GetMotorPort()))
+		if err != nil {
+			return &pBuff.StatusReply{ReplyMessage: false}, err
+		}
+		motorRequests[i] = motorRequest{request: request, motor: motor}
+		if i == 0 {
+			motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
+		} else {
+			motor.SetSpeedSetpoint(int(-request.GetMotorSpeed()))
+		}
+	}
+
+	for _, motorRequest := range motorRequests {
+		motorRequest.motor.Command(run)
+		isRunning := isRunning(motorRequest.motor)
+		if !isRunning {
+			return &pBuff.StatusReply{ReplyMessage: false}, fmt.Errorf("motor %s is not running", motorRequest.request.MotorType)
+		}
+	}
+
+	return &pBuff.StatusReply{ReplyMessage: true}, nil
+}
