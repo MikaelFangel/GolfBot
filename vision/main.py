@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 import cv2 as cv
 
@@ -52,7 +54,7 @@ def getCourseFromFramesWithHoughP(frame):
         cv.line(frame, (x1, y1), (x2, y2), (0, 255, 0), 1)
 
 
-def getCourseFromFramesWithContours(frame):
+def getCourseLinesFromFramesWithContours(frame):
     # Convert to hsv color space to better detect the red color
     hsvFrame = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
@@ -112,6 +114,23 @@ def getCirclesFromFrames(frame):
             cv.circle(frame, (x, y), r, (0, 255, 0), 2)
 
 
+# Calculate the distance given two points
+distance_in_pixels = lambda x1, y1, x2, y2: math.sqrt(math.pow((x2 - x1), 2) + math.pow((y2 - y1), 2))
+
+
+# A quick accuracy test with the height of the frame
+def accuracy_test():
+    # The length of the course frame calculated with pixels
+    pixel_length = distance_in_pixels(top_right[0], top_right[1], bottom_right[0], bottom_right[1])
+    calc = pixel_length * conversion_factor
+    print(calc)
+    return calc
+
+
+# Width and height of course frame on the inner side in cm
+real_width = 167
+real_heigth = 122
+
 while True:
     # grab the current frame
     ret, frame = video.read()
@@ -119,7 +138,29 @@ while True:
         break
 
     getCirclesFromFrames(frame)
-    getCourseFromFramesWithContours(frame)
+
+    try:
+        lines = getCourseLinesFromFramesWithContours(frame)
+    except CourseFrameNotFoundException:
+        print("Course frame not found. Skip this frame")
+        continue
+
+    # Origin
+    offset = lines[0][0]
+
+    # Calculate corners x and y with offset
+    corners = [point - offset for point in lines]
+
+    # Unpack a layer of nested array that is not needed. TODO: Check where this extra array comes from
+    [corners] = [corners]
+
+    # Unpack all subarrays for each point that contains x and y coordinates
+    [top_left], [top_right], [bottom_right], [bottom_left] = corners
+
+    # Find conversion factor by real-world width and calculated pixel width
+    conversion_factor = real_width / distance_in_pixels(top_left[0], top_left[1], top_right[0], top_right[1])
+
+    accuracy_test()
 
     cv.imshow("frame", frame)
     if cv.waitKey(1) & 0xFF == ord('q'):
