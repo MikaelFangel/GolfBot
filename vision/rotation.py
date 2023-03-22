@@ -44,7 +44,7 @@ while True:
             crop = mask[yRect:yRect + hRect, xRect:xRect + wRect]  # crop to size
 
             # Find line
-            edges = cv.Canny(crop, 50, 150, apertureSize=3)
+            edges = cv.Canny(crop, 30, 200, apertureSize=3)  # Change thresholds
             lines = cv.HoughLines(edges, 1, np.pi/180, 50)
 
             img = cv.cvtColor(crop, cv2.COLOR_GRAY2BGR)  # Convert cropped black and white image to color to draw the red line
@@ -61,10 +61,10 @@ while True:
                     y0 = b * rho
 
                     # !!! The lines positions !!!
-                    x1 = int(x0 + (-b) + xRect)
-                    y1 = int(y0 + (a) + yRect)
-                    x2 = int(x0 - wRect * (-b) + xRect)
-                    y2 = int(y0 - hRect * (a) + yRect)
+                    x1 = int(x0 + 1000 * (-b) + xRect)
+                    y1 = int(y0 + 1000 * (a) + yRect)
+                    x2 = int(x0 - 1000 * (-b) + xRect)
+                    y2 = int(y0 - 1000 * (a) + yRect)
 
                     cv.line(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)  # draw line
 
