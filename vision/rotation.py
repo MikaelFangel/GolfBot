@@ -37,15 +37,15 @@ while True:
     for cnt in contours:
         area = cv.contourArea(cnt)
 
-        if 3000 < area < 30000:  # Contour area size
+        if 1000 < area < 30000:  # Contour area size
             xRect, yRect, wRect, hRect = cv2.boundingRect(cnt)  # get bounding rectangle around biggest contour to crop to
             markerRect = cv2.rectangle(frame, (xRect, yRect), (xRect + wRect, yRect + hRect), (255, 0, 0), 2)
 
             crop = mask[yRect:yRect + hRect, xRect:xRect + wRect]  # crop to size
 
             # Find line
-            edges = cv.Canny(crop, 30, 200, apertureSize=3)  # Change thresholds
-            lines = cv.HoughLines(edges, 1, np.pi/180, 50)
+            edges = cv.Canny(crop, 50, 200, apertureSize=3)  # Change thresholds
+            lines = cv.HoughLines(edges, 1, np.pi/180, 20)
 
             img = cv.cvtColor(crop, cv2.COLOR_GRAY2BGR)  # Convert cropped black and white image to color to draw the red line
 
