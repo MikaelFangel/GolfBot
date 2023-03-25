@@ -6,15 +6,7 @@ import cv2 as cv
 
 video = cv.VideoCapture(0)
 
-while True:
-    ret, frame = video.read()
-    if not ret:
-        break
-
-    # Get frame size
-    frameWidth = video.get(cv.CAP_PROP_FRAME_WIDTH)
-    frameHeight = video.get(cv.CAP_PROP_FRAME_HEIGHT)
-
+def getCenterAndDirectionCoords(frame):
     hsvFrame = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
     # Optional
@@ -26,10 +18,7 @@ while True:
     green_mask = cv.inRange(hsv_blur, green_lower, green_upper)
 
     # Inverting
-    mask = (255-green_mask)
-
-    # Get threshold
-    # ret, thresh = cv2.threshold(green_mask, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    mask = (255 - green_mask)
 
     # Get contours
     contours, heirarchy = cv.findContours(mask, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
@@ -54,17 +43,27 @@ while True:
             xRect, yRect, wRect, hRect = cv.boundingRect(contour)  # get bounding rectangle
 
             # Visual only
-            markerRect = cv.rectangle(frame, (xRect, yRect), (xRect + wRect, yRect + hRect), (255, 0, 0), 2)
-            cv.rectangle(frame, (xRect+int(wRect/2)-2, yRect+int(hRect/2)-2), (xRect+int(wRect/2)+2, yRect+int(hRect/2)+2), (255, 0, 0), 2)
+            cv.rectangle(frame, (xRect, yRect), (xRect + wRect, yRect + hRect), (255, 0, 0), 2)
+            cv.rectangle(frame, (xRect + int(wRect / 2) - 2, yRect + int(hRect / 2) - 2),
+                         (xRect + int(wRect / 2) + 2, yRect + int(hRect / 2) + 2), (255, 0, 0), 2)
 
             if i == 0:
-                centerCoords = [xRect + int(wRect/2), yRect + int(hRect/2)]
+                centerCoords = [xRect + int(wRect / 2), yRect + int(hRect / 2)]
             if i == 1:
                 directionCoords = [xRect + int(wRect / 2), yRect + int(hRect / 2)]
 
+    return centerCoords, directionCoords
+
+while True:
+    ret, frame = video.read()
+    if not ret:
+        break
+
+    centerCoords, dirCoords = getCenterAndDirectionCoords(frame)
+
     # Show frame
     cv.imshow("frame", frame)
-    cv.imshow("mask", mask)
+
     # cv.imshow("hsvframe", hsvFrame)
 
     if cv.waitKey(1) & 0xFF == ord('q'):
