@@ -34,40 +34,35 @@ while True:
     # Get contours
     contours, heirarchy = cv.findContours(mask, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
 
+    # Find contours with an area within a threshold
+    ls = []
     for cnt in contours:
         area = cv.contourArea(cnt)
+        if 1000 < area < 30000:
+            ls.append([area, cnt])
 
-        if 1000 < area < 30000:  # Contour area size
-            xRect, yRect, wRect, hRect = cv2.boundingRect(cnt)  # get bounding rectangle around biggest contour to crop to
-            markerRect = cv2.rectangle(frame, (xRect, yRect), (xRect + wRect, yRect + hRect), (255, 0, 0), 2)
+    # Sort to the biggest item first
+    ls.sort(reverse=True)
 
-            crop = mask[yRect:yRect + hRect, xRect:xRect + wRect]  # crop to size
+    centerCoords = []
+    directionCoords = []
 
-            # Find line
-            edges = cv.Canny(crop, 50, 200, apertureSize=3)  # Change thresholds
-            lines = cv.HoughLines(edges, 1, np.pi/180, 20)
+    # Get centers for 2 biggest contours
+    if len(ls) >= 2:
+        for i in range(2):  # Change to 2
+            contour = ls[i][1]
+            xRect, yRect, wRect, hRect = cv.boundingRect(contour)  # get bounding rectangle
 
-            img = cv.cvtColor(crop, cv2.COLOR_GRAY2BGR)  # Convert cropped black and white image to color to draw the red line
+            # Visual only
+            markerRect = cv.rectangle(frame, (xRect, yRect), (xRect + wRect, yRect + hRect), (255, 0, 0), 2)
+            cv.rectangle(frame, (xRect+int(wRect/2)-2, yRect+int(hRect/2)-2), (xRect+int(wRect/2)+2, yRect+int(hRect/2)+2), (255, 0, 0), 2)
 
-            # lines[0]'s theta is the rotation.
-            if lines is not None:
-                for rho, theta in lines[0]:
-                    # Get line coefficients
-                    a = np.cos(theta)
-                    b = np.sin(theta)
+            if i == 0:
+                centerCoords = [xRect + int(wRect/2), yRect + int(hRect/2)]
+            if i == 1:
+                directionCoords = [xRect + int(wRect / 2), yRect + int(hRect / 2)]
 
-                    # Calculate line position
-                    x0 = a * rho
-                    y0 = b * rho
-
-                    # !!! The lines positions !!!
-                    x1 = int(x0 + 1000 * (-b) + xRect)
-                    y1 = int(y0 + 1000 * (a) + yRect)
-                    x2 = int(x0 - 1000 * (-b) + xRect)
-                    y2 = int(y0 - 1000 * (a) + yRect)
-
-                    cv.line(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)  # draw line
-
+    # Show frame
     cv.imshow("frame", frame)
     cv.imshow("mask", mask)
     # cv.imshow("hsvframe", hsvFrame)
