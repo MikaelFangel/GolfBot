@@ -15,13 +15,14 @@ public class RPCClient {
 
         ManagedChannel channel = Grpc.newChannelBuilder(args[0], InsecureChannelCredentials.create()).build();
 
-        int speed = 500;
+        int speed = -250;
+        // speed = -1050;
         MotorRequest reqA = MotorRequest.newBuilder().setMotorPort(Port.A).setMotorSpeed(speed).build();
         MotorRequest reqD = MotorRequest.newBuilder().setMotorPort(Port.D).setMotorSpeed(speed).build();
 
-        speed = 0;
-        MotorRequest reqA2 = MotorRequest.newBuilder().setMotorPort(Port.A).setMotorSpeed(speed).build();
-        MotorRequest reqD2 = MotorRequest.newBuilder().setMotorPort(Port.D).setMotorSpeed(speed).build();
+        //speed = 0;
+        MotorRequest reqA2 = MotorRequest.newBuilder().setMotorPort(Port.A).setMotorSpeed(-speed).build();
+        MotorRequest reqD2 = MotorRequest.newBuilder().setMotorPort(Port.D).setMotorSpeed(-speed).build();
 
         ArrayList<MotorRequest> requests = new ArrayList<>();
         requests.add(reqA);
@@ -35,16 +36,26 @@ public class RPCClient {
 
         MultipleMotors motors2 = MultipleMotors.newBuilder().addAllMotor(requests2).build();
 
+        RotateRequest rotateRequest = RotateRequest.newBuilder().setMultipleMotors(motors).setDegrees(360).build();
+
         MotorsGrpc.MotorsBlockingStub client = MotorsGrpc.newBlockingStub(channel);
 
         try {
             StatusReply a = client.runMotors(motors);
 
+            //client.rotate(rotateRequest);
+
+            Thread.sleep(2000);
+
+            client.stopMotors(motors);
+
             Thread.sleep(1000);
 
             client.runMotors(motors2);
 
-            //client.stopMotors(motors);
+            Thread.sleep(2000);
+
+            client.stopMotors(motors2);
 
         } catch (StatusRuntimeException e) {
             System.out.println(e.getMessage());

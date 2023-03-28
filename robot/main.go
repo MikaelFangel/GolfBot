@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"net"
 
 	"github.com/ev3go/ev3dev"
@@ -20,8 +21,11 @@ const (
 
 // Motor commands
 const (
-	run  = "run-forever"
-	stop = "stop"
+	run     = "run-forever"
+	stop    = "stop"
+	rel_pos = "run-to-rel-pos"
+	absPos  = "run-to-abs-pos"
+	reset   = "reset"
 )
 
 type motorServer struct {
@@ -66,14 +70,16 @@ func (s *motorServer) RunMotors(ctx context.Context, in *pBuff.MultipleMotors) (
 		}
 		motorRequests[i] = motorRequest{request: request, motor: motor}
 		motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
+		fmt.Println(request)
+		fmt.Println(motor.String())
 	}
 
-	for _, motorRequest := range motorRequests {
+	for i, motorRequest := range motorRequests {
 		motorRequest.motor.Command(run)
-		// _, b, _ := ev3dev.Wait(motorRequests[i].motor, ev3dev.Running, ev3dev.Running, ev3dev.Stalled, false, -1)
-		// if !b {
-		// 	return &pBuff.StatusReply{ReplyMessage: false}, fmt.Errorf("motor %s is not running", motorRequest.request.MotorType)
-		// }
+		_, b, _ := ev3dev.Wait(motorRequests[i].motor, ev3dev.Running, ev3dev.Running, ev3dev.Stalled, false, -1)
+		if !b {
+			return &pBuff.StatusReply{ReplyMessage: false}, fmt.Errorf("motor %s is not running", motorRequest.request.MotorType)
+		}
 	}
 
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
@@ -107,26 +113,47 @@ func (s *motorServer) StopMotors(ctx context.Context, in *pBuff.MultipleMotors) 
 func (s *motorServer) Rotate(ctx context.Context, in *pBuff.RotateRequest) (*pBuff.StatusReply, error) {
 	var motorRequests [2]motorRequest // for keeping track of motors
 	// check whether motors are available
+	// var arr [2]string
+	// arr[0] = "A"
+	// arr[1] = "D"
+	wheelRotations := convertRobotRotationToWheelRotations(in.Degrees)
+	fmt.Println(wheelRotations)
+
 	for i, request := range in.MultipleMotors.GetMotor() {
-		motor, err := getMotorHandle(string(request.GetMotorPort()))
+		// motor, err := getMotorHandle(arr[i])
+		motor, err := getMotorHandle(request.GetMotorPort().String())
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err
 		}
 		motorRequests[i] = motorRequest{request: request, motor: motor}
-		if i == 0 {
-			motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
+		//motor.SetPosition(0)
+		motor.Command(reset)
+		if i%2 == 0 {
+			motor.SetPositionSetpoint(wheelRotations)
+			motor.SetSpeedSetpoint(500)
 		} else {
-			motor.SetSpeedSetpoint(int(-request.GetMotorSpeed()))
+			motor.SetPositionSetpoint(-wheelRotations)
+			motor.SetSpeedSetpoint(-500)
 		}
 	}
 
 	for _, motorRequest := range motorRequests {
-		motorRequest.motor.Command(run)
-		isRunning := isRunning(motorRequest.motor)
-		if !isRunning {
-			return &pBuff.StatusReply{ReplyMessage: false}, fmt.Errorf("motor %s is not running", motorRequest.request.MotorType)
-		}
+		motorRequest.motor.Command(absPos)
 	}
 
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
+}
+
+// convertRobotRotationToWheelRotations Converts a input of degrees to how many degrees a wheel should rotate.
+func convertRobotRotationToWheelRotations(degrees int32) int {
+	// Radius values are in centimeters and the wheelBaseRadius is measured from the inner sides of the wheels.
+	wheelRadius := 3.4
+	wheelBaseRadius := 8.75
+
+	wheelCircumference := 2 * wheelRadius * math.Pi
+	wheelBaseCircumference := 2 * wheelBaseRadius * math.Pi
+
+	// Calculate the distance move by rotating 1 degree on a wheel
+	rotationInCm := (wheelBaseCircumference * float64(degrees)) / 360.
+	return int(rotationInCm / (wheelCircumference / 360))
 }

@@ -31,7 +31,7 @@ enum Port {
 
 message RotateRequest {
   MultipleMotors multipleMotors = 1; // Or: repeated MotorRequest motor = 1;
-  int32 rotate = 2; // For specifying for how long a motor should run
+  int32 degrees = 2; // For specifying for how long a motor should run
 }
 
 // MultipleMotors reuses the message MotorRequest
