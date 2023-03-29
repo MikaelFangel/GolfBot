@@ -127,8 +127,9 @@ def getCirclesFromFrames(frame):
         return circles
 
 
-# Calculate the distance given two points
-distance_in_pixels = lambda x1, y1, x2, y2: math.sqrt(math.pow((x2 - x1), 2) + math.pow((y2 - y1), 2))
+# Calculate the distance given two points. Mostly used for accuracy tests
+def distance_in_pixels(x1, y1, x2, y2):
+    return math.sqrt(math.pow((x2 - x1), 2) + math.pow((y2 - y1), 2))
 
 
 # A quick accuracy test with the height of the frame
