@@ -43,8 +43,6 @@ def getCourseFromFramesWithHoughP(frame):
     grayFrame = cv.cvtColor(courseFrame, cv.COLOR_BGR2GRAY)
     blurFrame = cv.GaussianBlur(grayFrame, (9, 9), 0)
 
-    cv.imshow('blurframe', blurFrame)
-
     lines = cv.HoughLinesP(blurFrame, 1, np.pi / 180, 10, minLineLength=300, maxLineGap=50)
 
     # Merge the detected lines that are close to each other into a single line
@@ -199,6 +197,7 @@ while True:
     accuracy_test(balls)
 
     cv.imshow("frame", frame)
+
     if cv.waitKey(1) & 0xFF == ord('q'):
         break
 
