@@ -66,9 +66,9 @@ def getCourseFromFramesWithHoughP(frame):
         cv.line(frame, (x1, y1), (x2, y2), (0, 255, 0), 1)
 
 
-def getCourseLinesFromFramesWithContours(frame):
+def getCourseLinesFromFramesWithContours(frame_):
     # Convert to hsv color space to better detect the red color
-    hsvFrame = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+    hsvFrame = cv.cvtColor(frame_, cv.COLOR_BGR2HSV)
 
     # Lower and upper RGB values for detection
     lower = np.array([0, 150, 150])
@@ -77,7 +77,7 @@ def getCourseLinesFromFramesWithContours(frame):
     red_mask = cv.inRange(hsvFrame, lower, upper)
 
     # Remove everything other than the mask
-    courseFrame = cv.bitwise_and(frame, frame, mask=red_mask)
+    courseFrame = cv.bitwise_and(frame_, frame_, mask=red_mask)
 
     # Apply grayframe and blurs for noise reduction
     grayFrame = cv.cvtColor(courseFrame, cv.COLOR_BGR2GRAY)
@@ -86,14 +86,12 @@ def getCourseLinesFromFramesWithContours(frame):
     contours, _ = cv.findContours(blurFrame, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
 
     for contour in contours:
-
         # Approximate contour to a polygon
         approx = cv.approxPolyDP(contour, 0.01 * cv.arcLength(contour, True), True)
-
         # Check if polygon has four vertices (i.e., is a rectangle)
         if len(approx) == 4:
             # Draw rectangle around the polygon
-            cv.drawContours(frame, [approx], 0, (0, 255, 0), 2)
+            cv.drawContours(frame_, [approx], 0, (0, 255, 0), 2)
             # Return the array of lines with x and y coordinates
             return approx
         else:
