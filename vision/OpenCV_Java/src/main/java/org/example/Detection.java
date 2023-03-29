@@ -12,7 +12,7 @@ public class Detection {
      * @param frame
      * @return List({x, y}, {x, y} ...)
      */
-    public static ArrayList<double[]> getCircleCoordsFromFrame(Mat frame) {
+    public static Point[] getCircleCoordsFromFrame(Mat frame) {
         //Converting the image to Gray and blur it
         Mat frameGray = new Mat();
         Mat frameBlur = new Mat();
@@ -41,16 +41,22 @@ public class Detection {
             }
         }
 
-        return circleCoords;
+        // Convert to Point[]
+        Point[] coords = new Point[circleCoords.size()];
+        for (int i = 0; i < coords.length; i++) {
+            coords[i] = new Point(circleCoords.get(0));
+        }
+
+        return coords;
     }
 
     /**
      * Returns and 2 long list of coordinates. First coordinates for the biggest marker
      * the second for the next biggest one.
      * @param frame
-     * @return List(centerCoords, directionCoords)
+     * @return Returns List(centerCoords, directionCoords) or null
      */
-    public static ArrayList<double[]> getRotationCoordsFromFrame(Mat frame) {
+    public static Point[] getRotationCoordsFromFrame(Mat frame) {
         final int areaLower = 60;
         final int areaUpper = 350;
 
@@ -108,13 +114,19 @@ public class Detection {
             }
         }
 
-        ArrayList<double[]> coords = new ArrayList<>();
-        coords.add(centerCoords);
-        coords.add(directionCoords);
+        // Convert to Point []
+        Point[] coords = new Point[2];
+        coords[0] = new Point(centerCoords);
+        coords[1] = new Point(centerCoords);
 
         return coords;
     }
 
+    /**
+     * Returns the coordinates of the border.
+     * @param frame
+     * @return null or is of length 4
+     */
     public static Point[] getBorderFromFrame(Mat frame) {
         Mat frameHSV = new Mat();
         Mat maskRed = new Mat();
