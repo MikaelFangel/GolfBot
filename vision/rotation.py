@@ -4,17 +4,17 @@ import cv2 as cv
 
 # https://stackoverflow.com/questions/59363937/opencv-detecting-an-object-and-its-rotation
 
-video = cv.VideoCapture(0)
+video = cv.VideoCapture(2)
 
 def getCenterAndDirectionCoords(frame):
     hsvFrame = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
     # Optional
-    hsv_blur = cv.GaussianBlur(hsvFrame, (11, 11), 0)
+    hsv_blur = cv.GaussianBlur(hsvFrame, (7, 7), 0)
 
     # Create mask
-    green_upper = np.array([255, 255, 255])
-    green_lower = np.array([50, 90, 90])
+    green_upper = np.array([150, 255, 150])
+    green_lower = np.array([40, 50, 90])
     green_mask = cv.inRange(hsv_blur, green_lower, green_upper)
 
     # Inverting
@@ -27,7 +27,7 @@ def getCenterAndDirectionCoords(frame):
     ls = []
     for cnt in contours:
         area = cv.contourArea(cnt)
-        if 1000 < area < 30000:
+        if 100 < area < 500:
             ls.append([area, cnt])
 
     centerCoords = []
@@ -36,10 +36,12 @@ def getCenterAndDirectionCoords(frame):
     # Get centers for 2 biggest contours
     if len(ls) >= 2:
         # Sort to the biggest item first
-        ls.sort(reverse=True)
+        ls.sort(key=lambda x: x[0], reverse=True)
 
         for i in range(2):  # Change to 2
             contour = ls[i][1]
+            print(cv.contourArea(contour))
+
             xRect, yRect, wRect, hRect = cv.boundingRect(contour)  # get bounding rectangle
 
             # Visual only
@@ -52,7 +54,7 @@ def getCenterAndDirectionCoords(frame):
             if i == 1:
                 directionCoords = [xRect + int(wRect / 2), yRect + int(hRect / 2)]
 
-    # cv.imshow("mask", mask)
+    cv.imshow("mask", mask)
     return centerCoords, directionCoords
 
 while True:
