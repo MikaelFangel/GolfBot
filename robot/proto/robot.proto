@@ -14,6 +14,7 @@ option java_outer_classname = "EV3Client";
 import "google/protobuf/descriptor.proto";
 
 
+// Functions that can be called through the interface
 service Motors {
   rpc RunMotors(MultipleMotors) returns (StatusReply) {} // Takes an array. Usable for all amounts of motors at a time
   rpc StopMotors(MultipleMotors) returns (StatusReply) {}
@@ -57,7 +58,7 @@ message MultipleMotors {
 message MotorRequest {
   int32 motorSpeed = 1;
   Type motorType = 2; // E.g. "medium"
-  Port motorPort = 3; // E.g. "a"
+  Port motorPort = 3; // E.g. "A"
 }
 
 message StatusReply {

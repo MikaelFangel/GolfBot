@@ -13,17 +13,19 @@ public class RPCClient {
             throw new MissingArgumentException("Please provide an IP and port number (e.g 192.168.0.97:50051)");
         }
 
+        // Needed setup to communicate with the robot
         ManagedChannel channel = Grpc.newChannelBuilder(args[0], InsecureChannelCredentials.create()).build();
+        MotorsGrpc.MotorsBlockingStub client = MotorsGrpc.newBlockingStub(channel);
 
+        // Make MotorRequest object
         int speed = -250;
-        // speed = -1050;
         MotorRequest reqA = MotorRequest.newBuilder().setMotorPort(Port.A).setMotorSpeed(speed).build();
         MotorRequest reqD = MotorRequest.newBuilder().setMotorPort(Port.D).setMotorSpeed(speed).build();
 
-        //speed = 0;
         MotorRequest reqA2 = MotorRequest.newBuilder().setMotorPort(Port.A).setMotorSpeed(-speed).build();
         MotorRequest reqD2 = MotorRequest.newBuilder().setMotorPort(Port.D).setMotorSpeed(-speed).build();
 
+        // Put motorRequests into an array
         ArrayList<MotorRequest> requests = new ArrayList<>();
         requests.add(reqA);
         requests.add(reqD);
@@ -32,14 +34,14 @@ public class RPCClient {
         requests2.add(reqA2);
         requests2.add(reqD2);
 
+        // Make MultipleMotors object
         MultipleMotors motors = MultipleMotors.newBuilder().addAllMotor(requests).build();
-
         MultipleMotors motors2 = MultipleMotors.newBuilder().addAllMotor(requests2).build();
 
+        // Make RotateRequest object
         RotateRequest rotateRequest = RotateRequest.newBuilder().setMultipleMotors(motors).setDegrees(360).build();
 
-        MotorsGrpc.MotorsBlockingStub client = MotorsGrpc.newBlockingStub(channel);
-
+        // Test the robot
         try {
             StatusReply a = client.runMotors(motors);
 
@@ -57,7 +59,9 @@ public class RPCClient {
 
             //client.stopMotors(motors2);
 
-        } catch (StatusRuntimeException e) {
+        }
+        // Catch exceptions returned from the robot
+        catch (StatusRuntimeException e) {
             System.out.println(e.getMessage());
             System.exit(20);
         }
