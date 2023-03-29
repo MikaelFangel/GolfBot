@@ -94,8 +94,10 @@ def getCourseLinesFromFramesWithContours(frame_):
             cv.drawContours(frame_, [approx], 0, (0, 255, 0), 2)
             # Return the array of lines with x and y coordinates
             return approx
+        elif len(approx) == 16 or len(approx) == 15: # TODO A bit hacky way to detect the cross in the middle, but kinda works. Need to revisit this to be more stable.
+            cv.drawContours(frame_, [approx], 0, (0, 255, 0), 2)
         else:
-            raise CourseFrameNotFoundException([approx])
+            print(len(approx))
 
 
 # https://docs.opencv.org/4.x/da/d53/tutorial_py_houghcircles.html
