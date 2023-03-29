@@ -49,13 +49,13 @@ public class RPCClient {
 
             client.stopMotors(motors);
 
-            Thread.sleep(1000);
+            //Thread.sleep(1000);
 
-            client.runMotors(motors2);
+            //client.runMotors(motors2);
 
-            Thread.sleep(2000);
+            //Thread.sleep(2000);
 
-            client.stopMotors(motors2);
+            //client.stopMotors(motors2);
 
         } catch (StatusRuntimeException e) {
             System.out.println(e.getMessage());

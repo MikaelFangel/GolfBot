@@ -52,6 +52,8 @@ func main() {
 }
 
 func getMotorHandle(port string) (*ev3dev.TachoMotor, error) {
+	fmt.Println("Hej")
+	fmt.Println(pBuff.Type_large.String())
 	return ev3dev.TachoMotorFor("ev3-ports:out"+port, largeMotor)
 }
 
@@ -64,6 +66,7 @@ func isRunning(motor *ev3dev.TachoMotor) bool {
 func (s *motorServer) RunMotors(ctx context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
 	var motorRequests [2]motorRequest
 	for i, request := range in.GetMotor() {
+		fmt.Println("Noget sjovt")
 		motor, err := getMotorHandle(request.GetMotorPort().String())
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err

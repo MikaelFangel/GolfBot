@@ -8,6 +8,11 @@ option go_package = "main/proto";
 option java_multiple_files = true;
 option java_outer_classname = "EV3Client";
 
+// For enums
+// https://protobuf.dev/programming-guides/proto2/#customoptions
+//
+import "google/protobuf/descriptor.proto";
+
 
 service Motors {
   rpc RunMotors(MultipleMotors) returns (StatusReply) {} // Takes an array. Usable for all amounts of motors at a time
@@ -15,11 +20,18 @@ service Motors {
   rpc Rotate(RotateRequest) returns (StatusReply) {}
 }
 
+extend google.protobuf.EnumValueOptions {
+  optional string enumvalue = 51234; // specific value??
+}
 // Motortypes
 enum Type {
-  large = 0;
+  large = 0 [(enumvalue) = "lego-ev3-l-motor"];
   medium = 1;
   small = 2; // For possible future needs - not used
+}
+
+message Motortype {
+  Type type = 1;
 }
 
 // Ports on EV3
