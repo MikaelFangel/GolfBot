@@ -30,14 +30,14 @@ def getCenterAndDirectionCoords(frame):
         if 1000 < area < 30000:
             ls.append([area, cnt])
 
-    # Sort to the biggest item first
-    ls.sort(reverse=True)
-
     centerCoords = []
     directionCoords = []
 
     # Get centers for 2 biggest contours
     if len(ls) >= 2:
+        # Sort to the biggest item first
+        ls.sort(reverse=True)
+
         for i in range(2):  # Change to 2
             contour = ls[i][1]
             xRect, yRect, wRect, hRect = cv.boundingRect(contour)  # get bounding rectangle
@@ -52,6 +52,7 @@ def getCenterAndDirectionCoords(frame):
             if i == 1:
                 directionCoords = [xRect + int(wRect / 2), yRect + int(hRect / 2)]
 
+    # cv.imshow("mask", mask)
     return centerCoords, directionCoords
 
 while True:
@@ -63,6 +64,7 @@ while True:
 
     # Show frame
     cv.imshow("frame", frame)
+
 
     # cv.imshow("hsvframe", hsvFrame)
 
