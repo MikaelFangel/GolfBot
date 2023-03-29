@@ -1,4 +1,4 @@
-package org.example.helperClasses;
+package vision.helperClasses;
 
 import org.opencv.core.MatOfPoint;
 

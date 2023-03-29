@@ -1,12 +1,10 @@
-package org.example;
+package vision;
 
 import nu.pattern.OpenCV;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.videoio.VideoCapture;
-import java.util.ArrayList;
-
-import static org.example.Detection.*;
+import static vision.Detection.*;
 
 public class Main {
     public static void main(String[] args) {

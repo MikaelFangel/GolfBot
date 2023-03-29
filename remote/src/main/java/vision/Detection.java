@@ -1,8 +1,8 @@
-package org.example;
+package vision;
 
-import org.example.helperClasses.ContourSet;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
+import vision.helperClasses.ContourSet;
 
 import java.util.*;
 
