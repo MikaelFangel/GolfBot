@@ -143,15 +143,17 @@ def accuracy_test():
 
 # Width and height of course frame on the inner side in cm
 real_width = 167
-real_heigth = 122
+real_height = 122
+
+video = cv.VideoCapture(0)
 
 while True:
     # grab the current frame
     ret, frame = video.read()
+
+    # If no frame is read, return
     if not ret:
         break
-
-    getCirclesFromFrames(frame)
 
     try:
         lines = getCourseLinesFromFramesWithContours(frame)
@@ -168,13 +170,37 @@ while True:
     # Unpack a layer of nested array that is not needed. TODO: Check where this extra array comes from
     [corners] = [corners]
 
-    # Unpack all subarrays for each point that contains x and y coordinates
+    # Unpack two points for each point that of the length of the course frame contains x and y coordinates
     [top_left], [top_right], [bottom_right], [bottom_left] = corners
 
     # Find conversion factor by real-world width and calculated pixel width
     conversion_factor = real_width / distance_in_pixels(top_left[0], top_left[1], top_right[0], top_right[1])
 
-    accuracy_test()
+    # Calculate irl-coordinates for the corners
+    irl_corners = [corner * conversion_factor for corner in corners]
+
+    print(corners)
+
+    try:
+        circles = getCirclesFromFrames(frame)
+
+        if circles is None:
+            raise BallsNotFoundException([circles])
+    except BallsNotFoundException:
+        print("No balls found. Skipping this frame")
+        continue
+
+    # Calculate irl_coordinates for the balls
+    balls = [ball * conversion_factor for ball in circles[0, :]]
+
+    # Unpack outer array of nested array that is not needed
+    [balls] = [balls]
+
+    # Print irl-coordinates for all balls
+    print(balls)
+
+    # For testing accuracy between two balls. TODO: Should be done elsewhere by calling this method
+    accuracy_test(balls)
 
     cv.imshow("frame", frame)
     if cv.waitKey(1) & 0xFF == ord('q'):
