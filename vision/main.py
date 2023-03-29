@@ -132,13 +132,13 @@ def distance_in_pixels(x1, y1, x2, y2):
     return math.sqrt(math.pow((x2 - x1), 2) + math.pow((y2 - y1), 2))
 
 
-# A quick accuracy test with the height of the frame
-def accuracy_test():
-    # The length of the course frame calculated with pixels
-    pixel_length = distance_in_pixels(top_right[0], top_right[1], bottom_right[0], bottom_right[1])
-    calc = pixel_length * conversion_factor
-    print(calc)
-    return calc
+# Test distance between 2 balls
+def accuracy_test(balls_test):
+    if len(balls) == 2:
+        one = balls_test[0]
+        two = balls_test[1]
+        dist = distance_in_pixels(one[0], one[1], two[0], two[1])
+        print(dist)
 
 
 # Width and height of course frame on the inner side in cm
