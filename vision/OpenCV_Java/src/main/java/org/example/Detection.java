@@ -115,7 +115,7 @@ public class Detection {
         return coords;
     }
 
-    public static void getBorderFromFrame(Mat frame) {
+    public static Point[] getBorderFromFrame(Mat frame) {
         Mat frameHSV = new Mat();
         Mat maskRed = new Mat();
         Mat frameCourse = new Mat();
@@ -128,7 +128,8 @@ public class Detection {
         // Remove every thing from frame except border (which is red)
         Scalar lower = new Scalar(0, 150, 150);
         Scalar upper = new Scalar(10, 255, 255);
-        Core.inRange(frameHSV, lower, upper,maskRed);
+        Core.inRange(frameHSV, lower, upper, maskRed);
+        Core.bitwise_and(frame, frame, frameCourse, maskRed);
 
         // Greyscale and blur
         Imgproc.cvtColor(frameCourse, frameGray, Imgproc.COLOR_BGR2GRAY);
@@ -139,12 +140,14 @@ public class Detection {
         Mat dummyHierarchy = new Mat();
         Imgproc.findContours(frameBlur, contours, dummyHierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
 
+        // Find border from contours
+        MatOfPoint2f lines = new MatOfPoint2f();
         for (MatOfPoint contour : contours) {
             MatOfPoint2f contourConverted = new MatOfPoint2f(contour.toArray());
 
             // Approximate polygon of contour
             MatOfPoint2f approx = new MatOfPoint2f();
-            Imgproc.approxPolyDP( // TODO this might be wrong
+            Imgproc.approxPolyDP(
                     contourConverted,
                     approx,
                     0.01 * Imgproc.arcLength(contourConverted, true),
@@ -152,10 +155,30 @@ public class Detection {
 
             );
 
-            // Make sure polygon has 4 vertices
             if (approx.toArray().length == 4) {
-                System.out.println(approx.toArray()[0]);
+                lines = approx;
+                break;
             }
         }
+
+        // End if lines are not found
+        if (lines.empty()) return null;
+
+        // Get as array
+        Point[] linePoints = lines.toArray();
+
+        // Get offset
+        double offsetX = linePoints[0].x;
+        double offsetY = linePoints[0].y;
+
+        // Calculate corners
+        Point[] corners = new Point[linePoints.length];
+        for (int i = 0; i < corners.length; i++) {
+            Point point = linePoints[i];
+
+            corners[i] = new Point(point.x - offsetX, point.y - offsetY);
+        }
+
+        return corners;
     }
 }
