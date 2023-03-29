@@ -4,72 +4,70 @@ import cv2 as cv
 
 # https://stackoverflow.com/questions/59363937/opencv-detecting-an-object-and-its-rotation
 
-video = cv.VideoCapture(0)
+video = cv.VideoCapture(2)
+
+def getCenterAndDirectionCoords(frame):
+    hsvFrame = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+
+    # Optional
+    hsv_blur = cv.GaussianBlur(hsvFrame, (7, 7), 0)
+
+    # Create mask
+    blue_upper = np.array([255, 255, 255])
+    blue_lower = np.array([100, 100, 50])
+    blue_mask = cv.inRange(hsv_blur, blue_lower, blue_upper)
+
+    # Inverting
+    mask = (255 - blue_mask)
+
+    # Get contours
+    contours, heirarchy = cv.findContours(mask, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+
+    # Find contours with an area within a threshold
+    ls = []
+    for cnt in contours:
+        area = cv.contourArea(cnt)
+        if 80 < area < 350:
+            ls.append([area, cnt])
+
+    centerCoords = []
+    directionCoords = []
+
+    # Get centers for 2 biggest contours
+    if len(ls) >= 2:
+        # Sort to the biggest item first
+        ls.sort(key=lambda x: x[0], reverse=True)
+
+        for i in range(2):  # Change to 2
+            contour = ls[i][1]
+            print(cv.contourArea(contour))
+
+            xRect, yRect, wRect, hRect = cv.boundingRect(contour)  # get bounding rectangle
+
+            # Visual only
+            cv.rectangle(frame, (xRect, yRect), (xRect + wRect, yRect + hRect), (255, 0, 0), 2)
+            cv.rectangle(frame, (xRect + int(wRect / 2) - 2, yRect + int(hRect / 2) - 2),
+                         (xRect + int(wRect / 2) + 2, yRect + int(hRect / 2) + 2), (255, 0, 0), 2)
+
+            if i == 0:
+                centerCoords = [xRect + int(wRect / 2), yRect + int(hRect / 2)]
+            if i == 1:
+                directionCoords = [xRect + int(wRect / 2), yRect + int(hRect / 2)]
+
+    cv.imshow("mask", mask)
+    return centerCoords, directionCoords
 
 while True:
     ret, frame = video.read()
     if not ret:
         break
 
-    # Get frame size
-    frameWidth = video.get(cv.CAP_PROP_FRAME_WIDTH)
-    frameHeight = video.get(cv.CAP_PROP_FRAME_HEIGHT)
+    centerCoords, dirCoords = getCenterAndDirectionCoords(frame)
 
-    hsvFrame = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
-
-    # Optional
-    hsv_blur = cv.GaussianBlur(hsvFrame, (11, 11), 0)
-
-    # Create mask
-    green_upper = np.array([255, 255, 255])
-    green_lower = np.array([50, 90, 90])
-    green_mask = cv.inRange(hsv_blur, green_lower, green_upper)
-
-    # Inverting
-    mask = (255-green_mask)
-
-    # Get threshold
-    # ret, thresh = cv2.threshold(green_mask, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
-    # Get contours
-    contours, heirarchy = cv.findContours(mask, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
-
-    for cnt in contours:
-        area = cv.contourArea(cnt)
-
-        if 3000 < area < 30000:  # Contour area size
-            xRect, yRect, wRect, hRect = cv2.boundingRect(cnt)  # get bounding rectangle around biggest contour to crop to
-            markerRect = cv2.rectangle(frame, (xRect, yRect), (xRect + wRect, yRect + hRect), (255, 0, 0), 2)
-
-            crop = mask[yRect:yRect + hRect, xRect:xRect + wRect]  # crop to size
-
-            # Find line
-            edges = cv.Canny(crop, 30, 200, apertureSize=3)  # Change thresholds
-            lines = cv.HoughLines(edges, 1, np.pi/180, 50)
-
-            img = cv.cvtColor(crop, cv2.COLOR_GRAY2BGR)  # Convert cropped black and white image to color to draw the red line
-
-            # lines[0]'s theta is the rotation.
-            if lines is not None:
-                for rho, theta in lines[0]:
-                    # Get line coefficients
-                    a = np.cos(theta)
-                    b = np.sin(theta)
-
-                    # Calculate line position
-                    x0 = a * rho
-                    y0 = b * rho
-
-                    # !!! The lines positions !!!
-                    x1 = int(x0 + 1000 * (-b) + xRect)
-                    y1 = int(y0 + 1000 * (a) + yRect)
-                    x2 = int(x0 - 1000 * (-b) + xRect)
-                    y2 = int(y0 - 1000 * (a) + yRect)
-
-                    cv.line(frame, (x1, y1), (x2, y2), (0, 0, 255), 2)  # draw line
-
+    # Show frame
     cv.imshow("frame", frame)
-    cv.imshow("mask", mask)
+
+
     # cv.imshow("hsvframe", hsvFrame)
 
     if cv.waitKey(1) & 0xFF == ord('q'):
