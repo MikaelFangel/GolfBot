@@ -3,11 +3,9 @@ import math
 import numpy as np
 import cv2 as cv
 
-video = cv.VideoCapture(0)
 
-
-class CourseFrameNotFoundException(Exception):
-    """Camera Exception raised for errors detecting the course frame.
+class BallsNotFoundException(Exception):
+    """Camera Exception raised for when not detecting any balls.
 
         Attributes:
             data -- the intercepted data of the camera
@@ -15,7 +13,21 @@ class CourseFrameNotFoundException(Exception):
         """
 
     def __init__(self, data,
-                 message="Camera expected to detect 4 lines from the course frame to be able to calculate a coordinate system"):
+                 message="Camera expected to detect at least 1 lines to be able to calculate coordinates"):
+        self.data = data
+        self.message = message
+
+
+class CourseFrameNotFoundException(Exception):
+    """Camera Exception raised for not detecting the course frame.
+
+        Attributes:
+            data -- the intercepted data of the camera
+            message -- explanation of the error
+        """
+
+    def __init__(self, data,
+                 message="Camera expected to detect exactly 4 lines from the course frame to be able to calculate a coordinate system"):
         self.data = data
         self.message = message
 
@@ -108,36 +120,40 @@ def getCirclesFromFrames(frame):
 
     if circles is not None:
         # Round the values to unsigned integers
-        circles = np.uint16(np.around(circles))
+        circles = np.uint16(circles)
         for (x, y, r) in circles[0, :]:
             # draw the circle
             cv.circle(frame, (x, y), r, (0, 255, 0), 2)
+        return circles
 
 
-# Calculate the distance given two points
-distance_in_pixels = lambda x1, y1, x2, y2: math.sqrt(math.pow((x2 - x1), 2) + math.pow((y2 - y1), 2))
+# Calculate the distance given two points. Mostly used for accuracy tests
+def distance_in_pixels(x1, y1, x2, y2):
+    return math.sqrt(math.pow((x2 - x1), 2) + math.pow((y2 - y1), 2))
 
 
-# A quick accuracy test with the height of the frame
-def accuracy_test():
-    # The length of the course frame calculated with pixels
-    pixel_length = distance_in_pixels(top_right[0], top_right[1], bottom_right[0], bottom_right[1])
-    calc = pixel_length * conversion_factor
-    print(calc)
-    return calc
+# Test distance between 2 balls
+def accuracy_test(balls_test):
+    if len(balls) == 2:
+        one = balls_test[0]
+        two = balls_test[1]
+        dist = distance_in_pixels(one[0], one[1], two[0], two[1])
+        print(dist)
 
 
 # Width and height of course frame on the inner side in cm
 real_width = 167
-real_heigth = 122
+real_height = 122
+
+video = cv.VideoCapture(0)
 
 while True:
     # grab the current frame
     ret, frame = video.read()
+
+    # If no frame is read, return
     if not ret:
         break
-
-    getCirclesFromFrames(frame)
 
     try:
         lines = getCourseLinesFromFramesWithContours(frame)
@@ -154,13 +170,37 @@ while True:
     # Unpack a layer of nested array that is not needed. TODO: Check where this extra array comes from
     [corners] = [corners]
 
-    # Unpack all subarrays for each point that contains x and y coordinates
+    # Unpack two points for each point that of the length of the course frame contains x and y coordinates
     [top_left], [top_right], [bottom_right], [bottom_left] = corners
 
     # Find conversion factor by real-world width and calculated pixel width
     conversion_factor = real_width / distance_in_pixels(top_left[0], top_left[1], top_right[0], top_right[1])
 
-    accuracy_test()
+    # Calculate irl-coordinates for the corners
+    irl_corners = [corner * conversion_factor for corner in corners]
+
+    print(corners)
+
+    try:
+        circles = getCirclesFromFrames(frame)
+
+        if circles is None:
+            raise BallsNotFoundException([circles])
+    except BallsNotFoundException:
+        print("No balls found. Skipping this frame")
+        continue
+
+    # Calculate irl_coordinates for the balls
+    balls = [ball * conversion_factor for ball in circles[0, :]]
+
+    # Unpack outer array of nested array that is not needed
+    [balls] = [balls]
+
+    # Print irl-coordinates for all balls
+    print(balls)
+
+    # For testing accuracy between two balls. TODO: Should be done elsewhere by calling this method
+    accuracy_test(balls)
 
     cv.imshow("frame", frame)
     if cv.waitKey(1) & 0xFF == ord('q'):
