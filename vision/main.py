@@ -124,6 +124,7 @@ def getCirclesFromFrames(frame):
         for (x, y, r) in circles[0, :]:
             # draw the circle
             cv.circle(frame, (x, y), r, (0, 255, 0), 2)
+        return circles
 
 
 # Calculate the distance given two points
