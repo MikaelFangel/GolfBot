@@ -1,27 +1,31 @@
 package org.example;
 
-import org.example.helper.ContourSet;
+import org.example.helperClasses.ContourSet;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.videoio.VideoCapture;
 
 import java.util.*;
 
 public class Detection {
-    public static ArrayList<double[]> getCirclesFromFrame(Mat frame) {
+    /**
+     * Returns a list of coordinates for each circle found on the board
+     * @param frame
+     * @return List({x, y}, {x, y} ...)
+     */
+    public static ArrayList<double[]> getCircleCoordsFromFrame(Mat frame) {
         //Converting the image to Gray and blur it
-        Mat frame_gray = new Mat();
-        Imgproc.cvtColor(frame, frame_gray, Imgproc.COLOR_RGBA2GRAY);
-        Mat frame_blur = new Mat();
-        Imgproc.medianBlur(frame_gray, frame_blur, 5);
+        Mat frameGray = new Mat();
+        Mat frameBlur = new Mat();
 
+        Imgproc.cvtColor(frame, frameGray, Imgproc.COLOR_BGR2GRAY);
+        Imgproc.medianBlur(frameGray, frameBlur, 5);
 
         ArrayList<double[]> circleCoords = new ArrayList<>();
 
         if (!frame.empty()) {
             // Get circles from frame
             Mat circles = new Mat();
-            Imgproc.HoughCircles(frame_blur, circles, Imgproc.HOUGH_GRADIENT, 1, 30, 20, 17, 6, 8);
+            Imgproc.HoughCircles(frameBlur, circles, Imgproc.HOUGH_GRADIENT, 1, 50, 25, 17, 4, 8);
 
             // Add circle coords to return arraylist
             if (!circles.empty()) {
@@ -41,37 +45,38 @@ public class Detection {
     }
 
     /**
+     * Returns and 2 long list of coordinates. First coordinates for the biggest marker
+     * the second for the next biggest one.
      * @param frame
      * @return List(centerCoords, directionCoords)
      */
     public static ArrayList<double[]> getRotationCoordsFromFrame(Mat frame) {
-        final int area_lower = 60;
-        final int area_upper = 350;
+        final int areaLower = 60;
+        final int areaUpper = 350;
 
-        // Convert frame to HSV
-        Mat hsv_frame = new Mat();
-        Imgproc.cvtColor(frame, hsv_frame, Imgproc.COLOR_BGR2HSV);
+        // Transform frame
+        Mat frameHSV = new Mat();
+        Mat frameBlur = new Mat();
 
-        // Blur the frame
-        Mat blur_frame = new Mat();
-        Imgproc.GaussianBlur(frame, blur_frame, new Size(7,7), 7, 0);
+        Imgproc.cvtColor(frame, frameHSV, Imgproc.COLOR_BGR2HSV);
+        Imgproc.GaussianBlur(frame, frameBlur, new Size(7,7), 7, 0);
 
         // Create a mask
         Mat mask = new Mat();
         Scalar lower = new Scalar(100, 100, 50);
         Scalar upper = new Scalar(255, 255, 255);
-        Core.inRange(blur_frame, lower, upper, mask);
+        Core.inRange(frameBlur, lower, upper, mask);
 
         // Get Contours
         List<MatOfPoint> contours = new ArrayList<>();
-        Mat dummy_hierarchy = new Mat();
-        Imgproc.findContours(mask, contours, dummy_hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+        Mat dummyHierarchy = new Mat();
+        Imgproc.findContours(mask, contours, dummyHierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
 
         // Get useful contour areas
         ArrayList<ContourSet> newList = new ArrayList<>();
         for (MatOfPoint contour : contours) {
             double area = Imgproc.contourArea(contour);
-            if (area >= area_lower && area <= area_upper) {
+            if (area >= areaLower && area <= areaUpper) {
                 newList.add(new ContourSet(area, contour));
             }
         }
@@ -108,5 +113,49 @@ public class Detection {
         coords.add(directionCoords);
 
         return coords;
+    }
+
+    public static void getBorderFromFrame(Mat frame) {
+        Mat frameHSV = new Mat();
+        Mat maskRed = new Mat();
+        Mat frameCourse = new Mat();
+        Mat frameGray = new Mat();
+        Mat frameBlur = new Mat();
+
+        // Convert to HSV and
+        Imgproc.cvtColor(frame, frameHSV, Imgproc.COLOR_BGR2HSV);
+
+        // Remove every thing from frame except border (which is red)
+        Scalar lower = new Scalar(0, 150, 150);
+        Scalar upper = new Scalar(10, 255, 255);
+        Core.inRange(frameHSV, lower, upper,maskRed);
+
+        // Greyscale and blur
+        Imgproc.cvtColor(frameCourse, frameGray, Imgproc.COLOR_BGR2GRAY);
+        Imgproc.GaussianBlur(frameGray, frameBlur, new Size(9, 9), 0);
+
+        // Find contours
+        List<MatOfPoint> contours = new ArrayList<>();
+        Mat dummyHierarchy = new Mat();
+        Imgproc.findContours(frameBlur, contours, dummyHierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        for (MatOfPoint contour : contours) {
+            MatOfPoint2f contourConverted = new MatOfPoint2f(contour.toArray());
+
+            // Approximate polygon of contour
+            MatOfPoint2f approx = new MatOfPoint2f();
+            Imgproc.approxPolyDP( // TODO this might be wrong
+                    contourConverted,
+                    approx,
+                    0.01 * Imgproc.arcLength(contourConverted, true),
+                    true
+
+            );
+
+            // Make sure polygon has 4 vertices
+            if (approx.toArray().length == 4) {
+                System.out.println(approx.toArray()[0]);
+            }
+        }
     }
 }

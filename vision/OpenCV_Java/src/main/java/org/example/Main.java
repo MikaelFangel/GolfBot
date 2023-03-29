@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import static org.example.Detection.*;
 
 public class Main {
+    int realWidth = 167;
+    int realHeight = 122;
+
     public static void main(String[] args) {
         // Initialize library
         OpenCV.loadLocally();

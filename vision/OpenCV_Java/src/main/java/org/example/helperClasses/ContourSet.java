@@ -1,8 +1,6 @@
-package org.example.helper;
+package org.example.helperClasses;
 
 import org.opencv.core.MatOfPoint;
-
-import java.util.List;
 
 public class ContourSet {
     public Double area;
