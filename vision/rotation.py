@@ -15,10 +15,10 @@ def getCenterAndDirectionCoords(frame):
     # Create mask
     blue_upper = np.array([255, 255, 255])
     blue_lower = np.array([100, 100, 50])
-    blue_mask = cv.inRange(hsv_blur, blue_lower, blue_upper)
+    mask = cv.inRange(hsv_blur, blue_lower, blue_upper)
 
     # Inverting
-    mask = (255 - blue_mask)
+    # mask = (255 - blue_mask)
 
     # Get contours
     contours, heirarchy = cv.findContours(mask, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
@@ -27,7 +27,7 @@ def getCenterAndDirectionCoords(frame):
     ls = []
     for cnt in contours:
         area = cv.contourArea(cnt)
-        if 80 < area < 350:
+        if 50 < area < 350:
             ls.append([area, cnt])
 
     centerCoords = []
