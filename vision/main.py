@@ -120,7 +120,7 @@ def getCirclesFromFrames(frame):
 
     if circles is not None:
         # Round the values to unsigned integers
-        circles = np.uint16(np.around(circles))
+        circles = np.uint16(circles)
         for (x, y, r) in circles[0, :]:
             # draw the circle
             cv.circle(frame, (x, y), r, (0, 255, 0), 2)
