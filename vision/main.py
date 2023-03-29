@@ -155,9 +155,8 @@ while True:
     if not ret:
         break
 
-    try:
-        lines = getCourseLinesFromFramesWithContours(frame)
-    except CourseFrameNotFoundException:
+    lines = getCourseLinesFromFramesWithContours(frame)
+    if len(lines) != 4:
         print("Course frame not found. Skip this frame")
         continue
 
@@ -181,12 +180,9 @@ while True:
 
     print(corners)
 
-    try:
-        circles = getCirclesFromFrames(frame)
+    circles = getCirclesFromFrames(frame)
 
-        if circles is None:
-            raise BallsNotFoundException([circles])
-    except BallsNotFoundException:
+    if circles is None:
         print("No balls found. Skipping this frame")
         continue
 
