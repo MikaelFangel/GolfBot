@@ -5,10 +5,7 @@ import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Detection {
     public static ArrayList<double[]> getCirclesFromFrame(Mat frame) {
@@ -86,7 +83,8 @@ public class Detection {
         double[] centerCoords = {-1, -1}, directionCoords = {-1, -1};
 
         // Sort list to biggest first
-        // TODO newList.sort();
+        newList.sort(Comparator.comparingDouble(set -> set.area));
+        Collections.reverse(newList);
 
         for (int i = 0; i < 2; i++) { // Loop through 2 biggest contours
             MatOfPoint contour = newList.get(i).contour;
