@@ -56,9 +56,10 @@ func main() {
 
 // getMotorHandle Returns the TachoMotor equivalent to the port given (e.g. port "A").
 func getMotorHandle(port string) (*ev3dev.TachoMotor, error) {
-	fmt.Println("Hej")
-	fmt.Println(pBuff.Type_large.String())
-	return ev3dev.TachoMotorFor("ev3-ports:out"+port, largeMotor)
+	fmt.Println(pBuff.Type(0), "1")
+	fmt.Println(pBuff.E_MyEnumValueOption, 2)
+
+	return ev3dev.TachoMotorFor("ev3-ports:out"+port, pBuff.Type_large.String())
 }
 
 // isRunning Returns true if the speed of the given motor is not zero, otherwise false.
@@ -75,7 +76,6 @@ func (s *motorServer) RunMotors(ctx context.Context, in *pBuff.MultipleMotors) (
 
 	// Gets the motors and sets their speeds, which is specified on client side.
 	for i, request := range in.GetMotor() {
-		fmt.Println("Noget sjovt")
 		motor, err := getMotorHandle(request.GetMotorPort().String())
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err

@@ -22,17 +22,17 @@ service Motors {
 }
 
 extend google.protobuf.EnumValueOptions {
-  optional string enumvalue = 51234; // specific value??
+  optional string my_enum_value_option = 50005; // specific value??
 }
 // Motortypes
 enum Type {
-  large = 0 [(enumvalue) = "lego-ev3-l-motor"];
-  medium = 1;
-  small = 2; // For possible future needs - not used
+  large = 0 [(my_enum_value_option) = "lego-ev3-l-motor"];
+  medium = 1 [(my_enum_value_option) = "lego-ev3-m-motor"];
+  small = 2 [(my_enum_value_option) = "lego-ev3-s-motor"]; // For possible future needs - not used
 }
 
 message Motortype {
-  Type type = 1;
+  Type enum = 1;
 }
 
 // Ports on EV3
