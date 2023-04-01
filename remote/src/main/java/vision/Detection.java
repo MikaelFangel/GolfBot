@@ -105,12 +105,12 @@ public class Detection {
 
             // Get center of rectangles
             if (i == 0) { // For center marker
-                centerCoords[0] = rect.x + rect.width / 2;
-                centerCoords[1] = rect.y + rect.height / 2;
+                centerCoords[0] = rect.x + rect.width / 2.;
+                centerCoords[1] = rect.y + rect.height / 2.;
             }
-            if (i == 1) { // For direction marker
-                directionCoords[0] = rect.x + rect.width / 2;
-                directionCoords[1] = rect.y + rect.height / 2;
+            else if (i == 1) { // For direction marker
+                directionCoords[0] = rect.x + rect.width / 2.;
+                directionCoords[1] = rect.y + rect.height / 2.;
             }
         }
 
@@ -137,7 +137,7 @@ public class Detection {
         // Convert to HSV and
         Imgproc.cvtColor(frame, frameHSV, Imgproc.COLOR_BGR2HSV);
 
-        // Remove every thing from frame except border (which is red)
+        // Remove everything from frame except border (which is red)
         Scalar lower = new Scalar(0, 150, 150);
         Scalar upper = new Scalar(10, 255, 255);
         Core.inRange(frameHSV, lower, upper, maskRed);

@@ -26,8 +26,8 @@ public class Main {
 
                 if (frame.empty()) break;
 
-                Point[] circleCoords = getCircleCoordsFromFrame(frame);
-                Point[] rotationCoords = getRotationCoordsFromFrame(frame);
+                Point[] ballCoords = getCircleCoordsFromFrame(frame);
+                Point[] robotMarkerCoords = getRotationCoordsFromFrame(frame); // Used for rotation
 
                 // Get border coords
                 Point topLeft = null, topRight = null, bottomRight = null, bottomLeft = null;
