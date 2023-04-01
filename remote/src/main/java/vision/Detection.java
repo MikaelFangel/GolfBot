@@ -17,15 +17,15 @@ public class Detection {
         Mat frameGray = new Mat();
         Mat frameBlur = new Mat();
 
-        Imgproc.cvtColor(frame, frameGray, Imgproc.COLOR_BGR2GRAY);
-        Imgproc.medianBlur(frameGray, frameBlur, 5);
+        Imgproc.GaussianBlur(frame, frameBlur, new Size(9,9), 0);
+        Imgproc.cvtColor(frameBlur, frameGray, Imgproc.COLOR_BGR2GRAY);
 
         ArrayList<double[]> circleCoords = new ArrayList<>();
 
         if (!frame.empty()) {
             // Get circles from frame
             Mat circles = new Mat();
-            Imgproc.HoughCircles(frameBlur, circles, Imgproc.HOUGH_GRADIENT, 1, 50, 25, 17, 4, 8);
+            Imgproc.HoughCircles(frameGray, circles, Imgproc.HOUGH_GRADIENT, 1, 50, 25, 17, 4, 8);
 
             // Add circle coords to return arraylist
             if (!circles.empty()) {
@@ -44,7 +44,7 @@ public class Detection {
         // Convert to Point[]
         Point[] coords = new Point[circleCoords.size()];
         for (int i = 0; i < coords.length; i++) {
-            coords[i] = new Point(circleCoords.get(0));
+            coords[i] = new Point(circleCoords.get(i));
         }
 
         return coords;
@@ -88,7 +88,7 @@ public class Detection {
         }
 
         // Exit if there are not two coordinates
-        if (newList.size() < 2) return null;
+        if (newList.size() < 2) return new Point[]{};
 
         // ! Find coords of markers !
         double[] centerCoords = {-1, -1}, directionCoords = {-1, -1};
@@ -117,7 +117,7 @@ public class Detection {
         // Convert to Point []
         Point[] coords = new Point[2];
         coords[0] = new Point(centerCoords);
-        coords[1] = new Point(centerCoords);
+        coords[1] = new Point(directionCoords);
 
         return coords;
     }

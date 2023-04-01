@@ -15,7 +15,7 @@ public class Main {
         OpenCV.loadLocally();
 
         VideoCapture capture = new VideoCapture();
-        capture.open(0); // Might need to be changed
+        capture.open(2); // Might need to be changed
         // capture.open("/home/frederik/Desktop/border.mp4");
 
         // Main Loop
@@ -30,21 +30,64 @@ public class Main {
                 Point[] rotationCoords = getRotationCoordsFromFrame(frame);
 
                 // Get border coords
+                Point topLeft = null, topRight = null, bottomRight = null, bottomLeft = null;
+                Point irlTopLeft = null, irlTopRight = null, irlBottomLeft = null, irlBottomRight = null;
+
                 Point[] cornerCoords = getBorderFromFrame(frame);
+
+                double conversionFactor = 0;
                 if (cornerCoords != null) {
-                    Point topLeft = new Point(cornerCoords[0].x, cornerCoords[0].y);
-                    Point topRight = new Point(cornerCoords[1].x, cornerCoords[1].y);
-                    Point bottomRight = new Point(cornerCoords[2].x, cornerCoords[2].y);
-                    Point bottomLeft = new Point(cornerCoords[3].x, cornerCoords[3].y);
+                    topLeft = new Point(cornerCoords[0].x, cornerCoords[0].y);
+                    topRight = new Point(cornerCoords[1].x, cornerCoords[1].y);
+                    bottomRight = new Point(cornerCoords[2].x, cornerCoords[2].y);
+                    bottomLeft = new Point(cornerCoords[3].x, cornerCoords[3].y);
 
                     // Get irl coordinates
-                    double conversionFactor = realWidth / distanceBetweenTwoPoints(topLeft.x, topLeft.y, topRight.x, topRight.y);
+                    conversionFactor = realWidth / distanceBetweenTwoPoints(topLeft.x, topLeft.y, topRight.x, topRight.y);
 
-                    Point irlTopLeft = new Point(cornerCoords[0].x * conversionFactor, cornerCoords[0].y * conversionFactor);
-                    Point irlTopRight = new Point(cornerCoords[1].x * conversionFactor, cornerCoords[1].y * conversionFactor);
-                    Point irlBottomRight = new Point(cornerCoords[2].x * conversionFactor, cornerCoords[2].y * conversionFactor);
-                    Point irlBottomLeft = new Point(cornerCoords[3].x * conversionFactor, cornerCoords[3].y * conversionFactor);
+                    irlTopLeft = new Point(cornerCoords[0].x * conversionFactor, cornerCoords[0].y * conversionFactor);
+                    irlTopRight = new Point(cornerCoords[1].x * conversionFactor, cornerCoords[1].y * conversionFactor);
+                    irlBottomRight = new Point(cornerCoords[2].x * conversionFactor, cornerCoords[2].y * conversionFactor);
+                    irlBottomLeft = new Point(cornerCoords[3].x * conversionFactor, cornerCoords[3].y * conversionFactor);
                 }
+
+                // Pure debugging
+                System.out.println("\n### New Frame ###");
+
+                System.out.println("-- Pixel Coords --");
+                for (Point circle: circleCoords) {
+                    System.out.println("Circle: " + circle.x + ", " + circle.y);
+                }
+
+                System.out.println(" ");
+                for (Point rotation: rotationCoords) {
+                    System.out.println("Rotation: " + rotation.x + ", " + rotation.y);
+                }
+                System.out.println(" ");
+
+                if (topLeft != null) { // They will all be not null at the same time
+                    System.out.println("TopLeft: " + topLeft.x + ", " + topLeft.y);
+                    System.out.println("TopRight: " + topRight.x + ", " + topRight.y);
+                    System.out.println("BottomLeft: " + bottomLeft.x + ", " + bottomLeft.y);
+                    System.out.println("BottomRight: " + bottomRight.x + ", " + bottomRight.y);
+                }
+                System.out.println(" ");
+
+                System.out.println("-- Irl Coords --");
+
+                for (Point circle: circleCoords) {
+                    if (conversionFactor != 0)
+                        System.out.println("Circle: " + circle.x * conversionFactor + ", " + circle.y * conversionFactor);
+                }
+                System.out.println(" ");
+
+                if (irlTopLeft != null) { // They will all be not null at the same time
+                    System.out.println("TopLeft: " + irlTopLeft.x + ", " + irlTopLeft.y);
+                    System.out.println("TopRight: " + irlTopRight.x + ", " + irlTopRight.y);
+                    System.out.println("BottomLeft: " + irlBottomLeft.x + ", " + irlBottomLeft.y);
+                    System.out.println("BottomRight: " + irlBottomRight.x + ", " + irlBottomRight.y);
+                }
+                System.out.println(" ");
             } else {
                 break;
             }
