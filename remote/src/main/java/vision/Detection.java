@@ -8,9 +8,9 @@ import java.util.*;
 
 public class Detection {
     /**
-     * Returns a list of coordinates for each circle found on the board
-     * @param frame
-     * @return List({x, y}, {x, y} ...)
+     * Returns a Point array of center coordinates for each circle found on the board.
+     * @param frame to be evaluated.
+     * @return Point array, with coordinates of the center for each circle.
      */
     public static Point[] getCircleCoordsFromFrame(Mat frame) {
         //Converting the image to Gray and blur it
@@ -52,13 +52,14 @@ public class Detection {
 
     /**
      * Returns and 2 long list of coordinates. First coordinates for the biggest marker
-     * the second for the next biggest one.
-     * @param frame
-     * @return Returns List(centerCoords, directionCoords) or null
+     * the second for the next biggest one. Both on the robot.
+     * The markers have to be blue.
+     * @param frame that needs to be evaluated.
+     * @return Returns array of points for the 2 markers.
      */
     public static Point[] getRotationCoordsFromFrame(Mat frame) {
-        final int areaLower = 60;
-        final int areaUpper = 350;
+        final int areaLowerThreshold = 60;
+        final int areaUpperThreshold = 350;
 
         // Transform frame
         Mat frameHSV = new Mat();
@@ -79,26 +80,26 @@ public class Detection {
         Imgproc.findContours(mask, contours, dummyHierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
 
         // Get useful contour areas
-        ArrayList<ContourSet> newList = new ArrayList<>();
+        ArrayList<ContourSet> contourSets = new ArrayList<>();
         for (MatOfPoint contour : contours) {
             double area = Imgproc.contourArea(contour);
-            if (area >= areaLower && area <= areaUpper) {
-                newList.add(new ContourSet(area, contour));
+            if (area >= areaLowerThreshold && area <= areaUpperThreshold) {
+                contourSets.add(new ContourSet(area, contour));
             }
         }
 
         // Exit if there are not two coordinates
-        if (newList.size() < 2) return new Point[]{};
+        if (contourSets.size() < 2) return new Point[]{};
 
         // ! Find coords of markers !
         double[] centerCoords = {-1, -1}, directionCoords = {-1, -1};
 
-        // Sort list to biggest first
-        newList.sort(Comparator.comparingDouble(set -> set.area));
-        Collections.reverse(newList);
+        // Sort list to descending order.
+        contourSets.sort(Comparator.comparingDouble(set -> set.area));
+        Collections.reverse(contourSets);
 
         for (int i = 0; i < 2; i++) { // Loop through 2 biggest contours
-            MatOfPoint contour = newList.get(i).contour;
+            MatOfPoint contour = contourSets.get(i).contour;
 
             // Get bounding rectangle
             Rect rect = Imgproc.boundingRect(contour);
@@ -114,7 +115,7 @@ public class Detection {
             }
         }
 
-        // Convert to Point []
+        // Convert to Point[]
         Point[] coords = new Point[2];
         coords[0] = new Point(centerCoords);
         coords[1] = new Point(directionCoords);
@@ -123,9 +124,9 @@ public class Detection {
     }
 
     /**
-     * Returns the coordinates of the border.
-     * @param frame
-     * @return null or is of length 4
+     * Returns the coordinates of the border of the course.
+     * @param frame to be evaluated
+     * @return null if there are not found exactly 4 lines, else the 4 coordinates of the border intersections.
      */
     public static Point[] getBorderFromFrame(Mat frame) {
         Mat frameHSV = new Mat();
@@ -167,6 +168,7 @@ public class Detection {
 
             );
 
+            // Exit if the four lines are found.
             if (approx.toArray().length == 4) {
                 lines = approx;
                 break;
