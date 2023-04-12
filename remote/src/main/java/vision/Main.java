@@ -51,10 +51,35 @@ public class Main {
                     irlBottomLeft = new Point(cornerCoords[3].x * conversionFactor, cornerCoords[3].y * conversionFactor);
                 }
 
+                if (ballCoords.length != 0 && robotMarkerCoords.length != 0) {
+                    // Find the closest ball
+                    Point centerMarker = robotMarkerCoords[0];
+                    Point rotationMarker = robotMarkerCoords[1];
+                    Point closestBall = findClosestBall(ballCoords, centerMarker);
+
+                    // Calculate polar coordinates to get rotation.
+                    double distance = distanceBetweenTwoPoints(centerMarker.x, centerMarker.y, closestBall.x, closestBall.y);
+
+                    double angleRobot = angleBetweenTwoPoints(centerMarker.x, centerMarker.y, rotationMarker.x, rotationMarker.y);
+                    double angleBall = angleBetweenTwoPoints(centerMarker.x, centerMarker.y, closestBall.x, closestBall.y);
+
+                    if (conversionFactor != 0) {
+                        System.out.println("Distance: " + distance * conversionFactor + ", RobotAngle: " + angleRobot +"\n");
+                    }
+                    /*
+                    System.out.println("\nDistance: " + distance + ", Angle: " + angleDiff);
+                    if (conversionFactor != 0) {
+                        System.out.println("irlDistance: " + distance * conversionFactor + ", Angle: " + angleDiff +"\n");
+                    }
+                    */
+                }
+
                 // Pure debugging
+                /*
                 System.out.println("\n### New Frame ###");
 
                 System.out.println("-- Pixel Coords --");
+
                 for (Point ball: ballCoords) {
                     System.out.println("Circle: " + ball.x + ", " + ball.y);
                 }
@@ -88,6 +113,8 @@ public class Main {
                     System.out.println("BottomRight: " + irlBottomRight.x + ", " + irlBottomRight.y);
                 }
                 System.out.println(" ");
+
+                 */
             } else {
                 break;
             }
@@ -96,5 +123,38 @@ public class Main {
 
     private static double distanceBetweenTwoPoints(double x1, double y1, double x2, double y2) {
         return Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2));
+    }
+
+    private static double angleBetweenTwoPoints(double x1, double y1, double x2, double y2){
+        double angle = Math.atan( (y2-y1) / (x2-x1)) * 180/Math.PI;
+
+        // Add depending on quadrant
+        if (x2 - x1 <= 0 && y2 - y1 >= 0) // Quadrant 2
+            angle += 180;
+        else if (x2 - x1 <= 0 && y2 - y1 <= 0) // Quadrant 3
+            angle += 180;
+        else if (x2 - x1 >= 0 && y2 - y1 <= 0) // Quadrant 4
+            angle += 360;
+
+        return angle;
+    }
+
+    private static Point findClosestBall(Point[] balls, Point centerMarker){
+        if (balls.length == 0) return null;
+        Point closestBall = balls[0];
+        double closestDistance = distanceBetweenTwoPoints(closestBall.x, closestBall.y, centerMarker.x, centerMarker.y);
+
+        // Find ball closest to centerMarker
+        for (int i = 0; i < balls.length; i++) {
+            Point ball = balls[i];
+            double distance = distanceBetweenTwoPoints(ball.x, ball.y, centerMarker.x, centerMarker.y);
+
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestBall = ball;
+            }
+        }
+
+        return closestBall;
     }
 }
