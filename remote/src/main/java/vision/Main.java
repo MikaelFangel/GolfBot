@@ -15,7 +15,7 @@ public class Main {
         OpenCV.loadLocally();
 
         VideoCapture capture = new VideoCapture();
-        capture.open(2); // Might need to be changed
+        capture.open(0); // Might need to be changed
         // capture.open("/home/frederik/Desktop/border.mp4");
 
         // Main Loop
@@ -55,13 +55,13 @@ public class Main {
                 System.out.println("\n### New Frame ###");
 
                 System.out.println("-- Pixel Coords --");
-                for (Point circle: circleCoords) {
-                    System.out.println("Circle: " + circle.x + ", " + circle.y);
+                for (Point ball: ballCoords) {
+                    System.out.println("Circle: " + ball.x + ", " + ball.y);
                 }
 
                 System.out.println(" ");
-                for (Point rotation: rotationCoords) {
-                    System.out.println("Rotation: " + rotation.x + ", " + rotation.y);
+                for (Point marker: robotMarkerCoords) {
+                    System.out.println("marker: " + marker.x + ", " + marker.y);
                 }
                 System.out.println(" ");
 
@@ -75,9 +75,9 @@ public class Main {
 
                 System.out.println("-- Irl Coords --");
 
-                for (Point circle: circleCoords) {
+                for (Point ball: ballCoords) {
                     if (conversionFactor != 0)
-                        System.out.println("Circle: " + circle.x * conversionFactor + ", " + circle.y * conversionFactor);
+                        System.out.println("ball: " + ball.x * conversionFactor + ", " + ball.y * conversionFactor);
                 }
                 System.out.println(" ");
 
