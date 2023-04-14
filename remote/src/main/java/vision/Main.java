@@ -2,7 +2,9 @@ package vision;
 
 import nu.pattern.OpenCV;
 import org.opencv.core.Mat;
+
 import org.opencv.core.Point;
+import org.opencv.highgui.HighGui;
 import org.opencv.videoio.VideoCapture;
 import static vision.Detection.*;
 
@@ -18,11 +20,16 @@ public class Main {
         capture.open(0); // Might need to be changed
         // capture.open("/home/frederik/Desktop/border.mp4");
 
+        // Create GUI
+
+        HighGui.namedWindow("frame");
+
         // Main Loop
         while (true) {
             if (capture.isOpened()) {
                 Mat frame = new Mat();
                 capture.read(frame);
+                HighGui.imshow("frame", frame); // Display frame
 
                 if (frame.empty()) break;
 
@@ -63,9 +70,13 @@ public class Main {
                     double angleRobot = angleBetweenTwoPoints(centerMarker.x, centerMarker.y, rotationMarker.x, rotationMarker.y);
                     double angleBall = angleBetweenTwoPoints(centerMarker.x, centerMarker.y, closestBall.x, closestBall.y);
 
+                    double angleDiff = angleBall - angleRobot;
+
                     if (conversionFactor != 0) {
-                        System.out.println("Distance: " + distance * conversionFactor + ", RobotAngle: " + angleRobot +"\n");
+                        System.out.println("DiffAngle: " + angleDiff +"\n");
                     }
+
+
                     /*
                     System.out.println("\nDistance: " + distance + ", Angle: " + angleDiff);
                     if (conversionFactor != 0) {
@@ -119,6 +130,8 @@ public class Main {
                 break;
             }
         }
+
+        HighGui.destroyAllWindows();
     }
 
     private static double distanceBetweenTwoPoints(double x1, double y1, double x2, double y2) {
