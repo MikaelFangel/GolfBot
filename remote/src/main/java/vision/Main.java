@@ -6,6 +6,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.highgui.HighGui;
 import org.opencv.videoio.VideoCapture;
+
 import static vision.Detection.*;
 
 public class Main {
@@ -20,16 +21,11 @@ public class Main {
         capture.open(0); // Might need to be changed
         // capture.open("/home/frederik/Desktop/border.mp4");
 
-        // Create GUI
-
-        HighGui.namedWindow("frame");
-
         // Main Loop
         while (true) {
             if (capture.isOpened()) {
                 Mat frame = new Mat();
                 capture.read(frame);
-                HighGui.imshow("frame", frame); // Display frame
 
                 if (frame.empty()) break;
 
@@ -126,6 +122,11 @@ public class Main {
                 System.out.println(" ");
 
                  */
+
+                // Display frame
+                HighGui.imshow("frame", frame); // Display frame
+                HighGui.waitKey(1);
+
             } else {
                 break;
             }
