@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"net"
+	"time"
 
 	"github.com/ev3go/ev3dev"
 	"google.golang.org/grpc"
@@ -41,6 +42,10 @@ type motorRequest struct {
  * main Setup of the server to listen for requests from clients.
  */
 func main() {
+	for {
+		fmt.Println(getAngleInDegrees())
+		time.Sleep(1 * time.Second)
+	}
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Printf("%v", err)
@@ -103,7 +108,6 @@ func (s *motorServer) StopMotors(ctx context.Context, in *pBuff.MultipleMotors) 
 	// Gets the motors
 	for i, request := range in.GetMotor() {
 		motor, err := getMotorHandle(request.GetMotorPort().String())
-
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err
 		}
@@ -173,4 +177,9 @@ func convertRobotRotationToWheelRotations(degrees int32) int {
 	// Calculate the distance move by rotating 1 degree on a wheel
 	rotationInCm := (wheelBaseCircumference * float64(degrees)) / 360.
 	return int(rotationInCm / (wheelCircumference / 360))
+}
+
+func getAngleInDegrees() (string, error) {
+	gyro, _ := ev3dev.SensorFor("ev3-ports:in4", "lego-ev3-gyro")
+	return gyro.Value(0)
 }
