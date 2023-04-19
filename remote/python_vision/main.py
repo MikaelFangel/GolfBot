@@ -60,10 +60,42 @@ def getCourseLinesFromFramesWithContours(frame_):
             cv.drawContours(frame_, [approx], 0, (0, 255, 0), 2)
             # Return the array of lines with x and y coordinates
             return approx
-        elif len(approx) == 16 or len(approx) == 15: # TODO A bit hacky way to detect the cross in the middle, but kinda works. Need to revisit this to be more stable.
-            cv.drawContours(frame_, [approx], 0, (0, 255, 0), 2)
-        else:
-            print(len(approx))
+
+
+def getOrangeBall(frame_):
+    hsvFrame = cv.cvtColor(frame_, cv.COLOR_BGR2HSV)
+
+    # Lower and upper RGB values for detection
+    lower = np.array([10, 140, 230])
+    upper = np.array([255, 255, 255])
+
+    orange_mask = cv.inRange(hsvFrame, lower, upper)
+
+    # Remove everything other than the mask
+    mask = cv.bitwise_and(frame_, frame_, mask=orange_mask)
+
+    # Apply grayFrame
+    grayFrame = cv.cvtColor(mask, cv.COLOR_BGR2GRAY)
+
+    # Apply blur for better edge detection
+    blurFrame = cv.GaussianBlur(grayFrame, (7, 7), 0)
+
+    orange_circle = cv.HoughCircles(image=blurFrame,
+                                    method=cv.HOUGH_GRADIENT,
+                                    dp=1,
+                                    minDist=5,
+                                    param1=25,  # gradient value used in the edge detection
+                                    param2=15,  # lower values allow more circles to be detected (false positives)
+                                    minRadius=1,  # limits the smallest circle to this size (via radius)
+                                    maxRadius=7  # similarly sets the limit for the largest circles
+                                    )
+
+    if orange_circle is not None:
+        orange_circle = np.uint(orange_circle)
+        for (x, y, r) in orange_circle[0, :]:
+            # draw the circle
+            cv.circle(frame, (x, y), r, (100, 255, 100), 1)
+        return orange_circle
 
 
 # https://docs.opencv.org/4.x/da/d53/tutorial_py_houghcircles.html
@@ -157,7 +189,21 @@ while True:
     # Calculate irl-coordinates for the corners
     irl_corners = [corner * conversion_factor for corner in corners]
 
-    print(corners)
+    print("Corner coordinates")
+    print(irl_corners)
+
+    orange_ball = getOrangeBall(frame)
+
+    if orange_ball is not None:
+        # Calculate irl_coordinates for the balls
+        ball = [ball * conversion_factor for ball in orange_ball[0, :]]
+
+        # Unpack outer array of nested array that is not needed
+        [ball] = [ball]
+
+        # Print irl-coordinates for the orange ball
+        print("Orange ball: ")
+        print(ball)
 
     circles = getCirclesFromFrames(frame)
 
