@@ -67,21 +67,31 @@ def getCourseLinesFromFramesWithContours(frame_):
 
 
 # https://docs.opencv.org/4.x/da/d53/tutorial_py_houghcircles.html
-def getCirclesFromFrames(frame):
-    # TODO: Explore different blurs
-    blurFrame = cv.GaussianBlur(frame, (9, 9), 0)
-    # blurFrame = cv.medianBlur(frame, 11)
-    grayFrame = cv.cvtColor(blurFrame, cv.COLOR_BGR2GRAY)
+def getCirclesFromFrames(frame_):
+    # Apply grayFrame
+    grayFrame = cv.cvtColor(frame_, cv.COLOR_BGR2GRAY)
+
+    # Pixel values under 175 is ignored
+    _, binary_frame = cv.threshold(grayFrame, 175, 255, cv.THRESH_BINARY)
+
+    mask = np.zeros_like(binary_frame)
+    mask[:] = 255
+
+    # Apply the mask binary mask
+    masked_frame = cv.bitwise_and(binary_frame, mask)
+
+    # Apply blur for better edge detection
+    blurFrame = cv.GaussianBlur(masked_frame, (7, 7), 0)
 
     # These configurations works okay with the current course setup
-    circles = cv.HoughCircles(image=grayFrame,
+    circles = cv.HoughCircles(image=blurFrame,
                               method=cv.HOUGH_GRADIENT,
                               dp=1,
-                              minDist=50,
+                              minDist=5,
                               param1=25,  # gradient value used in the edge detection
                               param2=17,  # lower values allow more circles to be detected (false positives)
-                              minRadius=4,  # limits the smallest circle to this size (via radius)
-                              maxRadius=8  # similarly sets the limit for the largest circles
+                              minRadius=2,  # limits the smallest circle to this size (via radius)
+                              maxRadius=7  # similarly sets the limit for the largest circles
                               )
 
     if circles is not None:
@@ -89,7 +99,7 @@ def getCirclesFromFrames(frame):
         circles = np.uint16(circles)
         for (x, y, r) in circles[0, :]:
             # draw the circle
-            cv.circle(frame, (x, y), r, (0, 255, 0), 2)
+            cv.circle(frame, (x, y), r, (0, 255, 0), 1)
         return circles
 
 
