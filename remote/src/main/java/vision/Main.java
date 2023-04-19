@@ -18,7 +18,7 @@ public class Main {
         OpenCV.loadLocally();
 
         VideoCapture capture = new VideoCapture();
-        capture.open(0); // Might need to be changed
+        capture.open(2); // Might need to be changed
         // capture.open("/home/frederik/Desktop/border.mp4");
 
         // Main Loop
@@ -54,7 +54,7 @@ public class Main {
                     irlBottomLeft = new Point(cornerCoords[3].x * conversionFactor, cornerCoords[3].y * conversionFactor);
                 }
 
-                if (ballCoords.length != 0 && robotMarkerCoords.length != 0) {
+                if (ballCoords.length != 0 && robotMarkerCoords.length != 0 && conversionFactor != 0) {
                     // Find the closest ball
                     Point centerMarker = robotMarkerCoords[0];
                     Point rotationMarker = robotMarkerCoords[1];
@@ -67,61 +67,53 @@ public class Main {
                     double angleBall = angleBetweenTwoPoints(centerMarker.x, centerMarker.y, closestBall.x, closestBall.y);
 
                     double angleDiff = angleBall - angleRobot;
+                    System.out.println("DiffAngle: " + angleDiff +"\n");
 
-                    if (conversionFactor != 0) {
-                        System.out.println("DiffAngle: " + angleDiff +"\n");
-                    }
+                    // TODO Make robot drive to closest ball
 
-
-                    /*
-                    System.out.println("\nDistance: " + distance + ", Angle: " + angleDiff);
-                    if (conversionFactor != 0) {
-                        System.out.println("irlDistance: " + distance * conversionFactor + ", Angle: " + angleDiff +"\n");
-                    }
-                    */
                 }
 
                 // Pure debugging
-                /*
-                System.out.println("\n### New Frame ###");
+                {
+                    System.out.println("\n### New Frame ###");
 
-                System.out.println("-- Pixel Coords --");
+                    System.out.println("-- Pixel Coords --");
 
-                for (Point ball: ballCoords) {
-                    System.out.println("Circle: " + ball.x + ", " + ball.y);
+                    for (Point ball : ballCoords) {
+                        System.out.println("Circle: " + ball.x + ", " + ball.y);
+                    }
+
+                    System.out.println(" ");
+                    for (Point marker : robotMarkerCoords) {
+                        System.out.println("marker: " + marker.x + ", " + marker.y);
+                    }
+                    System.out.println(" ");
+
+                    if (topLeft != null) { // They will all be not null at the same time
+                        System.out.println("TopLeft: " + topLeft.x + ", " + topLeft.y);
+                        System.out.println("TopRight: " + topRight.x + ", " + topRight.y);
+                        System.out.println("BottomLeft: " + bottomLeft.x + ", " + bottomLeft.y);
+                        System.out.println("BottomRight: " + bottomRight.x + ", " + bottomRight.y);
+                    }
+                    System.out.println(" ");
+
+                    System.out.println("-- Irl Coords --");
+
+                    for (Point ball : ballCoords) {
+                        if (conversionFactor != 0)
+                            System.out.println("ball: " + ball.x * conversionFactor + ", " + ball.y * conversionFactor);
+                    }
+                    System.out.println(" ");
+
+                    if (irlTopLeft != null) { // They will all be not null at the same time
+                        System.out.println("TopLeft: " + irlTopLeft.x + ", " + irlTopLeft.y);
+                        System.out.println("TopRight: " + irlTopRight.x + ", " + irlTopRight.y);
+                        System.out.println("BottomLeft: " + irlBottomLeft.x + ", " + irlBottomLeft.y);
+                        System.out.println("BottomRight: " + irlBottomRight.x + ", " + irlBottomRight.y);
+                    }
+                    System.out.println(" ");
                 }
 
-                System.out.println(" ");
-                for (Point marker: robotMarkerCoords) {
-                    System.out.println("marker: " + marker.x + ", " + marker.y);
-                }
-                System.out.println(" ");
-
-                if (topLeft != null) { // They will all be not null at the same time
-                    System.out.println("TopLeft: " + topLeft.x + ", " + topLeft.y);
-                    System.out.println("TopRight: " + topRight.x + ", " + topRight.y);
-                    System.out.println("BottomLeft: " + bottomLeft.x + ", " + bottomLeft.y);
-                    System.out.println("BottomRight: " + bottomRight.x + ", " + bottomRight.y);
-                }
-                System.out.println(" ");
-
-                System.out.println("-- Irl Coords --");
-
-                for (Point ball: ballCoords) {
-                    if (conversionFactor != 0)
-                        System.out.println("ball: " + ball.x * conversionFactor + ", " + ball.y * conversionFactor);
-                }
-                System.out.println(" ");
-
-                if (irlTopLeft != null) { // They will all be not null at the same time
-                    System.out.println("TopLeft: " + irlTopLeft.x + ", " + irlTopLeft.y);
-                    System.out.println("TopRight: " + irlTopRight.x + ", " + irlTopRight.y);
-                    System.out.println("BottomLeft: " + irlBottomLeft.x + ", " + irlBottomLeft.y);
-                    System.out.println("BottomRight: " + irlBottomRight.x + ", " + irlBottomRight.y);
-                }
-                System.out.println(" ");
-
-                 */
 
                 // Display frame
                 HighGui.imshow("frame", frame); // Display frame
