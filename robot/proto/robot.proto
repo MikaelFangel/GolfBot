@@ -17,9 +17,9 @@ service Motors {
 
 // Motortypes
 enum Type {
-  large = 0;
-  medium = 1;
-  small = 2; // For possible future needs - not used
+  l = 0;
+  m = 1;
+  s = 2; // For possible future needs - not used
 }
 
 // Ports on EV3
