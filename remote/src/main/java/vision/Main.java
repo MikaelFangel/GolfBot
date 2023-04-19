@@ -77,7 +77,7 @@ public class Main {
 
                 for (Point circle: circleCoords) {
                     if (conversionFactor != 0)
-                        System.out.println("Circle: " + circle.x * conversionFactor + ", " + circle.y * conversionFactor);
+                        System.out.println("Circle: " + (circle.x - topLeft.x) * conversionFactor + ", " + (circle.y - topLeft.y) * conversionFactor);
                 }
                 System.out.println(" ");
 
