@@ -1,5 +1,4 @@
 import math
-
 import numpy as np
 import cv2 as cv
 
@@ -48,6 +47,8 @@ def getCourseLinesFromFramesWithContours(frame_):
     # Apply grayframe and blurs for noise reduction
     grayFrame = cv.cvtColor(courseFrame, cv.COLOR_BGR2GRAY)
     blurFrame = cv.GaussianBlur(grayFrame, (9, 9), 0)
+
+    cv.imshow("blurframe", blurFrame)
 
     contours, _ = cv.findContours(blurFrame, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
 
@@ -167,60 +168,57 @@ while True:
         print("No lines found. Skipping frame")
         continue
 
-    if len(lines) != 4:
-        print("Course frame not found. Skip this frame")
-        continue
+    if len(lines) == 4:
+        # Origin
+        offset = lines[0][0]
 
-    # Origin
-    offset = lines[0][0]
+        # Calculate corners x and y with offset
+        corners = [point - offset for point in lines]
 
-    # Calculate corners x and y with offset
-    corners = [point - offset for point in lines]
+        # Unpack a layer of nested array that is not needed. TODO: Check where this extra array comes from
+        [corners] = [corners]
 
-    # Unpack a layer of nested array that is not needed. TODO: Check where this extra array comes from
-    [corners] = [corners]
+        # Unpack two points for each point that of the length of the course frame contains x and y coordinates
+        [top_left], [top_right], [bottom_right], [bottom_left] = corners
 
-    # Unpack two points for each point that of the length of the course frame contains x and y coordinates
-    [top_left], [top_right], [bottom_right], [bottom_left] = corners
+        # Find conversion factor by real-world width and calculated pixel width
+        conversion_factor = real_width / distance_in_pixels(top_left[0], top_left[1], top_right[0], top_right[1])
 
-    # Find conversion factor by real-world width and calculated pixel width
-    conversion_factor = real_width / distance_in_pixels(top_left[0], top_left[1], top_right[0], top_right[1])
+        # Calculate irl-coordinates for the corners
+        irl_corners = [corner * conversion_factor for corner in corners]
 
-    # Calculate irl-coordinates for the corners
-    irl_corners = [corner * conversion_factor for corner in corners]
+        #print("Corner coordinates")
+        #print(irl_corners)
 
-    print("Corner coordinates")
-    print(irl_corners)
+        orange_ball = getOrangeBall(frame)
 
-    orange_ball = getOrangeBall(frame)
+        if orange_ball is not None:
+            # Calculate irl_coordinates for the balls
+            ball = [ball * conversion_factor for ball in orange_ball[0, :]]
 
-    if orange_ball is not None:
-        # Calculate irl_coordinates for the balls
-        ball = [ball * conversion_factor for ball in orange_ball[0, :]]
+            # Unpack outer array of nested array that is not needed
+            [ball] = [ball]
 
-        # Unpack outer array of nested array that is not needed
-        [ball] = [ball]
+            # Print irl-coordinates for the orange ball
+            #print("Orange ball: ")
+            #print(ball)
 
-        # Print irl-coordinates for the orange ball
-        print("Orange ball: ")
-        print(ball)
+        circles = getCirclesFromFrames(frame)
 
-    circles = getCirclesFromFrames(frame)
+        if circles is not None:
+            # Calculate irl_coordinates for the balls
+            balls = [ball * conversion_factor for ball in circles[0, :]]
 
-    if circles is not None:
-        # Calculate irl_coordinates for the balls
-        balls = [ball * conversion_factor for ball in circles[0, :]]
+            # Unpack outer array of nested array that is not needed
+            [balls] = [balls]
 
-        # Unpack outer array of nested array that is not needed
-        [balls] = [balls]
-
-        # Print irl-coordinates for all white balls
-        print("White balls: ")
-        print(balls)
+            # Print irl-coordinates for all white balls
+            #print("White balls: ")
+            #print(balls)
 
     cv.imshow("frame", frame)
 
-    if cv.waitKey(1) & 0xFF == ord('q'):
+    if cv.waitKey(1000) & 0xFF == ord('q'):
         break
 
 video.release()
