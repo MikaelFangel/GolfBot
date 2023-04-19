@@ -19,11 +19,11 @@ public class RPCClient {
 
         // Make MotorRequest object
         int speed = -250;
-        MotorRequest reqA = MotorRequest.newBuilder().setMotorPort(Port.A).setMotorSpeed(speed).build();
-        MotorRequest reqD = MotorRequest.newBuilder().setMotorPort(Port.D).setMotorSpeed(speed).build();
+        MotorRequest reqA = MotorRequest.newBuilder().setMotorPort(Port.A).setMotorType(Type.l).setMotorSpeed(speed).build();
+        MotorRequest reqD = MotorRequest.newBuilder().setMotorPort(Port.D).setMotorType(Type.l).setMotorSpeed(speed).build();
 
-        MotorRequest reqA2 = MotorRequest.newBuilder().setMotorPort(Port.A).setMotorSpeed(-speed).build();
-        MotorRequest reqD2 = MotorRequest.newBuilder().setMotorPort(Port.D).setMotorSpeed(-speed).build();
+        MotorRequest reqA2 = MotorRequest.newBuilder().setMotorPort(Port.A).setMotorType(Type.l).setMotorSpeed(-speed).build();
+        MotorRequest reqD2 = MotorRequest.newBuilder().setMotorPort(Port.D).setMotorType(Type.l).setMotorSpeed(-speed).build();
 
         // Put motorRequests into an array
         ArrayList<MotorRequest> requests = new ArrayList<>();

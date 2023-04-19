@@ -13,19 +13,13 @@ import (
 	pBuff "main/proto"
 )
 
-// Motor types
-const (
-	mediumMotor = "lego-ev3-m-motor"
-	largeMotor  = "lego-ev3-l-motor"
-)
-
 // Motor commands
 const (
-	run     = "run-forever"
-	stop    = "stop"
-	rel_pos = "run-to-rel-pos" // Not working..?
-	absPos  = "run-to-abs-pos"
-	reset   = "reset"
+	run    = "run-forever"
+	stop   = "stop"
+	relPos = "run-to-rel-pos" // Not working..?
+	absPos = "run-to-abs-pos"
+	reset  = "reset"
 )
 
 type motorServer struct {
@@ -55,11 +49,8 @@ func main() {
 }
 
 // getMotorHandle Returns the TachoMotor equivalent to the port given (e.g. port "A").
-func getMotorHandle(port string) (*ev3dev.TachoMotor, error) {
-	fmt.Println(pBuff.Type(0), "1")
-	fmt.Println(pBuff.E_MyEnumValueOption, 2)
-
-	return ev3dev.TachoMotorFor("ev3-ports:out"+port, pBuff.Type_large.String())
+func getMotorHandle(port string, motor string) (*ev3dev.TachoMotor, error) {
+	return ev3dev.TachoMotorFor("ev3-ports:out"+port, "lego-ev3-"+motor+"-motor")
 }
 
 // isRunning Returns true if the speed of the given motor is not zero, otherwise false.
@@ -70,13 +61,13 @@ func isRunning(motor *ev3dev.TachoMotor) bool {
 }
 
 // RunMotors Starts the motors given, and sets them to the speed specified on client side.
-func (s *motorServer) RunMotors(ctx context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
+func (s *motorServer) RunMotors(_ context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
 	// motorRequests stores the request and the motor, so we don't need to get them again in the 2nd loop
 	var motorRequests [2]motorRequest
 
 	// Gets the motors and sets their speeds, which is specified on client side.
 	for i, request := range in.GetMotor() {
-		motor, err := getMotorHandle(request.GetMotorPort().String())
+		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err
 		}
@@ -99,13 +90,13 @@ func (s *motorServer) RunMotors(ctx context.Context, in *pBuff.MultipleMotors) (
 }
 
 // StopMotors Stops the motors given, e.g. cleaning their MotorState.
-func (s *motorServer) StopMotors(ctx context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
+func (s *motorServer) StopMotors(_ context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
 	// motorRequests stores the request and the motor, so we don't need to get them again in the 2nd loop
 	var motorRequests [2]motorRequest
 
 	// Gets the motors
 	for i, request := range in.GetMotor() {
-		motor, err := getMotorHandle(request.GetMotorPort().String())
+		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
 
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err
@@ -131,7 +122,7 @@ func (s *motorServer) StopMotors(ctx context.Context, in *pBuff.MultipleMotors) 
 }
 
 // Rotate Rotates the robot with a static speed, x degrees, which is specified on client side.
-func (s *motorServer) Rotate(ctx context.Context, in *pBuff.RotateRequest) (*pBuff.StatusReply, error) {
+func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff.StatusReply, error) {
 	// motorRequests stores the request and the motor, so we don't need to get them again in the 2nd loop
 	var motorRequests [2]motorRequest
 
@@ -140,7 +131,7 @@ func (s *motorServer) Rotate(ctx context.Context, in *pBuff.RotateRequest) (*pBu
 
 	// Gets the motors and sets their speeds to a static speed, making the wheels turn in different directions
 	for i, request := range in.MultipleMotors.GetMotor() {
-		motor, err := getMotorHandle(request.GetMotorPort().String())
+		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err
 		}
