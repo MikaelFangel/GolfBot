@@ -131,6 +131,10 @@ while True:
         break
 
     lines = getCourseLinesFromFramesWithContours(frame)
+    if lines is None:
+        print("No lines found. Skipping frame")
+        continue
+
     if len(lines) != 4:
         print("Course frame not found. Skip this frame")
         continue
@@ -157,21 +161,16 @@ while True:
 
     circles = getCirclesFromFrames(frame)
 
-    if circles is None:
-        print("No balls found. Skipping this frame")
-        continue
+    if circles is not None:
+        # Calculate irl_coordinates for the balls
+        balls = [ball * conversion_factor for ball in circles[0, :]]
 
-    # Calculate irl_coordinates for the balls
-    balls = [ball * conversion_factor for ball in circles[0, :]]
+        # Unpack outer array of nested array that is not needed
+        [balls] = [balls]
 
-    # Unpack outer array of nested array that is not needed
-    [balls] = [balls]
-
-    # Print irl-coordinates for all balls
-    print(balls)
-
-    # For testing accuracy between two balls. TODO: Should be done elsewhere by calling this method
-    accuracy_test(balls)
+        # Print irl-coordinates for all white balls
+        print("White balls: ")
+        print(balls)
 
     cv.imshow("frame", frame)
 
