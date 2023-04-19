@@ -3,34 +3,6 @@ import numpy as np
 import cv2 as cv
 
 
-class BallsNotFoundException(Exception):
-    """Camera Exception raised for when not detecting any balls.
-
-        Attributes:
-            data -- the intercepted data of the camera
-            message -- explanation of the error
-        """
-
-    def __init__(self, data,
-                 message="Camera expected to detect at least 1 lines to be able to calculate coordinates"):
-        self.data = data
-        self.message = message
-
-
-class CourseFrameNotFoundException(Exception):
-    """Camera Exception raised for not detecting the course frame.
-
-        Attributes:
-            data -- the intercepted data of the camera
-            message -- explanation of the error
-        """
-
-    def __init__(self, data,
-                 message="Camera expected to detect exactly 4 lines from the course frame to be able to calculate a coordinate system"):
-        self.data = data
-        self.message = message
-
-
 def getCourseLinesFromFramesWithContours(frame_):
     # Convert to hsv color space to better detect the red color
     hsvFrame = cv.cvtColor(frame_, cv.COLOR_BGR2HSV)
@@ -47,8 +19,6 @@ def getCourseLinesFromFramesWithContours(frame_):
     # Apply grayframe and blurs for noise reduction
     grayFrame = cv.cvtColor(courseFrame, cv.COLOR_BGR2GRAY)
     blurFrame = cv.GaussianBlur(grayFrame, (7, 7), 0)
-
-    cv.imshow("blurframe", blurFrame)
 
     contours, _ = cv.findContours(blurFrame, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
 
@@ -113,7 +83,7 @@ def getCirclesFromFrames(frame_):
     # Apply the mask binary mask
     masked_frame = cv.bitwise_and(binary_frame, mask)
 
-    # Apply blur for better edge detection
+    # Apply blur for noise reduction
     blurFrame = cv.GaussianBlur(masked_frame, (7, 7), 0)
 
     # These configurations works okay with the current course setup
