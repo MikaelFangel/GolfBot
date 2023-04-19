@@ -3,14 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/ev3go/ev3dev"
+	"google.golang.org/grpc"
 	"log"
 	"math"
 	"net"
 	"strconv"
-	"time"
-
-	"github.com/ev3go/ev3dev"
-	"google.golang.org/grpc"
 
 	pBuff "main/proto"
 )
@@ -37,11 +35,6 @@ type motorRequest struct {
  * main Setup of the server to listen for requests from clients.
  */
 func main() {
-	for true {
-		fmt.Println(GetDistanceInCm())
-		time.Sleep(1 * time.Second)
-	}
-
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Printf("%v", err)
@@ -180,13 +173,13 @@ func getSensor(inPort string, sensor string) (*ev3dev.Sensor, error) {
 	return ev3dev.SensorFor("ev3-ports:"+inPort, "lego-ev3-"+sensor)
 }
 
-func GetDistanceInCm() int {
+func GetDistanceInCm() float64 {
 	ultraSonicSensor, err := getSensor(pBuff.InPort_in1.String(), pBuff.Sensor_us.String())
 	if err != nil {
 		return -1
 	}
 
 	distanceString, _ := ultraSonicSensor.Value(0)
-	distance, _ := strconv.Atoi(distanceString)
-	return distance
+	distance, _ := strconv.ParseFloat(distanceString, 64)
+	return distance / 10
 }
