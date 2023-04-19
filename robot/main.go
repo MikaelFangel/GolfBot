@@ -6,6 +6,8 @@ import (
 	"log"
 	"math"
 	"net"
+	"strconv"
+	"time"
 
 	"github.com/ev3go/ev3dev"
 	"google.golang.org/grpc"
@@ -35,6 +37,11 @@ type motorRequest struct {
  * main Setup of the server to listen for requests from clients.
  */
 func main() {
+	for true {
+		fmt.Println(GetDistanceInCm())
+		time.Sleep(1 * time.Second)
+	}
+
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Printf("%v", err)
@@ -167,4 +174,19 @@ func convertRobotRotationToWheelRotations(degrees int32) int {
 	// Calculate the distance move by rotating 1 degree on a wheel
 	rotationInCm := (wheelBaseCircumference * float64(degrees)) / 360.
 	return int(rotationInCm / (wheelCircumference / 360))
+}
+
+func getSensor(inPort string, sensor string) (*ev3dev.Sensor, error) {
+	return ev3dev.SensorFor("ev3-ports:"+inPort, "lego-ev3-"+sensor)
+}
+
+func GetDistanceInCm() int {
+	ultraSonicSensor, err := getSensor(pBuff.InPort_in1.String(), pBuff.Sensor_us.String())
+	if err != nil {
+		return -1
+	}
+
+	distanceString, _ := ultraSonicSensor.Value(0)
+	distance, _ := strconv.Atoi(distanceString)
+	return distance
 }

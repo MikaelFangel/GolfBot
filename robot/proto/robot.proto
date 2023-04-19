@@ -22,8 +22,21 @@ enum Type {
   s = 2; // For possible future needs - not used
 }
 
-// Ports on EV3
-enum Port {
+enum Sensor {
+  gyro = 0;
+  us = 1; // Ultra sonic sensor
+}
+
+// Input ports
+enum InPort {
+  in1 = 0;
+  in2 = 1;
+  in3 = 2;
+  in4 = 3;
+}
+
+// Output ports on EV3
+enum OutPort {
   A = 0;
   B = 1;
   C = 2;
@@ -45,7 +58,7 @@ message MultipleMotors {
 message MotorRequest {
   int32 motorSpeed = 1;
   Type motorType = 2; // E.g. "medium"
-  Port motorPort = 3; // E.g. "A"
+  OutPort motorPort = 3; // E.g. "A"
 }
 
 message StatusReply {
