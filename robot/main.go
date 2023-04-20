@@ -32,11 +32,11 @@ type motorRequest struct {
 }
 
 // Radius values are in centimeters and the wheelBaseRadius is measured from the inner sides of the wheels.
-var wheelRadius = 3.4
-var wheelBaseRadius = 8.75
+const wheelRadius = 3.4
+const wheelBaseRadius = 8.75
 
-var wheelCircumference = 2 * wheelRadius * math.Pi
-var wheelBaseCircumference = 2 * wheelBaseRadius * math.Pi
+const wheelCircumference = 2 * wheelRadius * math.Pi
+const wheelBaseCircumference = 2 * wheelBaseRadius * math.Pi
 
 /*
  * main Setup of the server to listen for requests from clients.
@@ -178,16 +178,15 @@ func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.S
 			return &pBuff.StatusReply{ReplyMessage: false}, err
 		}
 
-		// Construct Motor Requests
-		motor.SetPositionSetpoint(int(numberOfRotations))
-
 		// Change speed value if distance is negative
 		dir := 1
 		if in.Speed < 0 {
 			dir = -1
 		}
 
+		// Set values for request
 		motor.SetSpeedSetpoint(dir * int(in.Speed))
+		motor.SetPositionSetpoint(int(numberOfRotations))
 		motorRequests[i] = motorRequest{request: request, motor: motor}
 	}
 
@@ -202,12 +201,9 @@ func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.S
 // convertRobotRotationToWheelRotations Converts an input of degrees to how many degrees a wheel should rotate.
 func convertRobotRotationToWheelRotations(degrees int32) int {
 	rotationInCm := (wheelBaseCircumference * float64(degrees)) / 360.
-	numberOfRotations := int(rotationInCm / (wheelCircumference / 360))
-
-	return numberOfRotations
+	return int(rotationInCm / (wheelCircumference / 360))
 }
 
-// Hey
 func convertDistanceToWheelRotation(distance float64) float64 {
 	return (distance / wheelCircumference) * 360
 }
