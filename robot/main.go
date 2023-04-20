@@ -137,7 +137,9 @@ func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff
 	fmt.Println(wheelRotations) // For debugging TODO: delete
 
 	// Gets the motors and sets their speeds to a static speed, making the wheels turn in different directions
-	for i, request := range in.MultipleMotors.GetMotor() {
+	for i := 0; i < 2; i++ {
+		request := in.GetMotors()[i]
+
 		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err
@@ -146,10 +148,10 @@ func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff
 		motor.Command(reset) // Reset motors
 		if i%2 == 0 {
 			motor.SetPositionSetpoint(wheelRotations)
-			motor.SetSpeedSetpoint(500)
+			motor.SetSpeedSetpoint(int(in.Speed))
 		} else {
 			motor.SetPositionSetpoint(-wheelRotations)
-			motor.SetSpeedSetpoint(-500)
+			motor.SetSpeedSetpoint(int(-in.Speed))
 		}
 		motorRequests[i] = motorRequest{request: request, motor: motor}
 	}
@@ -169,15 +171,24 @@ func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.S
 
 	// Fetch each motor
 	for i := 0; i < 2; i++ {
-		motor, err := getMotorHandle(in.GetMotors()[i].GetMotorPort().String(), in.GetMotors()[i].GetMotorType())
+		request := in.GetMotors()[i]
+
+		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType())
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err
 		}
 
 		// Construct Motor Requests
 		motor.SetPositionSetpoint(int(numberOfRotations))
-		motor.SetSpeedSetpoint(500)
-		motorRequests[i] = motorRequest{request: in.GetMotors()[i], motor: motor}
+
+		// Change speed value if distance is negative
+		dir := 1
+		if in.Speed < 0 {
+			dir = -1
+		}
+
+		motor.SetSpeedSetpoint(dir * int(in.Speed))
+		motorRequests[i] = motorRequest{request: request, motor: motor}
 	}
 
 	// Give requests to motors
