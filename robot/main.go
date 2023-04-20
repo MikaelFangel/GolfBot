@@ -31,6 +31,13 @@ type motorRequest struct {
 	motor   *ev3dev.TachoMotor
 }
 
+// Radius values are in centimeters and the wheelBaseRadius is measured from the inner sides of the wheels.
+var wheelRadius = 3.4
+var wheelBaseRadius = 8.75
+
+var wheelCircumference = 2 * wheelRadius * math.Pi
+var wheelBaseCircumference = 2 * wheelBaseRadius * math.Pi
+
 /*
  * main Setup of the server to listen for requests from clients.
  */
@@ -155,16 +162,41 @@ func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
+func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.StatusReply, error) {
+	var motorRequests [2]motorRequest
+
+	numberOfRotations := convertDistanceToWheelRotation(float64(in.Distance))
+
+	// Fetch each motor
+	for i := 0; i < 2; i++ {
+		motor, err := getMotorHandle(in.GetMotors()[i].GetMotorPort().String(), in.GetMotors()[i].GetMotorType())
+		if err != nil {
+			return &pBuff.StatusReply{ReplyMessage: false}, err
+		}
+
+		// Construct Motor Requests
+		motor.SetPositionSetpoint(int(numberOfRotations))
+		motor.SetSpeedSetpoint(500)
+		motorRequests[i] = motorRequest{request: in.GetMotors()[i], motor: motor}
+	}
+
+	// Give requests to motors
+	for _, motorRequest := range motorRequests {
+		motorRequest.motor.Command(absPos)
+	}
+
+	return &pBuff.StatusReply{ReplyMessage: true}, nil
+}
+
 // convertRobotRotationToWheelRotations Converts an input of degrees to how many degrees a wheel should rotate.
 func convertRobotRotationToWheelRotations(degrees int32) int {
-	// Radius values are in centimeters and the wheelBaseRadius is measured from the inner sides of the wheels.
-	wheelRadius := 3.4
-	wheelBaseRadius := 8.75
-
-	wheelCircumference := 2 * wheelRadius * math.Pi
-	wheelBaseCircumference := 2 * wheelBaseRadius * math.Pi
-
-	// Calculate the distance move by rotating 1 degree on a wheel
 	rotationInCm := (wheelBaseCircumference * float64(degrees)) / 360.
-	return int(rotationInCm / (wheelCircumference / 360))
+	numberOfRotations := int(rotationInCm / (wheelCircumference / 360))
+
+	return numberOfRotations
+}
+
+// Hey
+func convertDistanceToWheelRotation(distance float64) float64 {
+	return (distance / wheelCircumference) * 360
 }
