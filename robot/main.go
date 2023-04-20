@@ -173,7 +173,7 @@ func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.S
 	for i := 0; i < 2; i++ {
 		request := in.GetMotors()[i]
 
-		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType())
+		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err
 		}
