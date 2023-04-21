@@ -38,26 +38,16 @@ public class Main {
                 Point irlTopLeft = null, irlTopRight = null, irlBottomLeft = null, irlBottomRight = null;
 
                 BorderSet borderSet = getBorderFromFrame(frame);
-;
-
 
                 double conversionFactor = 0;
                 if (borderSet != null) {
                     Point[] cornerCoords = borderSet.correctCoords;
                     Point origin = borderSet.origin;
 
-                    System.out.println("Origin: " + origin.x + ", " + origin.y);
-
                     topLeft = new Point(cornerCoords[0].x, cornerCoords[0].y);
                     topRight = new Point(cornerCoords[1].x, cornerCoords[1].y);
                     bottomRight = new Point(cornerCoords[2].x, cornerCoords[2].y);
                     bottomLeft = new Point(cornerCoords[3].x, cornerCoords[3].y);
-
-                    // Correct ball coordinates, by adjusting with TopLeft course point:
-                    for (Point ball : ballCoords) {
-                        ball.x = ball.x - origin.x;
-                        ball.y = ball.y - origin.y;
-                    }
 
                     // Get irl coordinates
                     conversionFactor = realWidth / distanceBetweenTwoPoints(topLeft.x, topLeft.y, topRight.x, topRight.y);
@@ -69,10 +59,24 @@ public class Main {
                 }
 
                 if (ballCoords.length != 0 && robotMarkerCoords.length != 0 && conversionFactor != 0) {
+                    Point origin = borderSet.origin;
+
                     // Find the closest ball
                     Point centerMarker = robotMarkerCoords[0];
                     Point rotationMarker = robotMarkerCoords[1];
                     Point closestBall = findClosestBall(ballCoords, centerMarker);
+
+                    // Correct Coords from origin
+                    //TODO These 4 have not been tested
+                    centerMarker.x -= origin.x;
+                    centerMarker.y -= origin.y;
+                    rotationMarker.x -= origin.x;
+                    rotationMarker.y -= rotationMarker.y;
+
+                    for (Point ball : ballCoords) {
+                        ball.x -= origin.x;
+                        ball.y -= origin.y;
+                    }
 
                     // Calculate polar coordinates to get rotation.
                     double distance = distanceBetweenTwoPoints(centerMarker.x, centerMarker.y, closestBall.x, closestBall.y);
@@ -81,7 +85,8 @@ public class Main {
                     double angleBall = angleBetweenTwoPoints(centerMarker.x, centerMarker.y, closestBall.x, closestBall.y);
 
                     double angleDiff = angleBall - angleRobot;
-                    System.out.println("DiffAngle: " + angleDiff +"\n");
+                    System.out.println("DiffAngle: " + angleDiff);
+                    System.out.println("DiffDistance " + distance*conversionFactor);
 
                     // TODO Make robot drive to closest ball
                     /*
@@ -103,6 +108,7 @@ public class Main {
                 }
 
                 // Pure debugging
+                /*
                 {
                     System.out.println("\n### New Frame ###");
 
@@ -142,6 +148,7 @@ public class Main {
                     }
                     System.out.println(" ");
                 }
+                 */
 
                 // Display frame
                 HighGui.imshow("frame", frame); // Display frame
