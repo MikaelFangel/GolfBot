@@ -5,7 +5,8 @@ public class Main {
         controller.startController("192.168.1.12:50051");
 
         try {
-            controller.driveBackwards(30);
+            //controller.driveStraight(30);
+            controller.rotate(-90);
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
