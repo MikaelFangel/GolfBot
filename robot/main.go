@@ -200,6 +200,22 @@ func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.S
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
+func (s *motorServer) Grab(_ context.Context, in *pBuff.GrabRequest) (*pBuff.StatusReply, error) {
+	motor, err := getMotorHandle(in.Motor.MotorPort.String(), in.Motor.MotorType.String())
+
+	if err != nil {
+		return &pBuff.StatusReply{ReplyMessage: false}, err
+	}
+
+	motor.Command(reset)
+	motor.SetSpeedSetpoint(int(in.Speed))
+	motor.SetPositionSetpoint(int(in.DegreesOfRotation))
+
+	motor.Command(absPos)
+
+	return &pBuff.StatusReply{ReplyMessage: true}, nil
+}
+
 // convertRobotRotationToWheelRotations Converts an input of degrees to how many degrees a wheel should rotate.
 func convertRobotRotationToWheelRotations(degrees int32) int {
 	rotationInCm := (wheelBaseCircumference * float64(degrees)) / 360.
