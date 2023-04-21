@@ -6,6 +6,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.highgui.HighGui;
 import org.opencv.videoio.VideoCapture;
+import vision.helperClasses.BorderSet;
 
 import static vision.Detection.*;
 
@@ -36,14 +37,27 @@ public class Main {
                 Point topLeft = null, topRight = null, bottomRight = null, bottomLeft = null;
                 Point irlTopLeft = null, irlTopRight = null, irlBottomLeft = null, irlBottomRight = null;
 
-                Point[] cornerCoords = getBorderFromFrame(frame);
+                BorderSet borderSet = getBorderFromFrame(frame);
+;
+
 
                 double conversionFactor = 0;
-                if (cornerCoords != null) {
+                if (borderSet != null) {
+                    Point[] cornerCoords = borderSet.correctCoords;
+                    Point origin = borderSet.origin;
+
+                    System.out.println("Origin: " + origin.x + ", " + origin.y);
+
                     topLeft = new Point(cornerCoords[0].x, cornerCoords[0].y);
                     topRight = new Point(cornerCoords[1].x, cornerCoords[1].y);
                     bottomRight = new Point(cornerCoords[2].x, cornerCoords[2].y);
                     bottomLeft = new Point(cornerCoords[3].x, cornerCoords[3].y);
+
+                    // Correct ball coordinates, by adjusting with TopLeft course point:
+                    for (Point ball : ballCoords) {
+                        ball.x = ball.x - origin.x;
+                        ball.y = ball.y - origin.y;
+                    }
 
                     // Get irl coordinates
                     conversionFactor = realWidth / distanceBetweenTwoPoints(topLeft.x, topLeft.y, topRight.x, topRight.y);
@@ -70,6 +84,7 @@ public class Main {
                     System.out.println("DiffAngle: " + angleDiff +"\n");
 
                     // TODO Make robot drive to closest ball
+                    /*
                     System.out.println("Got Everything. Will proceed");
 
                     Thread.sleep(1000);
@@ -84,6 +99,7 @@ public class Main {
 
                     System.out.println("Should have arrived");
                     break;
+                     */
                 }
 
                 // Pure debugging
@@ -126,7 +142,6 @@ public class Main {
                     }
                     System.out.println(" ");
                 }
-
 
                 // Display frame
                 HighGui.imshow("frame", frame); // Display frame
