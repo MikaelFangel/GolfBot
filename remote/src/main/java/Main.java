@@ -8,8 +8,8 @@ public class Main {
             //controller.driveStraight(30);
             controller.rotate(-90);
 
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
+        } catch (RuntimeException e) {
+            System.out.println("Robot was probably not reached");
 
         } finally {
             controller.stopController();

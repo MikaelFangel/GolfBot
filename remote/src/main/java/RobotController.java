@@ -10,21 +10,21 @@ public class RobotController {
     private ManagedChannel channel;
     private MotorsGrpc.MotorsBlockingStub client;
 
-
     private final int speed = 100;
 
     /**
-     * Used thsi method to start the controller before calling any other methods
+     * Used this method to start the controller before calling any other methods
      * @param ip_port e.g. "192.168.1.12:50051"
      */
     public void startController(String ip_port) {
         channel = Grpc.newChannelBuilder(ip_port, InsecureChannelCredentials.create()).build();
         client = MotorsGrpc.newBlockingStub(channel);
+
     }
 
     /**
      * Use this method to stop the controller before ending the program.
-     * @throws InterruptedException
+     * @throws InterruptedException if shutdown was interrupted
      */
     public void stopController() throws InterruptedException {
         channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
@@ -33,12 +33,10 @@ public class RobotController {
     /**
      * Makes the robot drive straight either forward or backwards for the distance given as argument
      * @param distance Positive values for forward and negative for backwards
-     * @throws Exception
+     * @throws RuntimeException if the robot was not reached
      */
-    public void driveStraight(double distance) throws Exception {
-        if (client == null) throw new Exception();
-
-        ArrayList<MotorRequest> motorsRequest = createMotorRequests(Type.l, Port.A, Port.D);
+    public void driveStraight(double distance) throws RuntimeException {
+       ArrayList<MotorRequest> motorsRequest = createMotorRequests(Type.l, Port.A, Port.D);
 
         DriveRequest driveRequest = DriveRequest.newBuilder()
                 .addAllMotors(motorsRequest)
@@ -47,16 +45,15 @@ public class RobotController {
                 .build();
 
         client.drive(driveRequest);
+
     }
 
     /**
      * Rotates the robot with itself as its center
      * @param degrees postive values for counter-clockwise and negative for clockwise
-     * @throws Exception
+     * @throws RuntimeException if the robot was not reached
      */
-    public void rotate(double degrees) throws Exception {
-        if (client == null) throw new Exception();
-
+    public void rotate(double degrees) throws RuntimeException {
         ArrayList<MotorRequest> motorsRequest = createMotorRequests(Type.l, Port.A, Port.D);
 
         RotateRequest rotateRequest = RotateRequest.newBuilder()
@@ -66,6 +63,7 @@ public class RobotController {
                 .build();
 
         client.rotate(rotateRequest);
+
     }
 
     private ArrayList<MotorRequest> createMotorRequests(Type motorType, Port... ports) {
