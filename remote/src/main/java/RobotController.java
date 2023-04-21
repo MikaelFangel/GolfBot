@@ -68,7 +68,6 @@ public class RobotController {
         client.rotate(rotateRequest);
     }
 
-
     private ArrayList<MotorRequest> createMotorRequests(Type motorType, Port... ports) {
         ArrayList<MotorRequest> motorRequests = new ArrayList<>();
 
