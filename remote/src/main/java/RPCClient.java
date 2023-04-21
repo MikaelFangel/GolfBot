@@ -41,9 +41,9 @@ public class RPCClient {
         MultipleMotors motors2 = MultipleMotors.newBuilder().addAllMotor(requests2).build();
 
         // Make RotateRequest object
-        RotateRequest rotateRequest = RotateRequest.newBuilder().addAllMotors(requests).setDegrees(360).setSpeed(200).build();
+        RotateRequest rotateRequest = RotateRequest.newBuilder().addAllMotors(requests).setDegrees(90).setSpeed(100).build();
 
-        DriveRequest driveRequest = DriveRequest.newBuilder().setDistance(20).addAllMotors(requests).setSpeed(200).build();
+        DriveRequest driveRequest = DriveRequest.newBuilder().setDistance(10).addAllMotors(requests).setSpeed(100).build();
 
         // Test the robot
         try {
