@@ -9,21 +9,23 @@ import java.util.concurrent.TimeUnit;
 
 public class RPCClient {
     public static void main(String[] args) throws InterruptedException, MissingArgumentException {
+        /*
         if (args.length < 1) {
             throw new MissingArgumentException("Please provide an IP and port number (e.g 192.168.0.97:50051)");
         }
+         */
 
         // Needed setup to communicate with the robot
-        ManagedChannel channel = Grpc.newChannelBuilder(args[0], InsecureChannelCredentials.create()).build();
+        ManagedChannel channel = Grpc.newChannelBuilder("192.168.1.12:50051", InsecureChannelCredentials.create()).build();
         MotorsGrpc.MotorsBlockingStub client = MotorsGrpc.newBlockingStub(channel);
 
         // Make MotorRequest object
         int speed = -250;
-        MotorRequest reqA = MotorRequest.newBuilder().setMotorPort(Port.A).setMotorSpeed(speed).build();
-        MotorRequest reqD = MotorRequest.newBuilder().setMotorPort(Port.D).setMotorSpeed(speed).build();
+        MotorRequest reqA = MotorRequest.newBuilder().setMotorPort(Port.A).setMotorType(Type.l).setMotorSpeed(speed).build();
+        MotorRequest reqD = MotorRequest.newBuilder().setMotorPort(Port.D).setMotorType(Type.l).setMotorSpeed(-speed).build();
 
-        MotorRequest reqA2 = MotorRequest.newBuilder().setMotorPort(Port.A).setMotorSpeed(-speed).build();
-        MotorRequest reqD2 = MotorRequest.newBuilder().setMotorPort(Port.D).setMotorSpeed(-speed).build();
+        MotorRequest reqA2 = MotorRequest.newBuilder().setMotorPort(Port.A).setMotorType(Type.l).setMotorSpeed(-speed).build();
+        MotorRequest reqD2 = MotorRequest.newBuilder().setMotorPort(Port.D).setMotorType(Type.l).setMotorSpeed(-speed).build();
 
         // Put motorRequests into an array
         ArrayList<MotorRequest> requests = new ArrayList<>();
@@ -39,25 +41,28 @@ public class RPCClient {
         MultipleMotors motors2 = MultipleMotors.newBuilder().addAllMotor(requests2).build();
 
         // Make RotateRequest object
-        RotateRequest rotateRequest = RotateRequest.newBuilder().setMultipleMotors(motors).setDegrees(360).build();
+        RotateRequest rotateRequest = RotateRequest.newBuilder().addAllMotors(requests).setDegrees(90).setSpeed(100).build();
+
+        DriveRequest driveRequest = DriveRequest.newBuilder().setDistance(10).addAllMotors(requests).setSpeed(100).build();
 
         // Test the robot
         try {
-            StatusReply a = client.runMotors(motors);
+            //client.drive(driveRequest);
+            client.rotate(rotateRequest);
 
-            //client.rotate(rotateRequest);
+            //StatusReply a = client.runMotors(motors);
+            //Thread.sleep(2000);
+            //client.stopMotors(motors);
 
-            Thread.sleep(2000);
 
-            client.stopMotors(motors);
 
-            Thread.sleep(1000);
+            //Thread.sleep(1000);
 
-            client.runMotors(motors2);
+            //client.runMotors(motors2);
 
-            Thread.sleep(2000);
+            //Thread.sleep(2000);
 
-            client.stopMotors(motors2);
+            //client.stopMotors(motors2);
 
         }
         // Catch exceptions returned from the robot
