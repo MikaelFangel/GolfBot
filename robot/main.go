@@ -31,6 +31,13 @@ type motorRequest struct {
 	motor   *ev3dev.TachoMotor
 }
 
+// Radius values are in centimeters and the wheelBaseRadius is measured from the inner sides of the wheels.
+const wheelRadius = 3.5
+const wheelBaseRadius = 12.5 / 2 // For diameter/2
+
+const wheelCircumference = 2 * wheelRadius * math.Pi
+const wheelBaseCircumference = 2 * wheelBaseRadius * math.Pi
+
 /*
  * main Setup of the server to listen for requests from clients.
  */
@@ -127,10 +134,12 @@ func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff
 	var motorRequests [2]motorRequest
 
 	wheelRotations := convertRobotRotationToWheelRotations(in.Degrees)
-	fmt.Println(wheelRotations) // For debugging TODO: delete
+	fmt.Printf("Rotation in degrees: %d\n", wheelRotations)
 
 	// Gets the motors and sets their speeds to a static speed, making the wheels turn in different directions
-	for i, request := range in.MultipleMotors.GetMotor() {
+	for i := 0; i < 2; i++ {
+		request := in.GetMotors()[i]
+
 		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err
@@ -139,10 +148,10 @@ func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff
 		motor.Command(reset) // Reset motors
 		if i%2 == 0 {
 			motor.SetPositionSetpoint(wheelRotations)
-			motor.SetSpeedSetpoint(500)
+			motor.SetSpeedSetpoint(int(in.Speed))
 		} else {
 			motor.SetPositionSetpoint(-wheelRotations)
-			motor.SetSpeedSetpoint(-500)
+			motor.SetSpeedSetpoint(int(-in.Speed))
 		}
 		motorRequests[i] = motorRequest{request: request, motor: motor}
 	}
@@ -155,16 +164,48 @@ func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
+func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.StatusReply, error) {
+	var motorRequests [2]motorRequest
+
+	numberOfRotations := -convertDistanceToWheelRotation(float64(in.Distance))
+	fmt.Printf("Drive degrees of rotation: %d\n", numberOfRotations)
+
+	// Fetch each motor
+	for i := 0; i < 2; i++ {
+		request := in.GetMotors()[i]
+
+		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
+		if err != nil {
+			return &pBuff.StatusReply{ReplyMessage: false}, err
+		}
+
+		// Change speed value if distance is negative
+		dir := 1
+		if in.Speed < 0 {
+			dir = -1
+		}
+
+		// Set values for request
+		motor.Command(reset)
+		motor.SetSpeedSetpoint(dir * int(in.Speed))
+		motor.SetPositionSetpoint(numberOfRotations)
+		motorRequests[i] = motorRequest{request: request, motor: motor}
+	}
+
+	// Give requests to motors
+	for _, motorRequest := range motorRequests {
+		motorRequest.motor.Command(absPos)
+	}
+
+	return &pBuff.StatusReply{ReplyMessage: true}, nil
+}
+
 // convertRobotRotationToWheelRotations Converts an input of degrees to how many degrees a wheel should rotate.
 func convertRobotRotationToWheelRotations(degrees int32) int {
-	// Radius values are in centimeters and the wheelBaseRadius is measured from the inner sides of the wheels.
-	wheelRadius := 3.4
-	wheelBaseRadius := 8.75
-
-	wheelCircumference := 2 * wheelRadius * math.Pi
-	wheelBaseCircumference := 2 * wheelBaseRadius * math.Pi
-
-	// Calculate the distance move by rotating 1 degree on a wheel
 	rotationInCm := (wheelBaseCircumference * float64(degrees)) / 360.
 	return int(rotationInCm / (wheelCircumference / 360))
+}
+
+func convertDistanceToWheelRotation(distance float64) int {
+	return int((distance / wheelCircumference) * 360)
 }
