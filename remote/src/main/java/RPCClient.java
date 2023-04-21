@@ -46,14 +46,15 @@ public class RPCClient {
         DriveRequest driveRequest = DriveRequest.newBuilder().setDistance(10).addAllMotors(requests).setSpeed(100).build();
 
         MotorRequest reqB = MotorRequest.newBuilder().setMotorPort(Port.B).setMotorType(Type.m).setMotorSpeed(speed).build();
-        GrabRequest grabRequest = GrabRequest.newBuilder().setSpeed(100).setMotor(reqB).setDegreesOfRotation(-1020).build();
-        GrabRequest unGrabRequest = GrabRequest.newBuilder().setSpeed(100).setMotor(reqB).setDegreesOfRotation(720).build();
+        GrabRequest grabRequest = GrabRequest.newBuilder().setSpeed(300).setMotor(reqB).setDegreesOfRotation(-1300).build();
+        GrabRequest unGrabRequest = GrabRequest.newBuilder().setSpeed(300).setMotor(reqB).setDegreesOfRotation(1200).build();
 
         // Test the robot
         try {
             client.grab(unGrabRequest);
-            Thread.sleep(10000);
-            client.grab(grabRequest);
+            //client.grab(grabRequest);
+
+            //client.drive(driveRequest);
 
         }
         // Catch exceptions returned from the robot
