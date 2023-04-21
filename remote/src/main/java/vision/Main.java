@@ -10,7 +10,7 @@ import org.opencv.videoio.VideoCapture;
 import static vision.Detection.*;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         int realWidth = 167;
         int realHeight = 122;
 
@@ -70,7 +70,20 @@ public class Main {
                     System.out.println("DiffAngle: " + angleDiff +"\n");
 
                     // TODO Make robot drive to closest ball
+                    System.out.println("Got Everything. Will proceed");
 
+                    Thread.sleep(1000);
+
+                    System.out.println("Rotating towards ball");
+
+                    Thread.sleep(5000);
+
+                    System.out.println("Driving towards ball");
+
+                    Thread.sleep(5000);
+
+                    System.out.println("Should have arrived");
+                    break;
                 }
 
                 // Pure debugging
