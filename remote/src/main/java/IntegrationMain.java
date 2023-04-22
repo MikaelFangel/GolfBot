@@ -1,9 +1,13 @@
+import io.grpc.Channel;
+import io.grpc.Grpc;
+import io.grpc.InsecureChannelCredentials;
 import nu.pattern.OpenCV;
 import org.opencv.core.Mat;
 
 import org.opencv.core.Point;
 import org.opencv.highgui.HighGui;
 import org.opencv.videoio.VideoCapture;
+import proto.*;
 import vision.helperClasses.BorderSet;
 
 import static vision.Detection.*;
@@ -13,6 +17,8 @@ public class IntegrationMain {
         int realWidth = 167;
         int realHeight = 122;
         int realLength = 25;
+
+        boolean stop = false;
 
         // Initialize library
         OpenCV.loadLocally();
@@ -99,15 +105,25 @@ public class IntegrationMain {
 
                     System.out.println("Rotating towards ball...");
                     robotController.rotate(angleDiff);
-                    Thread.sleep(5000);
 
+                    /*
+                    Thread.sleep(5000);
                     System.out.println("Driving towards ball");
                     robotController.driveStraight(distanceDiff);
                     Thread.sleep(5000);
 
                     System.out.println("Should have arrived. Will grab");
 
-                    break;
+                    robotController.stopController();
+                    Channel channel = Grpc.newChannelBuilder("192.168.1.12:50051", InsecureChannelCredentials.create()).build();
+                    MotorsGrpc.MotorsBlockingStub client = MotorsGrpc.newBlockingStub(channel);
+                    MotorRequest reqB = MotorRequest.newBuilder().setMotorPort(Port.B).setMotorType(Type.m).setMotorSpeed(100).build();
+                    GrabRequest grabRequest = GrabRequest.newBuilder().setSpeed(300).setMotor(reqB).setDegreesOfRotation(-1300).build();
+                    GrabRequest unGrabRequest = GrabRequest.newBuilder().setSpeed(300).setMotor(reqB).setDegreesOfRotation(1200).build();
+                    client.grab(grabRequest);
+                     */
+
+                    stop = true;
                 }
 
                 // Pure debugging
@@ -150,6 +166,9 @@ public class IntegrationMain {
                         System.out.println("BottomRight: " + irlBottomRight.x + ", " + irlBottomRight.y);
                     }
                     System.out.println(" ");
+
+
+                    if (stop) break;
                 }
 
 
