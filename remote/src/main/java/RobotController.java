@@ -10,16 +10,15 @@ public class RobotController {
     private ManagedChannel channel;
     private MotorsGrpc.MotorsBlockingStub client;
 
-    private final int speed = 100;
+    private final int defaultSpeed = 100;
 
     /**
-     * Used this method to start the controller before calling any other methods
-     * @param ip_port e.g. "192.168.1.12:50051"
+     * Initializes channel and client to connect with the robot.
+     * @param ip_port the ip and port of the robot on the subnet. e.g. 192.168.1.12:50051
      */
-    public void startController(String ip_port) {
+    public RobotController(String ip_port) {
         channel = Grpc.newChannelBuilder(ip_port, InsecureChannelCredentials.create()).build();
         client = MotorsGrpc.newBlockingStub(channel);
-
     }
 
     /**
@@ -41,7 +40,7 @@ public class RobotController {
         DriveRequest driveRequest = DriveRequest.newBuilder()
                 .addAllMotors(motorsRequest)
                 .setDistance((float) distance)
-                .setSpeed(speed)
+                .setSpeed(defaultSpeed)
                 .build();
 
         client.drive(driveRequest);
@@ -58,7 +57,7 @@ public class RobotController {
         RotateRequest rotateRequest = RotateRequest.newBuilder()
                 .addAllMotors(motorsRequest)
                 .setDegrees((int) degrees)
-                .setSpeed(speed)
+                .setSpeed(defaultSpeed)
                 .build();
 
         client.rotate(rotateRequest);
