@@ -1,5 +1,3 @@
-package vision;
-
 import nu.pattern.OpenCV;
 import org.opencv.core.Mat;
 
@@ -10,7 +8,7 @@ import vision.helperClasses.BorderSet;
 
 import static vision.Detection.*;
 
-public class Main {
+public class IntegrationMain {
     public static void main(String[] args) throws InterruptedException {
         int realWidth = 167;
         int realHeight = 122;
@@ -21,6 +19,8 @@ public class Main {
         VideoCapture capture = new VideoCapture();
         capture.open(2); // Might need to be changed
         // capture.open("/home/frederik/Desktop/border.mp4");
+
+        RobotController robotController = new RobotController("192.168.1.12:50051");
 
         // Main Loop
         while (true) {
@@ -71,7 +71,7 @@ public class Main {
                     centerMarker.x -= origin.x;
                     centerMarker.y -= origin.y;
                     rotationMarker.x -= origin.x;
-                    rotationMarker.y -= rotationMarker.y;
+                    rotationMarker.y -= origin.y;
 
                     for (Point ball : ballCoords) {
                         ball.x -= origin.x;
@@ -88,27 +88,25 @@ public class Main {
                     System.out.println("DiffAngle: " + angleDiff);
                     System.out.println("DiffDistance " + distance*conversionFactor);
 
-                    // TODO Make robot drive to closest ball
                     /*
-                    System.out.println("Got Everything. Will proceed");
+                    // TODO Make robot drive to closest ball
+                    System.out.println("Got Everything. Will proceed");;
 
-                    Thread.sleep(1000);
-
-                    System.out.println("Rotating towards ball");
-
+                    System.out.println("Rotating towards ball...");
+                    robotController.rotate(angleDiff);
                     Thread.sleep(5000);
 
                     System.out.println("Driving towards ball");
-
+                    robotController.driveStraight(distance);
                     Thread.sleep(5000);
 
                     System.out.println("Should have arrived");
                     break;
-                     */
+                    */
+
                 }
 
                 // Pure debugging
-                /*
                 {
                     System.out.println("\n### New Frame ###");
 
@@ -148,7 +146,6 @@ public class Main {
                     }
                     System.out.println(" ");
                 }
-                 */
 
                 // Display frame
                 HighGui.imshow("frame", frame); // Display frame
@@ -160,6 +157,7 @@ public class Main {
         }
 
         HighGui.destroyAllWindows();
+        robotController.stopController();
     }
 
     private static double distanceBetweenTwoPoints(double x1, double y1, double x2, double y2) {
