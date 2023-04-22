@@ -32,7 +32,7 @@ public class RobotController {
 
     /**
      * Makes the robot drive straight either forward or backwards for the distance given as argument
-     * @param distance Positive values for forward and negative for backwards
+     * @param distance Positive values in cm for forward and negative for backwards
      * @throws RuntimeException if the robot was not reached
      */
     public void driveStraight(double distance) throws RuntimeException {
@@ -45,7 +45,6 @@ public class RobotController {
                 .build();
 
         client.drive(driveRequest);
-
     }
 
     /**
