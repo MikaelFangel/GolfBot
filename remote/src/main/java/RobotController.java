@@ -35,7 +35,7 @@ public class RobotController {
      * @throws RuntimeException if the robot was not reached
      */
     public void driveStraight(double distance) throws RuntimeException {
-       ArrayList<MotorRequest> motorsRequest = createMotorRequests(Type.l, Port.A, Port.D);
+       ArrayList<MotorRequest> motorsRequest = createMultipleMotorRequests(Type.l, Port.A, Port.D);
 
         DriveRequest driveRequest = DriveRequest.newBuilder()
                 .addAllMotors(motorsRequest)
@@ -52,7 +52,7 @@ public class RobotController {
      * @throws RuntimeException if the robot was not reached
      */
     public void rotate(double degrees) throws RuntimeException {
-        ArrayList<MotorRequest> motorsRequest = createMotorRequests(Type.l, Port.A, Port.D);
+        ArrayList<MotorRequest> motorsRequest = createMultipleMotorRequests(Type.l, Port.A, Port.D);
 
         RotateRequest rotateRequest = RotateRequest.newBuilder()
                 .addAllMotors(motorsRequest)
@@ -64,16 +64,57 @@ public class RobotController {
 
     }
 
-    private ArrayList<MotorRequest> createMotorRequests(Type motorType, Port... ports) {
+    /**
+     * Runs a Grab rutine, by first grapping and the lowering again.
+     * @throws InterruptedException if sleep thread is interrupted
+     */
+    public void grab() throws InterruptedException {
+        MotorRequest motorRequest = createSingleMotorRequest(Type.m, Port.B);
+
+        GrabRequest grabRequest = GrabRequest.newBuilder()
+                .setMotor(motorRequest)
+                .setDegreesOfRotation(-1300)
+                .setSpeed(defaultSpeed)
+                .build();
+        GrabRequest unGrabRequest = GrabRequest.newBuilder()
+                .setMotor(motorRequest)
+                .setDegreesOfRotation(1200)
+                .setSpeed(defaultSpeed)
+                .build();
+
+        client.grab(grabRequest);
+        Thread.sleep(8000);
+        client.grab(unGrabRequest);
+
+    }
+
+    /**
+     * Create ArrayList of MotorRequests.
+     * @param motorType the type of motor that will be sat for all ports
+     * @param ports the ports which the motors are attached to
+     * @return ArrayList of MotorRequests, same length as ports provided.
+     */
+    private ArrayList<MotorRequest> createMultipleMotorRequests(Type motorType, Port... ports) {
         ArrayList<MotorRequest> motorRequests = new ArrayList<>();
 
         for (Port port : ports) {
-            motorRequests.add(MotorRequest.newBuilder()
-                    .setMotorPort(port)
-                    .setMotorType(motorType)
-                    .build());
+            motorRequests.add(createSingleMotorRequest(motorType, port));
         }
 
         return motorRequests;
+    }
+
+    /**
+     * Creates a single Motor Request
+     * @param motorType the type of motor that the port is connect to.
+     * @param port the port which the motor is on.
+     * @return MotorRequest
+     */
+    private MotorRequest createSingleMotorRequest(Type motorType, Port port) {
+        return MotorRequest.newBuilder()
+                .setMotorType(motorType)
+                .setMotorPort(port)
+                .setMotorSpeed(defaultSpeed)
+                .build();
     }
 }

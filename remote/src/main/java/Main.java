@@ -9,8 +9,7 @@ public class Main {
         RobotController controller = new RobotController(args[0]);
 
         try {
-            //controller.driveStraight(30);
-            controller.rotate(-90);
+            controller.grab();
 
         } catch (RuntimeException e) {
             System.out.println("Robot was probably not reached");
