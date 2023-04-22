@@ -12,6 +12,7 @@ public class IntegrationMain {
     public static void main(String[] args) throws InterruptedException {
         int realWidth = 167;
         int realHeight = 122;
+        int realLength = 25;
 
         // Initialize library
         OpenCV.loadLocally();
@@ -84,11 +85,15 @@ public class IntegrationMain {
                     double angleRobot = angleBetweenTwoPoints(centerMarker.x, centerMarker.y, rotationMarker.x, rotationMarker.y);
                     double angleBall = angleBetweenTwoPoints(centerMarker.x, centerMarker.y, closestBall.x, closestBall.y);
 
-                    double angleDiff = angleBall - angleRobot;
-                    System.out.println("DiffAngle: " + angleDiff);
-                    System.out.println("DiffDistance " + distance*conversionFactor);
+                    double angleDiff = angleRobot - angleBall;
+                    double distanceDiff = distance * conversionFactor - realLength;
 
-                    /*
+                    System.out.println("RobotAngle: " + angleRobot);
+                    System.out.println("BallAngle: " + angleBall);
+                    System.out.println("DiffAngle: " + angleDiff);
+                    System.out.println("DiffDistance " + (distance*conversionFactor - realLength));
+
+
                     // TODO Make robot drive to closest ball
                     System.out.println("Got Everything. Will proceed");;
 
@@ -97,16 +102,16 @@ public class IntegrationMain {
                     Thread.sleep(5000);
 
                     System.out.println("Driving towards ball");
-                    robotController.driveStraight(distance);
+                    robotController.driveStraight(distanceDiff);
                     Thread.sleep(5000);
 
-                    System.out.println("Should have arrived");
-                    break;
-                    */
+                    System.out.println("Should have arrived. Will grab");
 
+                    break;
                 }
 
                 // Pure debugging
+
                 {
                     System.out.println("\n### New Frame ###");
 
@@ -146,6 +151,7 @@ public class IntegrationMain {
                     }
                     System.out.println(" ");
                 }
+
 
                 // Display frame
                 HighGui.imshow("frame", frame); // Display frame
