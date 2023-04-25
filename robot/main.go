@@ -211,10 +211,12 @@ func convertDistanceToWheelRotation(distance float64) int {
 	return int((distance / wheelCircumference) * 360)
 }
 
+// getSensor Returns the requested sensor from the input ports of the robot
 func getSensor(inPort string, sensor string) (*ev3dev.Sensor, error) {
 	return ev3dev.SensorFor("ev3-ports:"+inPort, "lego-ev3-"+sensor)
 }
 
+// GetDistanceInCm Returns the distance to the closest object from the ultrasonic sensor
 func GetDistanceInCm() float64 {
 	ultraSonicSensor, err := getSensor(pBuff.InPort_in1.String(), pBuff.Sensor_us.String())
 	if err != nil {
