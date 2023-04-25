@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 public class RobotController {
-    private ManagedChannel channel;
-    private MotorsGrpc.MotorsBlockingStub client;
+    private final ManagedChannel channel;
+    private final MotorsGrpc.MotorsBlockingStub client;
 
     private final int defaultSpeed = 100;
 
@@ -48,7 +48,7 @@ public class RobotController {
 
     /**
      * Rotates the robot with itself as its center
-     * @param degrees postive values for counter-clockwise and negative for clockwise
+     * @param degrees positive values for counter-clockwise and negative for clockwise
      * @throws RuntimeException if the robot was not reached
      */
     public void rotate(double degrees) throws RuntimeException {
@@ -65,7 +65,7 @@ public class RobotController {
     }
 
     /**
-     * Runs a Grab rutine, by first grapping and the lowering again.
+     * Runs a Grab routine, by first grabbing and the lowering again.
      * @throws InterruptedException if sleep thread is interrupted
      */
     public void grab() throws InterruptedException {
@@ -106,7 +106,7 @@ public class RobotController {
 
     /**
      * Creates a single Motor Request
-     * @param motorType the type of motor that the port is connect to.
+     * @param motorType the type of motor that the port connect to.
      * @param port the port which the motor is on.
      * @return MotorRequest
      */
