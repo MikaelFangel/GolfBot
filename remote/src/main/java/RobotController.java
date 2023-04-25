@@ -7,18 +7,18 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 public class RobotController {
-    private final ManagedChannel channel;
-    private final MotorsGrpc.MotorsBlockingStub client;
+    private final ManagedChannel CHANNEL;
+    private final MotorsGrpc.MotorsBlockingStub CLIENT;
 
-    private final int defaultSpeed = 100;
+    private final int DEFAULT_SPEED = 100;
 
     /**
      * Initializes channel and client to connect with the robot.
      * @param ip_port the ip and port of the robot on the subnet. e.g. 192.168.1.12:50051
      */
     public RobotController(String ip_port) {
-        channel = Grpc.newChannelBuilder(ip_port, InsecureChannelCredentials.create()).build();
-        client = MotorsGrpc.newBlockingStub(channel);
+        CHANNEL = Grpc.newChannelBuilder(ip_port, InsecureChannelCredentials.create()).build();
+        CLIENT = MotorsGrpc.newBlockingStub(CHANNEL);
     }
 
     /**
@@ -26,7 +26,7 @@ public class RobotController {
      * @throws InterruptedException if shutdown was interrupted
      */
     public void stopController() throws InterruptedException {
-        channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
+        CHANNEL.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
     }
 
     /**
@@ -40,10 +40,10 @@ public class RobotController {
         DriveRequest driveRequest = DriveRequest.newBuilder()
                 .addAllMotors(motorsRequest)
                 .setDistance((float) distance)
-                .setSpeed(defaultSpeed)
+                .setSpeed(DEFAULT_SPEED)
                 .build();
 
-        client.drive(driveRequest);
+        CLIENT.drive(driveRequest);
     }
 
     /**
@@ -57,10 +57,10 @@ public class RobotController {
         RotateRequest rotateRequest = RotateRequest.newBuilder()
                 .addAllMotors(motorsRequest)
                 .setDegrees((int) degrees)
-                .setSpeed(defaultSpeed)
+                .setSpeed(DEFAULT_SPEED)
                 .build();
 
-        client.rotate(rotateRequest);
+        CLIENT.rotate(rotateRequest);
 
     }
 
@@ -74,17 +74,17 @@ public class RobotController {
         GrabRequest grabRequest = GrabRequest.newBuilder()
                 .setMotor(motorRequest)
                 .setDegreesOfRotation(-1300)
-                .setSpeed(defaultSpeed)
+                .setSpeed(DEFAULT_SPEED)
                 .build();
         GrabRequest unGrabRequest = GrabRequest.newBuilder()
                 .setMotor(motorRequest)
                 .setDegreesOfRotation(1200)
-                .setSpeed(defaultSpeed)
+                .setSpeed(DEFAULT_SPEED)
                 .build();
 
-        client.grab(grabRequest);
+        CLIENT.grab(grabRequest);
         Thread.sleep(8000);
-        client.grab(unGrabRequest);
+        CLIENT.grab(unGrabRequest);
 
     }
 
@@ -114,7 +114,7 @@ public class RobotController {
         return MotorRequest.newBuilder()
                 .setMotorType(motorType)
                 .setMotorPort(port)
-                .setMotorSpeed(defaultSpeed)
+                .setMotorSpeed(DEFAULT_SPEED)
                 .build();
     }
 }
