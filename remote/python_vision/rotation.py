@@ -54,7 +54,7 @@ def getCenterAndDirectionCoords(frame):
             if i == 1:
                 directionCoords = [xRect + int(wRect / 2), yRect + int(hRect / 2)]
 
-    cv.imshow("mask", mask)
+    # cv.imshow("mask", mask)
     return centerCoords, directionCoords
 
 while True:
@@ -66,7 +66,6 @@ while True:
 
     # Show frame
     cv.imshow("frame", frame)
-
 
     # cv.imshow("hsvframe", hsvFrame)
 

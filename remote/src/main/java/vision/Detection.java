@@ -2,6 +2,7 @@ package vision;
 
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
+import vision.helperClasses.BorderSet;
 import vision.helperClasses.ContourSet;
 
 import java.util.*;
@@ -128,7 +129,7 @@ public class Detection {
      * @param frame to be evaluated
      * @return null if there are not found exactly 4 lines, else the 4 coordinates of the border intersections.
      */
-    public static Point[] getBorderFromFrame(Mat frame) {
+    public static BorderSet getBorderFromFrame(Mat frame) {
         Mat frameHSV = new Mat();
         Mat maskRed = new Mat();
         Mat frameCourse = new Mat();
@@ -193,6 +194,8 @@ public class Detection {
             corners[i] = new Point(point.x - offsetX, point.y - offsetY);
         }
 
-        return corners;
+        BorderSet borderSet = new BorderSet(corners, new Point(offsetX, offsetY));
+
+        return borderSet;
     }
 }

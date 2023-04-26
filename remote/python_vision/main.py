@@ -141,6 +141,7 @@ while True:
         if len(lines) == 4:
             # Origin
             offset = lines[0][0]
+            print(f"Offset: ${offset}")
 
             # Calculate corners x and y with offset
             corners = [point - offset for point in lines]
