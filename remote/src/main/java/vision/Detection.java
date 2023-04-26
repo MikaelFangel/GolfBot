@@ -18,6 +18,7 @@ public class Detection {
 
     private Course course;
     private double conversionFactor;
+    private Point originCameraOffset;
 
     public Detection(int cameraIndex) {
         course = new Course();
@@ -34,7 +35,10 @@ public class Detection {
     }
 
     private void initializeCourse(VideoCapture capture) {
+        boolean courseFound = false, robotFound = false, ballsFound = false;
+
         // Fill course with variables
+        System.out.println("Searching for course objects...");
         while (true) {
             Mat frame = new Mat();
             capture.read(frame);
@@ -45,13 +49,25 @@ public class Detection {
             HighGui.waitKey(1);
 
             // 1. Find course corner to establish conversion factor
-            if (!findCourseCorners(frame))  continue;
+            if (!courseFound) {
+                courseFound = findCourseCorners(frame);
+                if (!courseFound) continue;
+                System.out.println("Found Course Corners");
+            }
 
             // 2. Find Robot position and rotation
-            if (!findRobot(frame)) continue;
+            if (!robotFound) {
+                robotFound = findRobot(frame);
+                if (!robotFound) continue;
+                System.out.println("Found Robot");
+            }
 
             // 3. Find balls on the course.
-            if(!findBalls(frame)) continue;
+            if (!ballsFound) {
+                ballsFound = findBalls(frame);
+                if (!ballsFound) continue;
+                System.out.println("Found At least 1 ball");
+            }
 
             break;
         }
@@ -69,31 +85,37 @@ public class Detection {
 
         // Get camera coordinates
         Point[] cornerCoords = borderSet.correctCoords;
-        Point origin = borderSet.origin;
+        originCameraOffset = borderSet.origin;
 
         topLeft = new Point(cornerCoords[0].x, cornerCoords[0].y);
         topRight = new Point(cornerCoords[1].x, cornerCoords[1].y);
         bottomRight = new Point(cornerCoords[2].x, cornerCoords[2].y);
         bottomLeft = new Point(cornerCoords[3].x, cornerCoords[3].y);
 
-        // Get irl coordinates
+        // Calculate conversion factor
         conversionFactor = course.length / distanceBetweenTwoPoints(topLeft.x, topLeft.y, topRight.x, topRight.y);
 
+        // Get irl coordinates
         irlTopLeft = new Point(cornerCoords[0].x * conversionFactor, cornerCoords[0].y * conversionFactor);
         irlTopRight = new Point(cornerCoords[1].x * conversionFactor, cornerCoords[1].y * conversionFactor);
         irlBottomRight = new Point(cornerCoords[2].x * conversionFactor, cornerCoords[2].y * conversionFactor);
         irlBottomLeft = new Point(cornerCoords[3].x * conversionFactor, cornerCoords[3].y * conversionFactor);
 
+        // Push variables to course class
         course.topLeft = irlTopLeft;
         course.topRight = irlTopRight;
         course.bottomLeft = irlBottomLeft;
         course.bottomRight = irlBottomRight;
 
-        return false;
+        return true;
     }
 
     private boolean findRobot(Mat frame) {
-        return false;
+        Point[] robotMarkerCoords = getRotationCoordsFromFrame(frame); // Used for rotation
+        if (robotMarkerCoords.length > 2) return false;
+
+
+        return true;
     }
 
     private boolean findBalls(Mat frame) {
