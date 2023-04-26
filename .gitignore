@@ -8,4 +8,4 @@ target/
 out/
 
 # Python virtualenv
-vision/venv/
+remote/python_vision/venv/
