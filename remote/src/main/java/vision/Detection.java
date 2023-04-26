@@ -1,6 +1,7 @@
 package vision;
 
 import courseObjects.Course;
+import courseObjects.Robot;
 import nu.pattern.OpenCV;
 import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
@@ -9,13 +10,16 @@ import org.opencv.videoio.VideoCapture;
 import vision.helperClasses.BorderSet;
 import vision.helperClasses.ContourSet;
 
-import java.io.IOException;
 import java.util.*;
+
+import static vision.Calculations.angleBetweenTwoPoints;
+import static vision.Calculations.distanceBetweenTwoPoints;
 
 public class Detection {
 
     private Course course;
     private double conversionFactor;
+    private Point originCameraOffset;
 
     public Detection(int cameraIndex) {
         course = new Course();
@@ -24,58 +28,114 @@ public class Detection {
         OpenCV.loadLocally();
         VideoCapture capture = new VideoCapture();
         capture.open(cameraIndex);
-
         if (!capture.isOpened()) throw new RuntimeException("Camera Capture was not opened");
 
+        initializeCourse(capture);
+
+        // Spawn background thread;
+    }
+
+    private void initializeCourse(VideoCapture capture) {
+        boolean courseFound = false, robotFound = false, ballsFound = false;
+
         // Fill course with variables
+        System.out.println("Searching for course objects...");
         while (true) {
             Mat frame = new Mat();
             capture.read(frame);
+            if (frame.empty()) throw new RuntimeException("Empty frame");
 
-            //HighGui.imshow("frame", frame); // Display frame
+            // Show GUI
+            HighGui.imshow("frame", frame); // Display frame
+            HighGui.waitKey(1);
 
-
-            // 1. Find course corner to establish size factor
-            //System.out.println("Finding Course Corners");
-            //if (!findCourseCorners(frame))  continue;
-            //System.out.println("Found Course Corners");
+            // 1. Find course corner to establish conversion factor
+            if (!courseFound) {
+                courseFound = findCourseCorners(frame);
+                if (!courseFound) continue;
+                System.out.println("Found Course Corners");
+            }
 
             // 2. Find Robot position and rotation
-            //System.out.println("Finding Balls");
-            //if (!findRobot(frame)) continue;
-            //System.out.println("Found at least one ball");
+            if (!robotFound) {
+                robotFound = findRobot(frame);
+                if (!robotFound) continue;
+                System.out.println("Found Robot");
+            }
 
             // 3. Find balls on the course.
-            //System.out.println("Finding Balls");
-            if(!findBalls(frame));
-            //System.out.println("Found at least one ball");
-
-            System.out.println("Test");
-            HighGui.waitKey(1);
-            // Check for user input to break the loop
-            try {
-                if (System.in.available() > 0 && System.in.read() == 'q') {
-                    break;
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (!ballsFound) {
+                ballsFound = findBalls(frame);
+                if (!ballsFound) continue;
+                System.out.println("Found At least 1 ball");
             }
+
+            break;
         }
 
         HighGui.destroyAllWindows();
     }
 
     private boolean findCourseCorners(Mat frame) {
-        /*
+        Point topLeft = null, topRight = null, bottomRight = null, bottomLeft = null;
+        Point irlTopLeft = null, irlTopRight = null, irlBottomLeft = null, irlBottomRight = null;
 
-        if (frame.empty()) throw new RuntimeException("Empty frame");
+        // Try to get border set
+        BorderSet borderSet = getBorderFromFrame(frame);
+        if (borderSet == null) return false;
 
-         */
-        return false;
+        // Get camera coordinates
+        Point[] cornerCoords = borderSet.correctCoords;
+
+
+        topLeft = new Point(cornerCoords[0].x, cornerCoords[0].y);
+        topRight = new Point(cornerCoords[1].x, cornerCoords[1].y);
+        bottomRight = new Point(cornerCoords[2].x, cornerCoords[2].y);
+        bottomLeft = new Point(cornerCoords[3].x, cornerCoords[3].y);
+
+        // Calculate conversion factor and save origin offset for
+        conversionFactor = course.length / distanceBetweenTwoPoints(topLeft.x, topLeft.y, topRight.x, topRight.y);
+        originCameraOffset = borderSet.origin;
+
+        // Get irl coordinates
+        irlTopLeft = new Point(cornerCoords[0].x * conversionFactor, cornerCoords[0].y * conversionFactor);
+        irlTopRight = new Point(cornerCoords[1].x * conversionFactor, cornerCoords[1].y * conversionFactor);
+        irlBottomRight = new Point(cornerCoords[2].x * conversionFactor, cornerCoords[2].y * conversionFactor);
+        irlBottomLeft = new Point(cornerCoords[3].x * conversionFactor, cornerCoords[3].y * conversionFactor);
+
+        // Push variables to course class
+        course.topLeft = irlTopLeft;
+        course.topRight = irlTopRight;
+        course.bottomLeft = irlBottomLeft;
+        course.bottomRight = irlBottomRight;
+
+        return true;
     }
 
     private boolean findRobot(Mat frame) {
-        return false;
+        Point[] robotMarkerCoords = getRotationCoordsFromFrame(frame);
+        if (robotMarkerCoords.length > 2) return false;
+
+        // Get robots two markers
+        Point centerMarker = robotMarkerCoords[0];
+        Point rotationMarker = robotMarkerCoords[1];
+
+        // Correct for offset
+        centerMarker.x -= originCameraOffset.x;
+        centerMarker.y -= originCameraOffset.y;
+        rotationMarker.x -= originCameraOffset.x;
+        rotationMarker.y -= originCameraOffset.y;
+
+        // Calculate angle of the robot
+        double robotAngle = angleBetweenTwoPoints(centerMarker.x, centerMarker.y, rotationMarker.x, rotationMarker.y);
+
+        // Convert pixel coordinates to real world measurements
+        Point robotCenter = new Point(centerMarker.x * conversionFactor, centerMarker.y * conversionFactor);
+
+        // Save variable to course object
+        course.robot = new Robot(robotCenter, robotAngle);
+
+        return true;
     }
 
     private boolean findBalls(Mat frame) {
