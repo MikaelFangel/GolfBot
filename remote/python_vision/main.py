@@ -111,7 +111,7 @@ def accuracy_test(balls_test):
 real_width = 167
 real_height = 122
 
-video = cv.VideoCapture(0)
+video = cv.VideoCapture(2)
 
 while True:
     # grab the current frame
@@ -128,6 +128,7 @@ while True:
 
     # Origin
     offset = lines[0][0]
+    print(f"Offset: ${offset}")
 
     # Calculate corners x and y with offset
     corners = [point - offset for point in lines]
