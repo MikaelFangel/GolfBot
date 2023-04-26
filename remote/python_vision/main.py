@@ -75,7 +75,7 @@ def getCirclesFromFrames(frame_):
     grayFrame = cv.cvtColor(frame_, cv.COLOR_BGR2GRAY)
 
     # Pixel values under 175 is ignored
-    _, binary_frame = cv.threshold(grayFrame, 180, 255, cv.THRESH_BINARY)
+    _, binary_frame = cv.threshold(grayFrame, 185, 255, cv.THRESH_BINARY)
 
     mask = np.zeros_like(binary_frame)
     mask[:] = 255
@@ -91,10 +91,10 @@ def getCirclesFromFrames(frame_):
                                     method=cv.HOUGH_GRADIENT,
                                     dp=1,
                                     minDist=5,
-                                    param1=25,  # gradient value used in the edge detection
-                                    param2=15,  # lower values allow more circles to be detected (false positives)
+                                    param1=20,  # gradient value used in the edge detection
+                                    param2=10,  # lower values allow more circles to be detected (false positives)
                                     minRadius=1,  # limits the smallest circle to this size (via radius)
-                                    maxRadius=7  # similarly sets the limit for the largest circles
+                                    maxRadius=6  # similarly sets the limit for the largest circles
                                     )
 
     if white_circles is not None:
@@ -141,7 +141,7 @@ while True:
         if len(lines) == 4:
             # Origin
             offset = lines[0][0]
-            print(f"Offset: ${offset}")
+            #print(f"Offset: ${offset}")
 
             # Calculate corners x and y with offset
             corners = [point - offset for point in lines]
@@ -171,8 +171,8 @@ while True:
                 [ball] = [ball]
 
                 # Print irl-coordinates for the orange ball
-                #print("Orange ball: ")
-                #print(ball)
+                print("Orange ball: ")
+                print(ball)
 
             circles = getCirclesFromFrames(frame)
 
@@ -184,12 +184,12 @@ while True:
                 [balls] = [balls]
 
                 # Print irl-coordinates for all white balls
-                #print("White balls: ")
-                #print(balls)
+                print("White balls: ")
+                print(balls)
 
     cv.imshow("frame", frame)
 
-    if cv.waitKey(1) & 0xFF == ord('q'):
+    if cv.waitKey(1000) & 0xFF == ord('q'):
         break
 
 video.release()
