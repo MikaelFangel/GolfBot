@@ -3,11 +3,12 @@ package courseObjects;
 import org.opencv.core.Point;
 
 public class Robot {
-    Point centerMarker, rotationMarker;
-    final double length = 19.0, width = 17.0, height = 18.0;
+    public Point center;
+    public double angle;
+    public final double length = 19.0, width = 17.0, height = 18.0;
 
-    public Robot(Point centerMarker, Point rotationMarker){
-        this.centerMarker = centerMarker;
-        this.rotationMarker = rotationMarker;
+    public Robot(Point center, double angle){
+        this.center = center;
+        this.angle = angle;
     }
 }
