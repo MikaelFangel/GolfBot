@@ -34,6 +34,9 @@ public class Detection {
         initializeCourse(capture);
 
         // Spawn background thread;
+        new Thread(() -> detectCourse(capture)).start();
+
+        System.out.println("Spawned Background Detection Thread");
     }
 
     private void initializeCourse(VideoCapture capture) {
@@ -77,6 +80,18 @@ public class Detection {
         HighGui.destroyAllWindows();
     }
 
+    private void detectCourse(VideoCapture capture) {
+
+        while (true) {
+            Mat frame = new Mat();
+            capture.read(frame);
+
+            findCourseCorners(frame);
+            findRobot(frame);
+            findBalls(frame);
+        }
+    }
+
     private boolean findCourseCorners(Mat frame) {
         Point topLeft = null, topRight = null, bottomRight = null, bottomLeft = null;
         Point irlTopLeft = null, irlTopRight = null, irlBottomLeft = null, irlBottomRight = null;
@@ -87,7 +102,6 @@ public class Detection {
 
         // Get camera coordinates
         Point[] cornerCoords = borderSet.correctCoords;
-
 
         topLeft = new Point(cornerCoords[0].x, cornerCoords[0].y);
         topRight = new Point(cornerCoords[1].x, cornerCoords[1].y);
@@ -105,10 +119,10 @@ public class Detection {
         irlBottomLeft = new Point(cornerCoords[3].x * conversionFactor, cornerCoords[3].y * conversionFactor);
 
         // Push variables to course class
-        course.topLeft = irlTopLeft;
-        course.topRight = irlTopRight;
-        course.bottomLeft = irlBottomLeft;
-        course.bottomRight = irlBottomRight;
+        course.setTopLeft(irlTopLeft);
+        course.setTopRight(irlTopRight);
+        course.setBottomLeft(irlBottomLeft);
+        course.setBottomRight(irlBottomRight);
 
         return true;
     }
@@ -134,13 +148,13 @@ public class Detection {
         Point robotCenter = new Point(centerMarker.x * conversionFactor, centerMarker.y * conversionFactor);
 
         // Save variable to course object
-        course.robot = new Robot(robotCenter, robotAngle);
+        course.setRobot(new Robot(robotCenter, robotAngle));
 
         return true;
     }
 
     private boolean findBalls(Mat frame) {
-        return false;
+        return true;
     }
 
     /**
