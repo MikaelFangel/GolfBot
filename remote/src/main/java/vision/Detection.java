@@ -114,7 +114,7 @@ public class Detection {
 
     private boolean findRobot(Mat frame) {
         Point[] robotMarkerCoords = getRotationCoordsFromFrame(frame);
-        if (robotMarkerCoords.length > 2) return false;
+        if (robotMarkerCoords.length < 2) return false;
 
         // Get robots two markers
         Point centerMarker = robotMarkerCoords[0];
