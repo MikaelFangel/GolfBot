@@ -194,8 +194,6 @@ public class Detection {
             corners[i] = new Point(point.x - offsetX, point.y - offsetY);
         }
 
-        BorderSet borderSet = new BorderSet(corners, new Point(offsetX, offsetY));
-
-        return borderSet;
+        return new BorderSet(corners, new Point(offsetX, offsetY));
     }
 }
