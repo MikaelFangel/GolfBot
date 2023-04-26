@@ -12,6 +12,8 @@ import vision.helperClasses.ContourSet;
 
 import java.util.*;
 
+import static vision.Calculations.distanceBetweenTwoPoints;
+
 public class Detection {
 
     private Course course;
@@ -24,31 +26,32 @@ public class Detection {
         OpenCV.loadLocally();
         VideoCapture capture = new VideoCapture();
         capture.open(cameraIndex);
-
         if (!capture.isOpened()) throw new RuntimeException("Camera Capture was not opened");
 
+        initializeCourse(capture);
+
+        // Spawn background thread;
+    }
+
+    private void initializeCourse(VideoCapture capture) {
         // Fill course with variables
         while (true) {
             Mat frame = new Mat();
             capture.read(frame);
+            if (frame.empty()) throw new RuntimeException("Empty frame");
 
+            // Show GUI
             HighGui.imshow("frame", frame); // Display frame
             HighGui.waitKey(1);
 
-            // 1. Find course corner to establish size factor
-            //System.out.println("Finding Course Corners");
+            // 1. Find course corner to establish conversion factor
             if (!findCourseCorners(frame))  continue;
-            //System.out.println("Found Course Corners");
 
             // 2. Find Robot position and rotation
-            //System.out.println("Finding Balls");
             if (!findRobot(frame)) continue;
-            //System.out.println("Found at least one ball");
 
             // 3. Find balls on the course.
-            //System.out.println("Finding Balls");
             if(!findBalls(frame)) continue;
-            //System.out.println("Found at least one ball");
 
             break;
         }
@@ -57,11 +60,35 @@ public class Detection {
     }
 
     private boolean findCourseCorners(Mat frame) {
-        /*
+        Point topLeft = null, topRight = null, bottomRight = null, bottomLeft = null;
+        Point irlTopLeft = null, irlTopRight = null, irlBottomLeft = null, irlBottomRight = null;
 
-        if (frame.empty()) throw new RuntimeException("Empty frame");
+        // Try to get border set
+        BorderSet borderSet = getBorderFromFrame(frame);
+        if (borderSet == null) return false;
 
-         */
+        // Get camera coordinates
+        Point[] cornerCoords = borderSet.correctCoords;
+        Point origin = borderSet.origin;
+
+        topLeft = new Point(cornerCoords[0].x, cornerCoords[0].y);
+        topRight = new Point(cornerCoords[1].x, cornerCoords[1].y);
+        bottomRight = new Point(cornerCoords[2].x, cornerCoords[2].y);
+        bottomLeft = new Point(cornerCoords[3].x, cornerCoords[3].y);
+
+        // Get irl coordinates
+        conversionFactor = course.length / distanceBetweenTwoPoints(topLeft.x, topLeft.y, topRight.x, topRight.y);
+
+        irlTopLeft = new Point(cornerCoords[0].x * conversionFactor, cornerCoords[0].y * conversionFactor);
+        irlTopRight = new Point(cornerCoords[1].x * conversionFactor, cornerCoords[1].y * conversionFactor);
+        irlBottomRight = new Point(cornerCoords[2].x * conversionFactor, cornerCoords[2].y * conversionFactor);
+        irlBottomLeft = new Point(cornerCoords[3].x * conversionFactor, cornerCoords[3].y * conversionFactor);
+
+        course.topLeft = irlTopLeft;
+        course.topRight = irlTopRight;
+        course.bottomLeft = irlBottomLeft;
+        course.bottomRight = irlBottomRight;
+
         return false;
     }
 
