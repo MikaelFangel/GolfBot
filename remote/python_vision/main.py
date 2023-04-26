@@ -77,14 +77,10 @@ def getCirclesFromFrames(frame_):
     # Pixel values under 175 is ignored
     _, binary_frame = cv.threshold(grayFrame, 185, 255, cv.THRESH_BINARY)
 
-    mask = np.zeros_like(binary_frame)
-    mask[:] = 255
-
-    # Apply the mask binary mask
-    masked_frame = cv.bitwise_and(binary_frame, mask)
+    cv.imshow("binary frame", binary_frame)
 
     # Apply blur for noise reduction
-    blurFrame = cv.GaussianBlur(masked_frame, (7, 7), 0)
+    blurFrame = cv.GaussianBlur(binary_frame, (7, 7), 0)
 
     # These configurations works okay with the current course setup
     white_circles = cv.HoughCircles(image=blurFrame,

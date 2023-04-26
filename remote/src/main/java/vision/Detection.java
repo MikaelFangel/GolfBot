@@ -1,16 +1,20 @@
 package vision;
 
+import courseObjects.Ball;
 import courseObjects.Course;
 import courseObjects.Robot;
 import nu.pattern.OpenCV;
 import org.opencv.core.*;
+import org.opencv.core.Point;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 import vision.helperClasses.BorderSet;
 import vision.helperClasses.ContourSet;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 import static vision.Calculations.angleBetweenTwoPoints;
 import static vision.Calculations.distanceBetweenTwoPoints;
@@ -67,7 +71,8 @@ public class Detection {
             if (!ballsFound) {
                 ballsFound = findBalls(frame);
                 if (!ballsFound) continue;
-                System.out.println("Found At least 1 ball");
+                System.out.println("Found " + course.getBalls().size() + " balls");
+                course.getBalls().forEach(ball -> System.out.println(ball.getCenter().x));
             }
 
             break;
@@ -146,47 +151,30 @@ public class Detection {
         Mat binaryFrame = new Mat();
         Imgproc.threshold(frameGray, binaryFrame, 185, 255, Imgproc.THRESH_BINARY);
 
-        // create a matrix of ones with the same dimensions as the input image
-        Mat whiteMask = Mat.ones(binaryFrame.size(), binaryFrame.type());
-
-        Mat maskedFrame = new Mat();
-        Core.bitwise_and(binaryFrame, whiteMask, maskedFrame);
-
-        HighGui.imshow("masked", maskedFrame); // Display frame
-
         Mat frameBlur = new Mat();
-        Imgproc.GaussianBlur(maskedFrame, frameBlur, new Size(7,7), 0);
+        Imgproc.GaussianBlur(binaryFrame, frameBlur, new Size(7,7), 0);
 
-        ArrayList<double[]> circleCoords = new ArrayList<>();
+        ArrayList<Ball> balls = new ArrayList<>();
 
         // Get circles from frame
         Mat circles = new Mat();
-        Imgproc.HoughCircles(frameGray, circles, Imgproc.HOUGH_GRADIENT, 1, 50, 20, 10, 1, 6);
+        Imgproc.HoughCircles(frameBlur, circles, Imgproc.HOUGH_GRADIENT, 1, 30, 20, 12, 1, 6);
 
         // Add circle coords to return arraylist
         if (!circles.empty()) {
             for (int i = 0; i < circles.width(); i++) {
                 double[] center = circles.get(0, i);
-
-                double[] coords = new double[2];
-                coords[0] = center[0];
-                coords[1] = center[1];
-
-                circleCoords.add(coords);
+                // Create the irl coordinates and create the ball object with the Color white
+                Point coordinates = new Point((center[0] - originCameraOffset.x) * conversionFactor, (center[1] - originCameraOffset.y) * conversionFactor);
+                balls.add(new Ball(coordinates, Color.WHITE));
+                Imgproc.circle(frame, coordinates, 5, new Scalar(0, 0, 255), 1);
             }
         }
+        // Update ball positions
+        course.setBalls(balls);
 
-        // Convert to Point[]
-        Point[] coords = new Point[circleCoords.size()];
-        for (int i = 0; i < coords.length; i++) {
-            coords[i] = new Point(circleCoords.get(i));
-        }
-
-        Arrays.stream(coords).forEach(s -> System.out.println(s.x));
-
-        System.out.println("Here!");
-
-        return true;
+        // Return false if size == 0, else true
+        return course.getBalls().size() != 0;
     }
 
     /**
@@ -202,16 +190,8 @@ public class Detection {
         Mat binaryFrame = new Mat();
         Imgproc.threshold(frameGray, binaryFrame, 185, 255, Imgproc.THRESH_BINARY);
 
-        // create a matrix of ones with the same dimensions as the input image
-        Mat whiteMask = Mat.ones(binaryFrame.size(), binaryFrame.type());
-
-        Mat maskedFrame = new Mat();
-        Core.bitwise_and(binaryFrame, whiteMask, maskedFrame);
-
-        HighGui.imshow("masked", maskedFrame); // Display frame
-
         Mat frameBlur = new Mat();
-        Imgproc.GaussianBlur(maskedFrame, frameBlur, new Size(7,7), 0);
+        Imgproc.GaussianBlur(binaryFrame, frameBlur, new Size(7,7), 0);
 
         ArrayList<double[]> circleCoords = new ArrayList<>();
 
