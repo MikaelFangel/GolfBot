@@ -3,7 +3,6 @@ package vision;
 import courseObjects.Course;
 import courseObjects.Robot;
 import nu.pattern.OpenCV;
-import org.checkerframework.checker.units.qual.C;
 import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
@@ -103,6 +102,7 @@ public class Detection {
         // Get camera coordinates
         Point[] cornerCoords = borderSet.correctCoords;
 
+
         topLeft = new Point(cornerCoords[0].x, cornerCoords[0].y);
         topRight = new Point(cornerCoords[1].x, cornerCoords[1].y);
         bottomRight = new Point(cornerCoords[2].x, cornerCoords[2].y);
@@ -154,6 +154,53 @@ public class Detection {
     }
 
     private boolean findBalls(Mat frame) {
+        //Converting the image to Gray and blur it
+        Mat frameGray = new Mat();
+        Imgproc.cvtColor(frame, frameGray, Imgproc.COLOR_BGR2GRAY);
+
+        Mat binaryFrame = new Mat();
+        Imgproc.threshold(frameGray, binaryFrame, 185, 255, Imgproc.THRESH_BINARY);
+
+        // create a matrix of ones with the same dimensions as the input image
+        Mat whiteMask = Mat.ones(binaryFrame.size(), binaryFrame.type());
+
+        Mat maskedFrame = new Mat();
+        Core.bitwise_and(binaryFrame, whiteMask, maskedFrame);
+
+        HighGui.imshow("masked", maskedFrame); // Display frame
+
+        Mat frameBlur = new Mat();
+        Imgproc.GaussianBlur(maskedFrame, frameBlur, new Size(7,7), 0);
+
+        ArrayList<double[]> circleCoords = new ArrayList<>();
+
+        // Get circles from frame
+        Mat circles = new Mat();
+        Imgproc.HoughCircles(frameGray, circles, Imgproc.HOUGH_GRADIENT, 1, 50, 20, 10, 1, 6);
+
+        // Add circle coords to return arraylist
+        if (!circles.empty()) {
+            for (int i = 0; i < circles.width(); i++) {
+                double[] center = circles.get(0, i);
+
+                double[] coords = new double[2];
+                coords[0] = center[0];
+                coords[1] = center[1];
+
+                circleCoords.add(coords);
+            }
+        }
+
+        // Convert to Point[]
+        Point[] coords = new Point[circleCoords.size()];
+        for (int i = 0; i < coords.length; i++) {
+            coords[i] = new Point(circleCoords.get(i));
+        }
+
+        Arrays.stream(coords).forEach(s -> System.out.println(s.x));
+
+        System.out.println("Here!");
+
         return true;
     }
 
@@ -162,32 +209,41 @@ public class Detection {
      * @param frame to be evaluated.
      * @return Point array, with coordinates of the center for each circle.
      */
-    public Point[] getCircleCoordsFromFrame(Mat frame) {
+    public Point[] getWhiteBallCoordsFromFrame(Mat frame) {
         //Converting the image to Gray and blur it
         Mat frameGray = new Mat();
-        Mat frameBlur = new Mat();
+        Imgproc.cvtColor(frame, frameGray, Imgproc.COLOR_BGR2GRAY);
 
-        Imgproc.GaussianBlur(frame, frameBlur, new Size(9,9), 0);
-        Imgproc.cvtColor(frameBlur, frameGray, Imgproc.COLOR_BGR2GRAY);
+        Mat binaryFrame = new Mat();
+        Imgproc.threshold(frameGray, binaryFrame, 185, 255, Imgproc.THRESH_BINARY);
+
+        // create a matrix of ones with the same dimensions as the input image
+        Mat whiteMask = Mat.ones(binaryFrame.size(), binaryFrame.type());
+
+        Mat maskedFrame = new Mat();
+        Core.bitwise_and(binaryFrame, whiteMask, maskedFrame);
+
+        HighGui.imshow("masked", maskedFrame); // Display frame
+
+        Mat frameBlur = new Mat();
+        Imgproc.GaussianBlur(maskedFrame, frameBlur, new Size(7,7), 0);
 
         ArrayList<double[]> circleCoords = new ArrayList<>();
 
-        if (!frame.empty()) {
-            // Get circles from frame
-            Mat circles = new Mat();
-            Imgproc.HoughCircles(frameGray, circles, Imgproc.HOUGH_GRADIENT, 1, 50, 25, 17, 4, 8);
+        // Get circles from frame
+        Mat circles = new Mat();
+        Imgproc.HoughCircles(frameGray, circles, Imgproc.HOUGH_GRADIENT, 1, 50, 20, 10, 1, 6);
 
-            // Add circle coords to return arraylist
-            if (!circles.empty()) {
-                for (int i = 0; i < circles.width(); i++) {
-                    double[] center = circles.get(0, i);
+        // Add circle coords to return arraylist
+        if (!circles.empty()) {
+            for (int i = 0; i < circles.width(); i++) {
+                double[] center = circles.get(0, i);
 
-                    double[] coords = new double[2];
-                    coords[0] = center[0];
-                    coords[1] = center[1];
+                double[] coords = new double[2];
+                coords[0] = center[0];
+                coords[1] = center[1];
 
-                    circleCoords.add(coords);
-                }
+                circleCoords.add(coords);
             }
         }
 
@@ -343,9 +399,7 @@ public class Detection {
             corners[i] = new Point(point.x - offsetX, point.y - offsetY);
         }
 
-        BorderSet borderSet = new BorderSet(corners, new Point(offsetX, offsetY));
-
-        return borderSet;
+        return new BorderSet(corners, new Point(offsetX, offsetY));
     }
 
     public synchronized Course getCourse() {

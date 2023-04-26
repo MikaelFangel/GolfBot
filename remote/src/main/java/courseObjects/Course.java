@@ -2,11 +2,13 @@ package courseObjects;
 
 import org.opencv.core.Point;
 
-public  class Course {
+import java.util.List;
+
+public class Course {
     public final double length = 167.0, width = 122.0;
 
     private Point topLeft, topRight, bottomLeft, bottomRight;
-    private Ball[] balls;
+    private List<Ball> balls;
     private Robot robot;
 
 
@@ -43,11 +45,11 @@ public  class Course {
         this.bottomRight = bottomRight;
     }
 
-    public synchronized Ball[] getBalls() {
+    public synchronized List<Ball> getBalls() {
         return balls;
     }
 
-    public synchronized void setBalls(Ball[] balls) {
+    public synchronized void setBalls(List<Ball> balls) {
         this.balls = balls;
     }
 

@@ -36,7 +36,7 @@ public class IntegrationMain {
 
                 if (frame.empty()) break;
 
-                Point[] ballCoords = getCircleCoordsFromFrame(frame);
+                Point[] ballCoords = getWhiteCircleCoordsFromFrame(frame);
                 Point[] robotMarkerCoords = getRotationCoordsFromFrame(frame); // Used for rotation
 
                 // Get border coords
