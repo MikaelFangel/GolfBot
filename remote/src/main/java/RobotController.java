@@ -35,7 +35,7 @@ public class RobotController {
      * @throws RuntimeException if the robot was not reached
      */
     public void driveStraight(double distance) throws RuntimeException {
-       ArrayList<MotorRequest> motorsRequest = createMotorRequests(Type.l, Port.A, Port.D);
+       ArrayList<MotorRequest> motorsRequest = createMotorRequests(Type.l, OutPort.A, OutPort.D);
 
         DriveRequest driveRequest = DriveRequest.newBuilder()
                 .addAllMotors(motorsRequest)
@@ -52,7 +52,7 @@ public class RobotController {
      * @throws RuntimeException if the robot was not reached
      */
     public void rotate(double degrees) throws RuntimeException {
-        ArrayList<MotorRequest> motorsRequest = createMotorRequests(Type.l, Port.A, Port.D);
+        ArrayList<MotorRequest> motorsRequest = createMotorRequests(Type.l, OutPort.A, OutPort.D);
 
         RotateRequest rotateRequest = RotateRequest.newBuilder()
                 .addAllMotors(motorsRequest)
@@ -64,10 +64,10 @@ public class RobotController {
 
     }
 
-    private ArrayList<MotorRequest> createMotorRequests(Type motorType, Port... ports) {
+    private ArrayList<MotorRequest> createMotorRequests(Type motorType, OutPort... ports) {
         ArrayList<MotorRequest> motorRequests = new ArrayList<>();
 
-        for (Port port : ports) {
+        for (OutPort port : ports) {
             motorRequests.add(MotorRequest.newBuilder()
                     .setMotorPort(port)
                     .setMotorType(motorType)
