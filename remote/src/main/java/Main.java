@@ -1,7 +1,6 @@
 import exceptions.MissingArgumentException;
 import courseObjects.*;
 import vision.*;
-import static vision.Calculations.*;
 import static vision.Algorithms.*;
 
 public class Main {

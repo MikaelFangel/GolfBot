@@ -26,9 +26,8 @@ public class Algorithms {
                 robotCenter.y
         );
 
-        // Find ball with least distance
-        for (int i = 0; i < balls.size() ; i++) {
-            Ball ball = balls.get(i);
+        // Find ball with the least distance
+        for (Ball ball : balls) {
             double distance = distanceBetweenTwoPoints(
                     ball.center.x,
                     ball.center.y,

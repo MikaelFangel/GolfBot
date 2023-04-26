@@ -17,7 +17,7 @@ import static vision.Calculations.distanceBetweenTwoPoints;
 
 public class Detection {
 
-    private Course course;
+    private final Course course;
     private double conversionFactor;
     private Point originCameraOffset;
 
@@ -92,8 +92,8 @@ public class Detection {
     }
 
     private boolean findCourseCorners(Mat frame) {
-        Point topLeft = null, topRight = null, bottomRight = null, bottomLeft = null;
-        Point irlTopLeft = null, irlTopRight = null, irlBottomLeft = null, irlBottomRight = null;
+        Point topLeft, topRight, bottomRight, bottomLeft;
+        Point irlTopLeft, irlTopRight, irlBottomLeft, irlBottomRight;
 
         // Try to get border set
         BorderSet borderSet = getBorderFromFrame(frame);
@@ -113,10 +113,10 @@ public class Detection {
         originCameraOffset = borderSet.origin;
 
         // Get irl coordinates
-        irlTopLeft = new Point(cornerCoords[0].x * conversionFactor, cornerCoords[0].y * conversionFactor);
-        irlTopRight = new Point(cornerCoords[1].x * conversionFactor, cornerCoords[1].y * conversionFactor);
-        irlBottomRight = new Point(cornerCoords[2].x * conversionFactor, cornerCoords[2].y * conversionFactor);
-        irlBottomLeft = new Point(cornerCoords[3].x * conversionFactor, cornerCoords[3].y * conversionFactor);
+        irlTopLeft = new Point(topLeft.x * conversionFactor, topLeft.y * conversionFactor);
+        irlTopRight = new Point(topRight.x * conversionFactor, topRight.y * conversionFactor);
+        irlBottomRight = new Point(bottomRight.x * conversionFactor, bottomRight.y * conversionFactor);
+        irlBottomLeft = new Point(bottomLeft.x * conversionFactor, bottomLeft.y * conversionFactor);
 
         // Push variables to course class
         course.setTopLeft(irlTopLeft);
@@ -311,13 +311,15 @@ public class Detection {
             Rect rect = Imgproc.boundingRect(contour);
 
             // Get center of rectangles
-            if (i == 0) { // For center marker
-                centerCoords[0] = rect.x + rect.width / 2.;
-                centerCoords[1] = rect.y + rect.height / 2.;
-            }
-            else if (i == 1) { // For direction marker
-                directionCoords[0] = rect.x + rect.width / 2.;
-                directionCoords[1] = rect.y + rect.height / 2.;
+            switch (i) {
+                case 0 -> {
+                    centerCoords[0] = rect.x + rect.width / 2.;
+                    centerCoords[1] = rect.y + rect.height / 2.;
+                }
+                case 1 -> {
+                    directionCoords[0] = rect.x + rect.width / 2.;
+                    directionCoords[1] = rect.y + rect.height / 2.;
+                }
             }
         }
 
