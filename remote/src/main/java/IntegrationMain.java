@@ -1,21 +1,18 @@
-import io.grpc.Channel;
-import io.grpc.Grpc;
-import io.grpc.InsecureChannelCredentials;
 import nu.pattern.OpenCV;
 import org.opencv.core.Mat;
 
 import org.opencv.core.Point;
 import org.opencv.highgui.HighGui;
 import org.opencv.videoio.VideoCapture;
-import proto.*;
 import vision.helperClasses.BorderSet;
 
 import static vision.Calculations.angleBetweenTwoPoints;
 import static vision.Calculations.distanceBetweenTwoPoints;
-import static vision.Detection.*;
+import static vision.Algorithms.findClosestBall;
 
 public class IntegrationMain {
     public static void main(String[] args) throws InterruptedException {
+        /*
         int realWidth = 167;
         int realHeight = 122;
         int realLength = 25;
@@ -108,7 +105,7 @@ public class IntegrationMain {
                     System.out.println("Rotating towards ball...");
                     robotController.rotate(angleDiff);
 
-                    /*
+
                     Thread.sleep(5000);
                     System.out.println("Driving towards ball");
                     robotController.driveStraight(distanceDiff);
@@ -123,7 +120,7 @@ public class IntegrationMain {
                     GrabRequest grabRequest = GrabRequest.newBuilder().setSpeed(300).setMotor(reqB).setDegreesOfRotation(-1300).build();
                     GrabRequest unGrabRequest = GrabRequest.newBuilder().setSpeed(300).setMotor(reqB).setDegreesOfRotation(1200).build();
                     client.grab(grabRequest);
-                     */
+
 
                     stop = true;
                 }
@@ -185,26 +182,7 @@ public class IntegrationMain {
 
         HighGui.destroyAllWindows();
         robotController.stopController();
-    }
 
-
-
-    private static Point findClosestBall(Point[] balls, Point centerMarker){
-        if (balls.length == 0) return null;
-        Point closestBall = balls[0];
-        double closestDistance = distanceBetweenTwoPoints(closestBall.x, closestBall.y, centerMarker.x, centerMarker.y);
-
-        // Find ball closest to centerMarker
-        for (int i = 0; i < balls.length; i++) {
-            Point ball = balls[i];
-            double distance = distanceBetweenTwoPoints(ball.x, ball.y, centerMarker.x, centerMarker.y);
-
-            if (distance < closestDistance) {
-                closestDistance = distance;
-                closestBall = ball;
-            }
-        }
-
-        return closestBall;
+         */
     }
 }
