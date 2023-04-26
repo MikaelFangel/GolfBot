@@ -25,6 +25,13 @@ public class Detection {
     private double conversionFactor;
     private Point originCameraOffset;
 
+    // HoughCircles parameters. These configurations works okay with the current course setup
+    private final int minDist = 5;
+    private final int param1 = 20;  // gradient value used in the edge detection
+    private final int param2 = 10;  // lower values allow more circles to be detected (false positives)
+    private final int minRadius = 1;  // limits the smallest circle to this size (via radius)
+    private final int maxRadius = 6;  // similarly sets the limit for the largest circles
+
     public Detection(int cameraIndex) {
         course = new Course();
 
@@ -144,26 +151,63 @@ public class Detection {
     }
 
     private boolean findBalls(Mat frame) {
+        // Start finding the orange ball
+        Mat frameHsv = new Mat();
+        Imgproc.cvtColor(frame, frameHsv, Imgproc.COLOR_BGR2HSV);
+
+        // Create a mask to seperate the orange ball
+        Mat mask = new Mat();
+        Scalar lower = new Scalar(10, 140, 230);
+        Scalar upper = new Scalar(255, 255, 255);
+        Core.inRange(frameHsv, lower, upper, mask);
+
+        // Remove everything other than the mask leaving only the orange ball left
+        Core.bitwise_and(frame, mask, frame);
+
         //Converting the image to Gray and blur it
         Mat frameGray = new Mat();
         Imgproc.cvtColor(frame, frameGray, Imgproc.COLOR_BGR2GRAY);
 
+        // Apply blur for better noise reduction
+        Mat frameBlur = new Mat();
+        Imgproc.GaussianBlur(frame, frameBlur, new Size(7,7), 0);
+
+        // Store all balls in arraylist
+        ArrayList<Ball> balls = new ArrayList<>();
+
+        // Stores orange circles from the HoughCircles algorithm
+        Mat orangeball = new Mat();
+
+        // Get the orange ball from the frame
+        Imgproc.HoughCircles(frameBlur, orangeball, Imgproc.HOUGH_GRADIENT, minDist, param1, param2, minRadius, maxRadius);
+
+        // Add orangeball to balls arraylist
+        if (!orangeball.empty()) {
+            // In for loop just in case, but could assume just to be 1.
+            for (int i = 0; i < orangeball.width(); i++) {
+                double[] center = orangeball.get(0, i);
+                // Create the irl coordinates and create the ball object with the Color white
+                Point coordinates = new Point((center[0] - originCameraOffset.x) * conversionFactor, (center[1] - originCameraOffset.y) * conversionFactor);
+                balls.add(new Ball(coordinates, Color.ORANGE));
+                Imgproc.circle(frame, coordinates, 5, new Scalar(0, 0, 255), 1);
+            }
+        }
+
+        // Now search for white balls. Apply a binary threshold mask to seperate out all colors than white.
         Mat binaryFrame = new Mat();
         Imgproc.threshold(frameGray, binaryFrame, 185, 255, Imgproc.THRESH_BINARY);
 
-        Mat frameBlur = new Mat();
+        // Apply blur for better noise detection
         Imgproc.GaussianBlur(binaryFrame, frameBlur, new Size(7,7), 0);
 
-        ArrayList<Ball> balls = new ArrayList<>();
+        // Get white balls from frame
+        Mat whiteballs = new Mat();
+        Imgproc.HoughCircles(frameBlur, whiteballs, Imgproc.HOUGH_GRADIENT, 1, 30, 20, 12, 1, 6);
 
-        // Get circles from frame
-        Mat circles = new Mat();
-        Imgproc.HoughCircles(frameBlur, circles, Imgproc.HOUGH_GRADIENT, 1, 30, 20, 12, 1, 6);
-
-        // Add circle coords to return arraylist
-        if (!circles.empty()) {
-            for (int i = 0; i < circles.width(); i++) {
-                double[] center = circles.get(0, i);
+        // Add whiteballs to balls arraylist
+        if (!whiteballs.empty()) {
+            for (int i = 0; i < whiteballs.width(); i++) {
+                double[] center = whiteballs.get(0, i);
                 // Create the irl coordinates and create the ball object with the Color white
                 Point coordinates = new Point((center[0] - originCameraOffset.x) * conversionFactor, (center[1] - originCameraOffset.y) * conversionFactor);
                 balls.add(new Ball(coordinates, Color.WHITE));
