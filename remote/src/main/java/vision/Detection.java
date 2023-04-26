@@ -1,13 +1,65 @@
 package vision;
 
+import courseObjects.Course;
+import nu.pattern.OpenCV;
+import org.checkerframework.checker.units.qual.C;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.videoio.VideoCapture;
 import vision.helperClasses.BorderSet;
 import vision.helperClasses.ContourSet;
 
 import java.util.*;
 
 public class Detection {
+
+    private Course course;
+
+    public Detection(int cameraIndex) {
+        course = new Course();
+
+        // Setup video capture
+        OpenCV.loadLocally();
+        VideoCapture capture = new VideoCapture();
+        capture.open(cameraIndex);
+
+        if (!capture.isOpened()) throw new RuntimeException("Camera Capture was not opened");
+
+        // Fill course with variables
+        // 1. Find course corner to establish size factor
+        System.out.println("Finding Course Corners");
+        findCourseCorners(capture);
+        System.out.println("Found Course Corners");
+
+        // 2. Find Robot position and rotation
+        System.out.println("Finding Balls");
+
+        System.out.println("Found at least one ball");
+
+        // 3. Find balls on the course.
+        System.out.println("Finding Balls");
+
+        System.out.println("Found at least one ball");
+    }
+
+    private void findCourseCorners(VideoCapture capture) {
+        while (true) {
+            Mat frame = new Mat();
+            capture.read(frame);
+            if (frame.empty()) throw new RuntimeException("Empty frame");
+
+
+        }
+    }
+
+    private void findRobot(VideoCapture capture) {
+
+    }
+
+    private void findBalls(VideoCapture capture) {
+
+    }
+
     /**
      * Returns a Point array of center coordinates for each circle found on the board.
      * @param frame to be evaluated.
