@@ -162,7 +162,7 @@ public class Detection {
      * @param frame to be evaluated.
      * @return Point array, with coordinates of the center for each circle.
      */
-    public static Point[] getCircleCoordsFromFrame(Mat frame) {
+    public Point[] getCircleCoordsFromFrame(Mat frame) {
         //Converting the image to Gray and blur it
         Mat frameGray = new Mat();
         Mat frameBlur = new Mat();
@@ -207,7 +207,7 @@ public class Detection {
      * @param frame that needs to be evaluated.
      * @return Returns array of points for the 2 markers.
      */
-    public static Point[] getRotationCoordsFromFrame(Mat frame) {
+    public Point[] getRotationCoordsFromFrame(Mat frame) {
         final int areaLowerThreshold = 60;
         final int areaUpperThreshold = 350;
 
@@ -278,7 +278,7 @@ public class Detection {
      * @param frame to be evaluated
      * @return null if there are not found exactly 4 lines, else the 4 coordinates of the border intersections.
      */
-    public static BorderSet getBorderFromFrame(Mat frame) {
+    public BorderSet getBorderFromFrame(Mat frame) {
         Mat frameHSV = new Mat();
         Mat maskRed = new Mat();
         Mat frameCourse = new Mat();
@@ -346,5 +346,9 @@ public class Detection {
         BorderSet borderSet = new BorderSet(corners, new Point(offsetX, offsetY));
 
         return borderSet;
+    }
+
+    public synchronized Course getCourse() {
+        return course;
     }
 }
