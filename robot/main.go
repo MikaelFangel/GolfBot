@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"net"
+	"strconv"
 
 	"github.com/ev3go/ev3dev"
 	"google.golang.org/grpc"
@@ -13,19 +14,13 @@ import (
 	pBuff "main/proto"
 )
 
-// Motor types
-const (
-	mediumMotor = "lego-ev3-m-motor"
-	largeMotor  = "lego-ev3-l-motor"
-)
-
 // Motor commands
 const (
-	run     = "run-forever"
-	stop    = "stop"
-	rel_pos = "run-to-rel-pos" // Not working..?
-	absPos  = "run-to-abs-pos"
-	reset   = "reset"
+	run    = "run-forever"
+	stop   = "stop"
+	relPos = "run-to-rel-pos" // Not working..?
+	absPos = "run-to-abs-pos"
+	reset  = "reset"
 )
 
 type motorServer struct {
@@ -36,6 +31,13 @@ type motorRequest struct {
 	request *pBuff.MotorRequest
 	motor   *ev3dev.TachoMotor
 }
+
+// Radius values are in centimeters and the wheelBaseRadius is measured from the inner sides of the wheels.
+const wheelRadius = 3.5
+const wheelBaseRadius = 12.5 / 2 // For diameter/2
+
+const wheelCircumference = 2 * wheelRadius * math.Pi
+const wheelBaseCircumference = 2 * wheelBaseRadius * math.Pi
 
 /*
  * main Setup of the server to listen for requests from clients.
@@ -55,8 +57,8 @@ func main() {
 }
 
 // getMotorHandle Returns the TachoMotor equivalent to the port given (e.g. port "A").
-func getMotorHandle(port string) (*ev3dev.TachoMotor, error) {
-	return ev3dev.TachoMotorFor("ev3-ports:out"+port, largeMotor)
+func getMotorHandle(port string, motor string) (*ev3dev.TachoMotor, error) {
+	return ev3dev.TachoMotorFor("ev3-ports:out"+port, "lego-ev3-"+motor+"-motor")
 }
 
 // isRunning Returns true if the speed of the given motor is not zero, otherwise false.
@@ -67,13 +69,13 @@ func isRunning(motor *ev3dev.TachoMotor) bool {
 }
 
 // RunMotors Starts the motors given, and sets them to the speed specified on client side.
-func (s *motorServer) RunMotors(ctx context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
+func (s *motorServer) RunMotors(_ context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
 	// motorRequests stores the request and the motor, so we don't need to get them again in the 2nd loop
 	var motorRequests [2]motorRequest
 
 	// Gets the motors and sets their speeds, which is specified on client side.
 	for i, request := range in.GetMotor() {
-		motor, err := getMotorHandle(request.GetMotorPort().String())
+		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err
 		}
@@ -96,13 +98,13 @@ func (s *motorServer) RunMotors(ctx context.Context, in *pBuff.MultipleMotors) (
 }
 
 // StopMotors Stops the motors given, e.g. cleaning their MotorState.
-func (s *motorServer) StopMotors(ctx context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
+func (s *motorServer) StopMotors(_ context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
 	// motorRequests stores the request and the motor, so we don't need to get them again in the 2nd loop
 	var motorRequests [2]motorRequest
 
 	// Gets the motors
 	for i, request := range in.GetMotor() {
-		motor, err := getMotorHandle(request.GetMotorPort().String())
+		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
 
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err
@@ -128,16 +130,18 @@ func (s *motorServer) StopMotors(ctx context.Context, in *pBuff.MultipleMotors) 
 }
 
 // Rotate Rotates the robot with a static speed, x degrees, which is specified on client side.
-func (s *motorServer) Rotate(ctx context.Context, in *pBuff.RotateRequest) (*pBuff.StatusReply, error) {
+func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff.StatusReply, error) {
 	// motorRequests stores the request and the motor, so we don't need to get them again in the 2nd loop
 	var motorRequests [2]motorRequest
 
 	wheelRotations := convertRobotRotationToWheelRotations(in.Degrees)
-	fmt.Println(wheelRotations) // For debugging TODO: delete
+	fmt.Printf("Rotation in degrees: %d\n", wheelRotations)
 
 	// Gets the motors and sets their speeds to a static speed, making the wheels turn in different directions
-	for i, request := range in.MultipleMotors.GetMotor() {
-		motor, err := getMotorHandle(request.GetMotorPort().String())
+	for i := 0; i < 2; i++ {
+		request := in.GetMotors()[i]
+
+		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err
 		}
@@ -145,10 +149,10 @@ func (s *motorServer) Rotate(ctx context.Context, in *pBuff.RotateRequest) (*pBu
 		motor.Command(reset) // Reset motors
 		if i%2 == 0 {
 			motor.SetPositionSetpoint(wheelRotations)
-			motor.SetSpeedSetpoint(500)
+			motor.SetSpeedSetpoint(int(in.Speed))
 		} else {
 			motor.SetPositionSetpoint(-wheelRotations)
-			motor.SetSpeedSetpoint(-500)
+			motor.SetSpeedSetpoint(int(-in.Speed))
 		}
 		motorRequests[i] = motorRequest{request: request, motor: motor}
 	}
@@ -161,16 +165,65 @@ func (s *motorServer) Rotate(ctx context.Context, in *pBuff.RotateRequest) (*pBu
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
+func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.StatusReply, error) {
+	var motorRequests [2]motorRequest
+
+	numberOfRotations := -convertDistanceToWheelRotation(float64(in.Distance))
+	fmt.Printf("Drive degrees of rotation: %d\n", numberOfRotations)
+
+	// Fetch each motor
+	for i := 0; i < 2; i++ {
+		request := in.GetMotors()[i]
+
+		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
+		if err != nil {
+			return &pBuff.StatusReply{ReplyMessage: false}, err
+		}
+
+		// Change speed value if distance is negative
+		dir := 1
+		if in.Speed < 0 {
+			dir = -1
+		}
+
+		// Set values for request
+		motor.Command(reset)
+		motor.SetSpeedSetpoint(dir * int(in.Speed))
+		motor.SetPositionSetpoint(numberOfRotations)
+		motorRequests[i] = motorRequest{request: request, motor: motor}
+	}
+
+	// Give requests to motors
+	for _, motorRequest := range motorRequests {
+		motorRequest.motor.Command(absPos)
+	}
+
+	return &pBuff.StatusReply{ReplyMessage: true}, nil
+}
+
 // convertRobotRotationToWheelRotations Converts an input of degrees to how many degrees a wheel should rotate.
 func convertRobotRotationToWheelRotations(degrees int32) int {
-	// Radius values are in centimeters and the wheelBaseRadius is measured from the inner sides of the wheels.
-	wheelRadius := 3.4
-	wheelBaseRadius := 8.75
-
-	wheelCircumference := 2 * wheelRadius * math.Pi
-	wheelBaseCircumference := 2 * wheelBaseRadius * math.Pi
-
-	// Calculate the distance move by rotating 1 degree on a wheel
 	rotationInCm := (wheelBaseCircumference * float64(degrees)) / 360.
 	return int(rotationInCm / (wheelCircumference / 360))
+}
+
+func convertDistanceToWheelRotation(distance float64) int {
+	return int((distance / wheelCircumference) * 360)
+}
+
+// getSensor Returns the requested sensor from the input ports of the robot
+func getSensor(inPort string, sensor string) (*ev3dev.Sensor, error) {
+	return ev3dev.SensorFor("ev3-ports:"+inPort, "lego-ev3-"+sensor)
+}
+
+// GetDistanceInCm Returns the distance to the closest object from the ultrasonic sensor
+func GetDistanceInCm() float64 {
+	ultraSonicSensor, err := getSensor(pBuff.InPort_in1.String(), pBuff.Sensor_us.String())
+	if err != nil {
+		return -1
+	}
+
+	distanceString, _ := ultraSonicSensor.Value(0)
+	distance, _ := strconv.ParseFloat(distanceString, 64)
+	return distance / 10
 }

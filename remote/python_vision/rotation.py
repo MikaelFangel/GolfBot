@@ -4,7 +4,7 @@ import cv2 as cv
 
 # https://stackoverflow.com/questions/59363937/opencv-detecting-an-object-and-its-rotation
 
-video = cv.VideoCapture(2)
+video = cv.VideoCapture(0)
 
 def getCenterAndDirectionCoords(frame):
     hsvFrame = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
