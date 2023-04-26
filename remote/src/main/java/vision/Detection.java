@@ -12,7 +12,7 @@ public class Detection {
      * @param frame to be evaluated.
      * @return Point array, with coordinates of the center for each circle.
      */
-    public static Point[] getCircleCoordsFromFrame(Mat frame) {
+    public static Point[] getWhiteCircleCoordsFromFrame(Mat frame) {
         //Converting the image to Gray and blur it
         Mat frameGray = new Mat();
         Mat frameBlur = new Mat();

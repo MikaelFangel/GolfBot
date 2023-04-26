@@ -26,7 +26,7 @@ public class Main {
 
                 if (frame.empty()) break;
 
-                Point[] ballCoords = getCircleCoordsFromFrame(frame);
+                Point[] ballCoords = getWhiteCircleCoordsFromFrame(frame);
                 Point[] robotMarkerCoords = getRotationCoordsFromFrame(frame); // Used for rotation
 
                 // Get border coords
@@ -55,12 +55,12 @@ public class Main {
                 System.out.println("\n### New Frame ###");
 
                 System.out.println("-- Pixel Coords --");
-                for (Point circle: circleCoords) {
+                for (Point circle: ballCoords) {
                     System.out.println("Circle: " + circle.x + ", " + circle.y);
                 }
 
                 System.out.println(" ");
-                for (Point rotation: rotationCoords) {
+                for (Point rotation: robotMarkerCoords) {
                     System.out.println("Rotation: " + rotation.x + ", " + rotation.y);
                 }
                 System.out.println(" ");
@@ -75,7 +75,7 @@ public class Main {
 
                 System.out.println("-- Irl Coords --");
 
-                for (Point circle: circleCoords) {
+                for (Point circle: ballCoords) {
                     if (conversionFactor != 0)
                         System.out.println("Circle: " + (circle.x - topLeft.x) * conversionFactor + ", " + (circle.y - topLeft.y) * conversionFactor);
                 }
