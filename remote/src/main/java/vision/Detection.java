@@ -1,6 +1,7 @@
 package vision;
 
 import courseObjects.Course;
+import courseObjects.Robot;
 import nu.pattern.OpenCV;
 import org.checkerframework.checker.units.qual.C;
 import org.opencv.core.*;
@@ -12,6 +13,7 @@ import vision.helperClasses.ContourSet;
 
 import java.util.*;
 
+import static vision.Calculations.angleBetweenTwoPoints;
 import static vision.Calculations.distanceBetweenTwoPoints;
 
 public class Detection {
@@ -85,15 +87,16 @@ public class Detection {
 
         // Get camera coordinates
         Point[] cornerCoords = borderSet.correctCoords;
-        originCameraOffset = borderSet.origin;
+
 
         topLeft = new Point(cornerCoords[0].x, cornerCoords[0].y);
         topRight = new Point(cornerCoords[1].x, cornerCoords[1].y);
         bottomRight = new Point(cornerCoords[2].x, cornerCoords[2].y);
         bottomLeft = new Point(cornerCoords[3].x, cornerCoords[3].y);
 
-        // Calculate conversion factor
+        // Calculate conversion factor and save origin offset for
         conversionFactor = course.length / distanceBetweenTwoPoints(topLeft.x, topLeft.y, topRight.x, topRight.y);
+        originCameraOffset = borderSet.origin;
 
         // Get irl coordinates
         irlTopLeft = new Point(cornerCoords[0].x * conversionFactor, cornerCoords[0].y * conversionFactor);
@@ -111,9 +114,27 @@ public class Detection {
     }
 
     private boolean findRobot(Mat frame) {
-        Point[] robotMarkerCoords = getRotationCoordsFromFrame(frame); // Used for rotation
+        Point[] robotMarkerCoords = getRotationCoordsFromFrame(frame);
         if (robotMarkerCoords.length > 2) return false;
 
+        // Get robots two markers
+        Point centerMarker = robotMarkerCoords[0];
+        Point rotationMarker = robotMarkerCoords[1];
+
+        // Correct for offset
+        centerMarker.x -= originCameraOffset.x;
+        centerMarker.y -= originCameraOffset.y;
+        rotationMarker.x -= originCameraOffset.x;
+        rotationMarker.y -= originCameraOffset.y;
+
+        // Calculate angle of the robot
+        double robotAngle = angleBetweenTwoPoints(centerMarker.x, centerMarker.y, rotationMarker.x, rotationMarker.y);
+
+        // Convert pixel coordinates to real world measurements
+        Point robotCenter = new Point(centerMarker.x * conversionFactor, centerMarker.y * conversionFactor);
+
+        // Save variable to course object
+        course.robot = new Robot(robotCenter, robotAngle);
 
         return true;
     }
