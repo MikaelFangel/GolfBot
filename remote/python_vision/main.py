@@ -134,7 +134,10 @@ while True:
         break
 
     lines = getCourseLinesFromFramesWithContours(frame)
-    if lines is not None:
+
+    if lines is None:
+        print("No course frame found")
+    else:
         if len(lines) == 4:
             # Origin
             offset = lines[0][0]
