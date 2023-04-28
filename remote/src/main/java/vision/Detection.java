@@ -127,10 +127,10 @@ public class Detection {
         originCameraOffset = borderSet.origin;
 
         // Get irl coordinates
-        irlTopLeft = new Point(topLeft.x * conversionFactor, topLeft.y * conversionFactor);
-        irlTopRight = new Point(topRight.x * conversionFactor, topRight.y * conversionFactor);
-        irlBottomRight = new Point(bottomRight.x * conversionFactor, bottomRight.y * conversionFactor);
-        irlBottomLeft = new Point(bottomLeft.x * conversionFactor, bottomLeft.y * conversionFactor);
+        irlTopLeft = pixelToCentimeter(topLeft);
+        irlTopRight = pixelToCentimeter(topRight);
+        irlBottomRight = pixelToCentimeter(bottomRight);
+        irlBottomLeft = pixelToCentimeter(bottomLeft);
 
         // Push variables to course class
         course.setTopLeft(irlTopLeft);
@@ -146,24 +146,14 @@ public class Detection {
         if (robotMarkerCoords.length < 2) return false;
 
         // Get robots two markers
-        Point centerMarker = robotMarkerCoords[0];
-        Point rotationMarker = robotMarkerCoords[1];
-
-        // Correct for offset
-        centerMarker.x -= originCameraOffset.x;
-        centerMarker.y -= originCameraOffset.y;
-        rotationMarker.x -= originCameraOffset.x;
-        rotationMarker.y -= originCameraOffset.y;
+        Point centerMarker = pixelToCentimeter(robotMarkerCoords[0]);
+        Point rotationMarker = pixelToCentimeter(robotMarkerCoords[1]);
 
         // Calculate angle of the robot
         double robotAngle = angleBetweenTwoPoints(centerMarker.x, centerMarker.y, rotationMarker.x, rotationMarker.y);
 
-        // Convert pixel coordinates to real world measurements
-        Point robotCenter = new Point(centerMarker.x * conversionFactor, centerMarker.y * conversionFactor);
-        Point robotRotationMarker = new Point(rotationMarker.x * conversionFactor, rotationMarker.y * conversionFactor);
-
         // Save variable to course object
-        course.setRobot(new Robot(robotCenter, robotRotationMarker, robotAngle));
+        course.setRobot(new Robot(centerMarker, rotationMarker, robotAngle));
 
         return true;
     }
@@ -400,12 +390,12 @@ public class Detection {
 
         List<Ball> balls = course.getBalls();
         Robot robot = course.getRobot();
-        Point robotCenter = measurementToPixel(robot.center);
-        Point robotRotate = measurementToPixel(robot.rotationMarker);
+        Point robotCenter = centimeterToPixel(robot.center);
+        Point robotRotate = centimeterToPixel(robot.rotationMarker);
 
         // Debug Balls
         for (Ball ball : balls) {
-            Point ballPoint = measurementToPixel(ball.getCenter());
+            Point ballPoint = centimeterToPixel(ball.getCenter());
 
             Imgproc.circle(debugFrame, ballPoint, 3, ballsColor, 1);
             Imgproc.line(debugFrame, robotCenter, ballPoint, ballsColor, 1);
@@ -417,8 +407,12 @@ public class Detection {
         Imgproc.line(debugFrame, robotCenter, robotRotate, robotColor, 2);
     }
 
-    private Point measurementToPixel(Point point) {
+    private Point centimeterToPixel(Point point) {
         return new Point(point.x / conversionFactor + originCameraOffset.x, point.y / conversionFactor + originCameraOffset.y);
+    }
+
+    private Point pixelToCentimeter(Point point) {
+        return new Point((point.x - originCameraOffset.x) * conversionFactor, (point.y - originCameraOffset.y) * conversionFactor);
     }
     public synchronized Course getCourse() {
         return course;
