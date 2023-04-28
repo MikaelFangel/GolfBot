@@ -156,7 +156,7 @@ public class Detection {
         Imgproc.cvtColor(frame, frameHsv, Imgproc.COLOR_BGR2HSV);
 
         // Create a mask to seperate the orange ball
-        Mat mask = new Mat();
+        Mat mask = new Mat(frameHsv.rows(), frameHsv.cols(), CvType.CV_8UC1);
         Scalar lower = new Scalar(10, 140, 230);
         Scalar upper = new Scalar(255, 255, 255);
         Core.inRange(frameHsv, lower, upper, mask);
