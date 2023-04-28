@@ -394,21 +394,31 @@ public class Detection {
 
         List<Ball> balls = course.getBalls();
         Robot robot = course.getRobot();
-        Point robotCenter = centimeterToPixel(robot.center);
-        Point robotRotate = centimeterToPixel(robot.rotationMarker);
 
         // Debug Balls
-        for (Ball ball : balls) {
-            Point ballPoint = centimeterToPixel(ball.getCenter());
+        if (balls.size() > 0)
+            for (Ball ball : balls) {
+                // Draw Ball
+                Point ballPoint = centimeterToPixel(ball.getCenter());
+                Imgproc.circle(debugFrame, ballPoint, 4, ballsColor, 1);
 
-            Imgproc.circle(debugFrame, ballPoint, 3, ballsColor, 1);
-            Imgproc.line(debugFrame, robotCenter, ballPoint, ballsColor, 1);
-        }
+                // Draw line from robot to balls
+                if (robot != null) {
+                    Point robotCenter = centimeterToPixel(robot.center);
+                    Imgproc.line(debugFrame, robotCenter, ballPoint, ballsColor, 1);
+                }
+
+            }
 
         // Debug Robot
-        Imgproc.circle(debugFrame, robotCenter, 5, robotColor, 2);
-        Imgproc.circle(debugFrame, robotRotate, 4, robotColor, 2);
-        Imgproc.line(debugFrame, robotCenter, robotRotate, robotColor, 2);
+        if (course.getRobot() != null) {
+            Point robotCenter = centimeterToPixel(robot.center);
+            Point robotRotate = centimeterToPixel(robot.rotationMarker);
+
+            Imgproc.circle(debugFrame, robotCenter, 5, robotColor, 2);
+            Imgproc.circle(debugFrame, robotRotate, 4, robotColor, 2);
+            Imgproc.line(debugFrame, robotCenter, robotRotate, robotColor, 2);
+        }
     }
 
     private Point centimeterToPixel(Point point) {
