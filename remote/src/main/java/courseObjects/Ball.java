@@ -6,7 +6,6 @@ import java.awt.*;
 
 public class Ball {
     private Point center;
-
     private Color color;
 
     public Ball(Point center, Color color) {

@@ -21,9 +21,11 @@ import static vision.Calculations.distanceBetweenTwoPoints;
 
 public class Detection {
 
-    private Course course;
+    private final Course course;
     private double conversionFactor;
     private Point originCameraOffset;
+
+    private final Thread backgroundThread;
 
     // HoughCircles parameters. These configurations works okay with the current course setup
     private final int minDist = 5;
@@ -44,6 +46,10 @@ public class Detection {
         initializeCourse(capture);
 
         // Spawn background thread;
+        backgroundThread = new Thread(() -> detectCourse(capture));
+        backgroundThread.start();
+
+        System.out.println("Spawned Background Detection Thread");
     }
 
     private void initializeCourse(VideoCapture capture) {
@@ -52,12 +58,13 @@ public class Detection {
         // Fill course with variables
         System.out.println("Searching for course objects...");
         while (true) {
-            Mat frame = new Mat();
+            Mat frame = new Mat(), debugFrame;
             capture.read(frame);
+            debugFrame = frame;
+
             if (frame.empty()) throw new RuntimeException("Empty frame");
 
-            // Show GUI
-            HighGui.imshow("frame", frame); // Display frame
+            HighGui.imshow("startFrame", debugFrame);
             HighGui.waitKey(1);
 
             // 1. Find course corner to establish conversion factor
@@ -69,14 +76,14 @@ public class Detection {
 
             // 2. Find Robot position and rotation
             if (!robotFound) {
-                robotFound = findRobot(frame);
+                robotFound = findRobot(frame, debugFrame);
                 if (!robotFound) continue;
                 System.out.println("Found Robot");
             }
 
             // 3. Find balls on the course.
             if (!ballsFound) {
-                ballsFound = findBalls(frame);
+                ballsFound = findBalls(frame, debugFrame); // Parsed twice for debugging
                 if (!ballsFound) continue;
                 System.out.println("Found " + course.getBalls().size() + " balls");
                 course.getBalls().forEach(ball -> System.out.println(ball.getCenter().x));
@@ -85,12 +92,29 @@ public class Detection {
             break;
         }
 
-        HighGui.destroyAllWindows();
+        HighGui.destroyWindow("startFrame");
+    }
+
+    private void detectCourse(VideoCapture capture) {
+        while (true) {
+            Mat frame = new Mat(), debugFrame;
+            capture.read(frame);
+            debugFrame = frame;
+
+            findCourseCorners(frame);
+            findRobot(frame, debugFrame);
+            findBalls(frame, debugFrame);
+
+            debugGUI(debugFrame);
+
+            HighGui.imshow("frame", debugFrame);
+            HighGui.waitKey(1);
+        }
     }
 
     private boolean findCourseCorners(Mat frame) {
-        Point topLeft = null, topRight = null, bottomRight = null, bottomLeft = null;
-        Point irlTopLeft = null, irlTopRight = null, irlBottomLeft = null, irlBottomRight = null;
+        Point topLeft, topRight, bottomRight, bottomLeft;
+        Point irlTopLeft, irlTopRight, irlBottomLeft, irlBottomRight;
 
         // Try to get border set
         BorderSet borderSet = getBorderFromFrame(frame);
@@ -110,47 +134,38 @@ public class Detection {
         originCameraOffset = borderSet.origin;
 
         // Get irl coordinates
-        irlTopLeft = new Point(cornerCoords[0].x * conversionFactor, cornerCoords[0].y * conversionFactor);
-        irlTopRight = new Point(cornerCoords[1].x * conversionFactor, cornerCoords[1].y * conversionFactor);
-        irlBottomRight = new Point(cornerCoords[2].x * conversionFactor, cornerCoords[2].y * conversionFactor);
-        irlBottomLeft = new Point(cornerCoords[3].x * conversionFactor, cornerCoords[3].y * conversionFactor);
+        irlTopLeft = pixelToCentimeter(topLeft);
+        irlTopRight = pixelToCentimeter(topRight);
+        irlBottomRight = pixelToCentimeter(bottomRight);
+        irlBottomLeft = pixelToCentimeter(bottomLeft);
 
         // Push variables to course class
-        course.topLeft = irlTopLeft;
-        course.topRight = irlTopRight;
-        course.bottomLeft = irlBottomLeft;
-        course.bottomRight = irlBottomRight;
+        course.setTopLeft(irlTopLeft);
+        course.setTopRight(irlTopRight);
+        course.setBottomLeft(irlBottomLeft);
+        course.setBottomRight(irlBottomRight);
 
         return true;
     }
 
-    private boolean findRobot(Mat frame) {
-        Point[] robotMarkerCoords = getRotationCoordsFromFrame(frame);
+    private boolean findRobot(Mat frame, Mat debugFrame) {
+        Point[] robotMarkerCoords = getRotationCoordsFromFrame(frame, debugFrame);
         if (robotMarkerCoords.length < 2) return false;
 
         // Get robots two markers
-        Point centerMarker = robotMarkerCoords[0];
-        Point rotationMarker = robotMarkerCoords[1];
-
-        // Correct for offset
-        centerMarker.x -= originCameraOffset.x;
-        centerMarker.y -= originCameraOffset.y;
-        rotationMarker.x -= originCameraOffset.x;
-        rotationMarker.y -= originCameraOffset.y;
+        Point centerMarker = pixelToCentimeter(robotMarkerCoords[0]);
+        Point rotationMarker = pixelToCentimeter(robotMarkerCoords[1]);
 
         // Calculate angle of the robot
         double robotAngle = angleBetweenTwoPoints(centerMarker.x, centerMarker.y, rotationMarker.x, rotationMarker.y);
 
-        // Convert pixel coordinates to real world measurements
-        Point robotCenter = new Point(centerMarker.x * conversionFactor, centerMarker.y * conversionFactor);
-
         // Save variable to course object
-        course.robot = new Robot(robotCenter, robotAngle);
+        course.setRobot(new Robot(centerMarker, rotationMarker, robotAngle));
 
         return true;
     }
 
-    private boolean findBalls(Mat frame) {
+    private boolean findBalls(Mat frame, Mat debugFrame) {
         // Start finding the orange ball
         Mat frameHsv = new Mat();
         Imgproc.cvtColor(frame, frameHsv, Imgproc.COLOR_BGR2HSV);
@@ -211,14 +226,14 @@ public class Detection {
                 // Create the irl coordinates and create the ball object with the Color white
                 Point coordinates = new Point((center[0] - originCameraOffset.x) * conversionFactor, (center[1] - originCameraOffset.y) * conversionFactor);
                 balls.add(new Ball(coordinates, Color.WHITE));
-                Imgproc.circle(frame, coordinates, 5, new Scalar(0, 0, 255), 1);
             }
         }
-        // Update ball positions
-        course.setBalls(balls);
 
-        // Return false if size == 0, else true
-        return course.getBalls().size() != 0;
+        // Update ball positions
+        if (balls.size() == 0) return false;
+
+        course.setBalls(balls);
+        return true;
     }
 
     /**
@@ -226,7 +241,7 @@ public class Detection {
      * @param frame to be evaluated.
      * @return Point array, with coordinates of the center for each circle.
      */
-    public static Point[] getWhiteBallCoordsFromFrame(Mat frame) {
+    public Point[] getWhiteBallCoordsFromFrame(Mat frame) {
         //Converting the image to Gray and blur it
         Mat frameGray = new Mat();
         Imgproc.cvtColor(frame, frameGray, Imgproc.COLOR_BGR2GRAY);
@@ -272,7 +287,7 @@ public class Detection {
      * @param frame that needs to be evaluated.
      * @return Returns array of points for the 2 markers.
      */
-    public static Point[] getRotationCoordsFromFrame(Mat frame) {
+    public Point[] getRotationCoordsFromFrame(Mat frame, Mat debugFrame) {
         final int areaLowerThreshold = 60;
         final int areaUpperThreshold = 350;
 
@@ -320,13 +335,15 @@ public class Detection {
             Rect rect = Imgproc.boundingRect(contour);
 
             // Get center of rectangles
-            if (i == 0) { // For center marker
-                centerCoords[0] = rect.x + rect.width / 2.;
-                centerCoords[1] = rect.y + rect.height / 2.;
-            }
-            else if (i == 1) { // For direction marker
-                directionCoords[0] = rect.x + rect.width / 2.;
-                directionCoords[1] = rect.y + rect.height / 2.;
+            switch (i) {
+                case 0 -> {
+                    centerCoords[0] = rect.x + rect.width / 2.;
+                    centerCoords[1] = rect.y + rect.height / 2.;
+                }
+                case 1 -> {
+                    directionCoords[0] = rect.x + rect.width / 2.;
+                    directionCoords[1] = rect.y + rect.height / 2.;
+                }
             }
         }
 
@@ -343,7 +360,7 @@ public class Detection {
      * @param frame to be evaluated
      * @return null if there are not found exactly 4 lines, else the 4 coordinates of the border intersections.
      */
-    public static BorderSet getBorderFromFrame(Mat frame) {
+    public BorderSet getBorderFromFrame(Mat frame) {
         Mat frameHSV = new Mat();
         Mat maskRed = new Mat();
         Mat frameCourse = new Mat();
@@ -409,5 +426,39 @@ public class Detection {
         }
 
         return new BorderSet(corners, new Point(offsetX, offsetY));
+    }
+
+    private void debugGUI(Mat debugFrame) {
+        Scalar ballsColor = new Scalar(255, 255, 0);
+        Scalar robotColor = new Scalar(255, 0, 255);
+
+        List<Ball> balls = course.getBalls();
+        Robot robot = course.getRobot();
+        Point robotCenter = centimeterToPixel(robot.center);
+        Point robotRotate = centimeterToPixel(robot.rotationMarker);
+
+        // Debug Balls
+        for (Ball ball : balls) {
+            Point ballPoint = centimeterToPixel(ball.getCenter());
+
+            Imgproc.circle(debugFrame, ballPoint, 3, ballsColor, 1);
+            Imgproc.line(debugFrame, robotCenter, ballPoint, ballsColor, 1);
+        }
+
+        // Debug Robot
+        Imgproc.circle(debugFrame, robotCenter, 5, robotColor, 2);
+        Imgproc.circle(debugFrame, robotRotate, 4, robotColor, 2);
+        Imgproc.line(debugFrame, robotCenter, robotRotate, robotColor, 2);
+    }
+
+    private Point centimeterToPixel(Point point) {
+        return new Point(point.x / conversionFactor + originCameraOffset.x, point.y / conversionFactor + originCameraOffset.y);
+    }
+
+    private Point pixelToCentimeter(Point point) {
+        return new Point((point.x - originCameraOffset.x) * conversionFactor, (point.y - originCameraOffset.y) * conversionFactor);
+    }
+    public synchronized Course getCourse() {
+        return course;
     }
 }
