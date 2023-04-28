@@ -69,14 +69,14 @@ public class Detection {
 
             // 2. Find Robot position and rotation
             if (!robotFound) {
-                robotFound = findRobot(frame, debugFrame);
+                robotFound = findRobot(frame);
                 if (!robotFound) continue;
                 System.out.println("Found Robot");
             }
 
             // 3. Find balls on the course.
             if (!ballsFound) {
-                ballsFound = findBalls(frame, debugFrame); // Parsed twice for debugging
+                ballsFound = findBalls(frame); // Parsed twice for debugging
                 if (!ballsFound) continue;
                 System.out.println("Found " + course.getBalls().size() + " balls");
                 course.getBalls().forEach(ball -> System.out.println(ball.getCenter().x));
@@ -95,8 +95,8 @@ public class Detection {
             debugFrame = frame;
 
             findCourseCorners(frame);
-            findRobot(frame, debugFrame);
-            findBalls(frame, debugFrame);
+            findRobot(frame);
+            findBalls(frame);
 
             debugGUI(debugFrame);
 
@@ -141,8 +141,8 @@ public class Detection {
         return true;
     }
 
-    private boolean findRobot(Mat frame, Mat debugFrame) {
-        Point[] robotMarkerCoords = getRotationCoordsFromFrame(frame, debugFrame);
+    private boolean findRobot(Mat frame) {
+        Point[] robotMarkerCoords = getRotationCoordsFromFrame(frame);
         if (robotMarkerCoords.length < 2) return false;
 
         // Get robots two markers
@@ -158,13 +158,15 @@ public class Detection {
         return true;
     }
 
-    private boolean findBalls(Mat frame, Mat debugFrame) {
+    private boolean findBalls(Mat frame) {
         //Converting the image to Gray and blur it
         Mat frameGray = new Mat();
         Imgproc.cvtColor(frame, frameGray, Imgproc.COLOR_BGR2GRAY);
 
         Mat binaryFrame = new Mat();
-        Imgproc.threshold(frameGray, binaryFrame, 185, 255, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(frameGray, binaryFrame, 200, 255, Imgproc.THRESH_BINARY);
+
+        //HighGui.imshow("ballmask", binaryFrame);
 
         Mat frameBlur = new Mat();
         Imgproc.GaussianBlur(binaryFrame, frameBlur, new Size(7,7), 0);
@@ -243,7 +245,7 @@ public class Detection {
      * @param frame that needs to be evaluated.
      * @return Returns array of points for the 2 markers.
      */
-    public Point[] getRotationCoordsFromFrame(Mat frame, Mat debugFrame) {
+    public Point[] getRotationCoordsFromFrame(Mat frame) {
         final int areaLowerThreshold = 60;
         final int areaUpperThreshold = 350;
 
@@ -252,13 +254,15 @@ public class Detection {
         Mat frameBlur = new Mat();
 
         Imgproc.cvtColor(frame, frameHSV, Imgproc.COLOR_BGR2HSV);
-        Imgproc.GaussianBlur(frame, frameBlur, new Size(7,7), 7, 0);
+        Imgproc.GaussianBlur(frameHSV, frameBlur, new Size(7,7), 7, 0);
 
         // Create a mask
         Mat mask = new Mat();
-        Scalar lower = new Scalar(100, 100, 50);
+        Scalar lower = new Scalar(100, 100, 120);
         Scalar upper = new Scalar(255, 255, 255);
         Core.inRange(frameBlur, lower, upper, mask);
+
+        //HighGui.imshow("robotmask", mask);
 
         // Get Contours
         List<MatOfPoint> contours = new ArrayList<>();

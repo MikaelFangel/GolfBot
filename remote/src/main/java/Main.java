@@ -1,6 +1,9 @@
 import exceptions.MissingArgumentException;
 import courseObjects.*;
 import vision.*;
+
+import java.util.Scanner;
+
 import static vision.Algorithms.*;
 
 public class Main {
@@ -18,13 +21,16 @@ public class Main {
 
         double angle = findRobotsAngleToBall(course.getRobot(), closestBall);
         double distance = findRobotsDistanceToBall(course.getRobot(), closestBall);
+        System.out.println("Driving distance: " + distance + "with angle: " + angle);
 
-        //controller.rotate(angle);
-        //Thread.sleep(10000); // Find better way.
-        //controller.driveStraight(distance);
+
+        Scanner scan  = new Scanner(System.in);
+        scan.nextLine();
+
+        controller.rotate(angle);
+        Thread.sleep(5000); // Find better way.
+        controller.driveStraight(distance);
 
         controller.stopController();
-
-
     }
 }
