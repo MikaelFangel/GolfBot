@@ -20,8 +20,8 @@ public class Algorithms {
         // Starting point
         Ball closestBall = balls.get(0);
         double closestDistance = distanceBetweenTwoPoints(
-                closestBall.center.x,
-                closestBall.center.y,
+                closestBall.getCenter().x,
+                closestBall.getCenter().y,
                 robotCenter.x,
                 robotCenter.y
         );
@@ -29,8 +29,8 @@ public class Algorithms {
         // Find ball with the least distance
         for (Ball ball : balls) {
             double distance = distanceBetweenTwoPoints(
-                    ball.center.x,
-                    ball.center.y,
+                    ball.getCenter().x,
+                    ball.getCenter().y,
                     robotCenter.x,
                     robotCenter.y
             );
@@ -45,11 +45,11 @@ public class Algorithms {
     }
 
     public static double findRobotsAngleToBall(Robot robot, Ball ball) {
-        double angleToBall = angleBetweenTwoPoints(robot.center.x, robot.center.y, ball.center.x, ball.center.y);
+        double angleToBall = angleBetweenTwoPoints(robot.center.x, robot.center.y, ball.getCenter().x, ball.getCenter().y);
         return robot.angle - angleToBall;
     }
 
     public static double findRobotsDistanceToBall(Robot robot, Ball ball) {
-        return distanceBetweenTwoPoints(robot.center.x, robot.center.y, ball.center.x, ball.center.y);
+        return distanceBetweenTwoPoints(robot.center.x, robot.center.y, ball.getCenter().x, ball.getCenter().y);
     }
 }

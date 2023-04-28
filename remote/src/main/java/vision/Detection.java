@@ -25,6 +25,8 @@ public class Detection {
     private double conversionFactor;
     private Point originCameraOffset;
 
+    private final Thread backgroundThread;
+
     public Detection(int cameraIndex) {
         course = new Course();
 
@@ -37,7 +39,8 @@ public class Detection {
         initializeCourse(capture);
 
         // Spawn background thread;
-        new Thread(() -> detectCourse(capture)).start();
+        backgroundThread = new Thread(() -> detectCourse(capture));
+        backgroundThread.start();
 
         System.out.println("Spawned Background Detection Thread");
     }
@@ -48,12 +51,13 @@ public class Detection {
         // Fill course with variables
         System.out.println("Searching for course objects...");
         while (true) {
-            Mat frame = new Mat();
+            Mat frame = new Mat(), debugFrame;
             capture.read(frame);
+            debugFrame = frame;
+
             if (frame.empty()) throw new RuntimeException("Empty frame");
 
-            // Show GUI
-            HighGui.imshow("frame", frame); // Display frame
+            HighGui.imshow("startFrame", debugFrame);
             HighGui.waitKey(1);
 
             // 1. Find course corner to establish conversion factor
@@ -65,14 +69,14 @@ public class Detection {
 
             // 2. Find Robot position and rotation
             if (!robotFound) {
-                robotFound = findRobot(frame);
+                robotFound = findRobot(frame, debugFrame);
                 if (!robotFound) continue;
                 System.out.println("Found Robot");
             }
 
             // 3. Find balls on the course.
             if (!ballsFound) {
-                ballsFound = findBalls(frame);
+                ballsFound = findBalls(frame, debugFrame); // Parsed twice for debugging
                 if (!ballsFound) continue;
                 System.out.println("Found " + course.getBalls().size() + " balls");
                 course.getBalls().forEach(ball -> System.out.println(ball.getCenter().x));
@@ -81,18 +85,23 @@ public class Detection {
             break;
         }
 
-        HighGui.destroyAllWindows();
+        HighGui.destroyWindow("startFrame");
     }
 
     private void detectCourse(VideoCapture capture) {
-
         while (true) {
-            Mat frame = new Mat();
+            Mat frame = new Mat(), debugFrame;
             capture.read(frame);
+            debugFrame = frame;
 
             findCourseCorners(frame);
-            findRobot(frame);
-            findBalls(frame);
+            findRobot(frame, debugFrame);
+            findBalls(frame, debugFrame);
+
+            debugGUI(debugFrame);
+
+            HighGui.imshow("frame", debugFrame);
+            HighGui.waitKey(1);
         }
     }
 
@@ -132,8 +141,8 @@ public class Detection {
         return true;
     }
 
-    private boolean findRobot(Mat frame) {
-        Point[] robotMarkerCoords = getRotationCoordsFromFrame(frame);
+    private boolean findRobot(Mat frame, Mat debugFrame) {
+        Point[] robotMarkerCoords = getRotationCoordsFromFrame(frame, debugFrame);
         if (robotMarkerCoords.length < 2) return false;
 
         // Get robots two markers
@@ -151,14 +160,15 @@ public class Detection {
 
         // Convert pixel coordinates to real world measurements
         Point robotCenter = new Point(centerMarker.x * conversionFactor, centerMarker.y * conversionFactor);
+        Point robotRotationMarker = new Point(rotationMarker.x * conversionFactor, rotationMarker.y * conversionFactor);
 
         // Save variable to course object
-        course.setRobot(new Robot(robotCenter, robotAngle));
+        course.setRobot(new Robot(robotCenter, robotRotationMarker, robotAngle));
 
         return true;
     }
 
-    private boolean findBalls(Mat frame) {
+    private boolean findBalls(Mat frame, Mat debugFrame) {
         //Converting the image to Gray and blur it
         Mat frameGray = new Mat();
         Imgproc.cvtColor(frame, frameGray, Imgproc.COLOR_BGR2GRAY);
@@ -182,14 +192,14 @@ public class Detection {
                 // Create the irl coordinates and create the ball object with the Color white
                 Point coordinates = new Point((center[0] - originCameraOffset.x) * conversionFactor, (center[1] - originCameraOffset.y) * conversionFactor);
                 balls.add(new Ball(coordinates, Color.WHITE));
-                Imgproc.circle(frame, coordinates, 5, new Scalar(0, 0, 255), 1);
             }
         }
-        // Update ball positions
-        course.setBalls(balls);
 
-        // Return false if size == 0, else true
-        return course.getBalls().size() != 0;
+        // Update ball positions
+        if (balls.size() == 0) return false;
+
+        course.setBalls(balls);
+        return true;
     }
 
     /**
@@ -243,7 +253,7 @@ public class Detection {
      * @param frame that needs to be evaluated.
      * @return Returns array of points for the 2 markers.
      */
-    public Point[] getRotationCoordsFromFrame(Mat frame) {
+    public Point[] getRotationCoordsFromFrame(Mat frame, Mat debugFrame) {
         final int areaLowerThreshold = 60;
         final int areaUpperThreshold = 350;
 
@@ -384,6 +394,32 @@ public class Detection {
         return new BorderSet(corners, new Point(offsetX, offsetY));
     }
 
+    private void debugGUI(Mat debugFrame) {
+        Scalar ballsColor = new Scalar(255, 255, 0);
+        Scalar robotColor = new Scalar(255, 0, 255);
+
+        List<Ball> balls = course.getBalls();
+        Robot robot = course.getRobot();
+        Point robotCenter = measurementToPixel(robot.center);
+        Point robotRotate = measurementToPixel(robot.rotationMarker);
+
+        // Debug Balls
+        for (Ball ball : balls) {
+            Point ballPoint = measurementToPixel(ball.getCenter());
+
+            Imgproc.circle(debugFrame, ballPoint, 3, ballsColor, 1);
+            Imgproc.line(debugFrame, robotCenter, ballPoint, ballsColor, 1);
+        }
+
+        // Debug Robot
+        Imgproc.circle(debugFrame, robotCenter, 5, robotColor, 2);
+        Imgproc.circle(debugFrame, robotRotate, 4, robotColor, 2);
+        Imgproc.line(debugFrame, robotCenter, robotRotate, robotColor, 2);
+    }
+
+    private Point measurementToPixel(Point point) {
+        return new Point(point.x / conversionFactor + originCameraOffset.x, point.y / conversionFactor + originCameraOffset.y);
+    }
     public synchronized Course getCourse() {
         return course;
     }

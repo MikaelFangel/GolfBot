@@ -19,9 +19,9 @@ public class Main {
         double angle = findRobotsAngleToBall(course.getRobot(), closestBall);
         double distance = findRobotsDistanceToBall(course.getRobot(), closestBall);
 
-        controller.rotate(angle);
-        Thread.sleep(10000); // Find better way.
-        controller.driveStraight(distance);
+        //controller.rotate(angle);
+        //Thread.sleep(10000); // Find better way.
+        //controller.driveStraight(distance);
 
         controller.stopController();
 
