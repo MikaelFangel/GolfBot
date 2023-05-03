@@ -68,6 +68,17 @@ public class RobotController {
         }
     }
 
+    public void collectRelease(boolean isCollecting) {
+        int motorSpeed = isCollecting ? -1200 : 1200;
+        MultipleMotors motorRequests = createMultipleMotorRequest(motorSpeed, Type.m, OutPort.B, OutPort.C);
+        CLIENT.runMotors(motorRequests);
+    }
+
+    public void stopCollectRelease() {
+        MultipleMotors motorRequests = createMultipleMotorRequest(0, Type.m, OutPort.B, OutPort.C);
+        CLIENT.stopMotors(motorRequests);
+    }
+
     /**
      * Creates an array of motor request.
      * @param motorSpeed Assuming that the wheels always run with the same speed
