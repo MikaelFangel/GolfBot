@@ -28,11 +28,12 @@ public class Detection {
     private final Thread backgroundThread;
 
     // HoughCircles parameters. These configurations works okay with the current course setup
-    private final int minDist = 5;
+    private final int dp = 1;
+    private final int minDist = 5; // Minimum distance between balls
     private final int param1 = 20;  // gradient value used in the edge detection
     private final int param2 = 12;  // lower values allow more circles to be detected (false positives)
     private final int minRadius = 1;  // limits the smallest circle to this size (via radius)
-    private final int maxRadius = 6;  // similarly sets the limit for the largest circles
+    private final int maxRadius = 8;  // similarly sets the limit for the largest circles
 
     public Detection(int cameraIndex) {
         course = new Course();
@@ -83,7 +84,7 @@ public class Detection {
 
             // 3. Find balls on the course.
             if (!ballsFound) {
-                ballsFound = findBalls(frame); // Parsed twice for debugging
+                ballsFound = findBalls(frame, debugFrame); // Parsed twice for debugging
                 if (!ballsFound) continue;
                 System.out.println("Found " + course.getBalls().size() + " balls");
                 course.getBalls().forEach(ball -> System.out.println(ball.getCenter().x));
@@ -103,7 +104,7 @@ public class Detection {
 
             findCourseCorners(frame);
             findRobot(frame);
-            findBalls(frame);
+            findBalls(frame, debugFrame);
 
             debugGUI(debugFrame);
 
@@ -166,28 +167,35 @@ public class Detection {
     }
 
     private Optional<Ball> findOrangeBall(Mat frame) {
-        // Start finding the orange ball
+        // Apply hsv filter to distinguish orange ball
         Mat frameHsv = new Mat();
         Imgproc.cvtColor(frame, frameHsv, Imgproc.COLOR_BGR2HSV);
 
         // Create a mask to seperate the orange ball
         Mat mask = new Mat();
-        Scalar lower = new Scalar(10, 130, 220);
-        Scalar upper = new Scalar(255, 255, 255);
+        Scalar lower = new Scalar(10, 50, 220);
+        Scalar upper = new Scalar(30, 240, 255);
         Core.inRange(frameHsv, lower, upper, mask);
+
+        // Apply blur for noise reduction
+        Mat frameBlur = new Mat();
+        Imgproc.GaussianBlur(mask, frameBlur, new Size(9,9), 0);
 
         // Stores orange circles from the HoughCircles algorithm
         Mat orangeball = new Mat();
 
         // Get the orange ball from the frame
-        Imgproc.HoughCircles(mask, orangeball, Imgproc.HOUGH_GRADIENT, minDist, param1, 20, 15, 2, 7);
+        Imgproc.HoughCircles(frameBlur, orangeball, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, minRadius, maxRadius);
+
+        // Delete the orange ball pixels from the frame,
+        // to not disturb later detection for white balls
+        Core.bitwise_not(frame, frame, mask);
 
         // Add orangeball to balls arraylist
         if (!orangeball.empty()) {
             double[] center = orangeball.get(0, 0);
             // Create the irl coordinates and create the ball object with the Color white
             Point coordinates = new Point((center[0] - originCameraOffset.x) * conversionFactor, (center[1] - originCameraOffset.y) * conversionFactor);
-            Imgproc.circle(frame, coordinates, 5, new Scalar(0, 0, 255), 1);
             return Optional.of(new Ball(coordinates, Color.ORANGE));
         }
         return Optional.empty();
@@ -196,31 +204,28 @@ public class Detection {
     private boolean findBalls(Mat frame, Mat debugFrame) {
         ArrayList<Ball> balls = new ArrayList<>();
 
+        // Find the orange ball
         Optional<Ball> orangeBall = findOrangeBall(frame);
         orangeBall.ifPresent(balls::add);
 
-        // Gray
+        // Apply gray frame for detecting white balls
         Mat frameGray = new Mat();
         Imgproc.cvtColor(frame, frameGray, Imgproc.COLOR_BGR2GRAY);
 
-        // Now search for white balls. Apply a binary threshold mask to seperate out all colors than white.
+        // Apply a binary threshold mask to seperate out all colors than white.
         Mat binaryFrame = new Mat();
-        Imgproc.threshold(frameGray, binaryFrame, 200, 255, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(frameGray, binaryFrame, 195, 255, Imgproc.THRESH_BINARY);
 
         // Apply blur for better noise reduction
         Mat frameBlur = new Mat();
-        // Apply blur for better noise detection
         Imgproc.GaussianBlur(binaryFrame, frameBlur, new Size(7,7), 0);
-
-        HighGui.imshow("frame", binaryFrame);
-        //HighGui.waitKey(1);
 
         // Get white balls from frame
         Mat whiteballs = new Mat();
-        Imgproc.HoughCircles(frameBlur, whiteballs, Imgproc.HOUGH_GRADIENT, 1, 30, 20, 13, 1, 7);
+        Imgproc.HoughCircles(frameBlur, whiteballs, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, minRadius, maxRadius);
 
-        // Add whiteballs to balls arraylist
         if (!whiteballs.empty()) {
+            // Add whiteballs to balls arraylist
             for (int i = 0; i < whiteballs.width(); i++) {
                 double[] center = whiteballs.get(0, i);
                 // Create the irl coordinates and create the ball object with the Color white
@@ -229,9 +234,9 @@ public class Detection {
             }
         }
 
-        // Update ball positions
         if (balls.size() == 0) return false;
 
+        // Update ball positions
         course.setBalls(balls);
         return true;
     }
