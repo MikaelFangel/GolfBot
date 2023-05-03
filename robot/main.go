@@ -33,7 +33,7 @@ type motorRequest struct {
 }
 
 // Radius values are in centimeters and the wheelBaseRadius is measured from the inner sides of the wheels.
-const wheelRadius = 3.5
+const wheelRadius = 3.65
 const wheelBaseRadius = 12.5 / 2 // For diameter/2
 
 const wheelCircumference = 2 * wheelRadius * math.Pi
