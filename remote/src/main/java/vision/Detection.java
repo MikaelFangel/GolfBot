@@ -84,7 +84,7 @@ public class Detection {
 
             // 3. Find balls on the course.
             if (!ballsFound) {
-                ballsFound = findBalls(frame, debugFrame); // Parsed twice for debugging
+                ballsFound = findBalls(frame); // Parsed twice for debugging
                 if (!ballsFound) continue;
                 System.out.println("Found " + course.getBalls().size() + " balls");
                 course.getBalls().forEach(ball -> System.out.println(ball.getCenter().x));
@@ -104,7 +104,7 @@ public class Detection {
 
             findCourseCorners(frame);
             findRobot(frame);
-            findBalls(frame, debugFrame);
+            findBalls(frame);
 
             debugGUI(debugFrame);
 
@@ -172,7 +172,7 @@ public class Detection {
      * @param frame that needs to be evaluated.
      * @return Returns true if any ball is found, else false
      */
-    private boolean findBalls(Mat frame, Mat debugFrame) {
+    private boolean findBalls(Mat frame) {
         ArrayList<Ball> balls = new ArrayList<>();
 
         // Find the orange ball
@@ -238,11 +238,11 @@ public class Detection {
         // Get the orange ball from the frame
         Imgproc.HoughCircles(frameBlur, orangeball, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, minRadius, maxRadius);
 
-        // Delete the orange ball pixels from the frame,
-        // to not disturb later detection for white balls
+        // Delete the orange ball pixels from the frame, to not disturb later detection for white balls
+        // TODO: Should be explored later if this is method should be used
         Core.bitwise_not(frame, frame, mask);
 
-        // Add orangeball to balls arraylist
+        // If orange ball is present, return the optional ball, else return optional empty
         if (!orangeball.empty()) {
             double[] center = orangeball.get(0, 0);
             // Create the irl coordinates and create the ball object with the Color white
