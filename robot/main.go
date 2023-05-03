@@ -157,9 +157,7 @@ func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff
 	fmt.Printf("Rotation in degrees: %d\n", wheelRotations)
 
 	// Gets the motors and sets their speeds to a static speed, making the wheels turn in different directions
-	for i := 0; i < 2; i++ {
-		request := in.GetMotors()[i]
-
+	for i, request := range in.GetMotors().GetMotor() {
 		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err
@@ -191,9 +189,7 @@ func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.S
 	fmt.Printf("Drive degrees of rotation: %d\n", numberOfRotations)
 
 	// Fetch each motor
-	for i := 0; i < 2; i++ {
-		request := in.GetMotors()[i]
-
+	for i, request := range in.GetMotors().GetMotor() {
 		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err

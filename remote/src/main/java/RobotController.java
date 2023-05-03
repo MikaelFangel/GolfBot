@@ -35,10 +35,10 @@ public class RobotController {
      * @throws RuntimeException if the robot was not reached
      */
     public void driveStraight(double distance) throws RuntimeException {
-       ArrayList<MotorRequest> motorsRequest = createMultipleMotorRequest(DEFAULT_SPEED, Type.l, OutPort.A, OutPort.D);
+       MultipleMotors motorsRequest = createMultipleMotorRequest(DEFAULT_SPEED, Type.l, OutPort.A, OutPort.D);
 
         DriveRequest driveRequest = DriveRequest.newBuilder()
-                .addAllMotors(motorsRequest)
+                .setMotors(motorsRequest)
                 .setDistance((float) distance)
                 .setSpeed(DEFAULT_SPEED)
                 .build();
@@ -52,10 +52,10 @@ public class RobotController {
      * @throws RuntimeException if the robot was not reached
      */
     public void rotate(double degrees) throws RuntimeException {
-        ArrayList<MotorRequest> motorsRequest = createMultipleMotorRequest(DEFAULT_SPEED, Type.l, OutPort.A, OutPort.D);
+        MultipleMotors motorsRequest = createMultipleMotorRequest(DEFAULT_SPEED, Type.l, OutPort.A, OutPort.D);
 
         RotateRequest rotateRequest = RotateRequest.newBuilder()
-                .addAllMotors(motorsRequest)
+                .setMotors(motorsRequest)
                 .setDegrees((int) degrees)
                 .setSpeed(DEFAULT_SPEED)
                 .build();
@@ -75,7 +75,7 @@ public class RobotController {
      * @param outPorts A, B, C, D
      * @return an arraylist of motor requests
      */
-    private ArrayList<MotorRequest> createMultipleMotorRequest(int motorSpeed, Type motorType, OutPort... outPorts) {
+    private MultipleMotors createMultipleMotorRequest(int motorSpeed, Type motorType, OutPort... outPorts) {
         ArrayList<MotorRequest> motorRequests = new ArrayList<>();
 
         for (OutPort port : outPorts) {
@@ -86,6 +86,10 @@ public class RobotController {
                     .build());
         }
 
-        return motorRequests;
+        MultipleMotors multipleMotors = MultipleMotors.newBuilder()
+                .addAllMotor(motorRequests)
+                .build();
+
+        return multipleMotors;
     }
 }
