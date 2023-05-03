@@ -7,18 +7,18 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 public class RobotController {
-    private ManagedChannel channel;
-    private MotorsGrpc.MotorsBlockingStub client;
+    private final ManagedChannel CHANNEL;
+    private final MotorsGrpc.MotorsBlockingStub CLIENT;
 
-    private final int defaultSpeed = 100;
+    private final int DEFAULT_SPEED = 100;
 
     /**
      * Initializes channel and client to connect with the robot.
      * @param ip_port the ip and port of the robot on the subnet. e.g. 192.168.1.12:50051
      */
     public RobotController(String ip_port) {
-        channel = Grpc.newChannelBuilder(ip_port, InsecureChannelCredentials.create()).build();
-        client = MotorsGrpc.newBlockingStub(channel);
+        CHANNEL = Grpc.newChannelBuilder(ip_port, InsecureChannelCredentials.create()).build();
+        CLIENT = MotorsGrpc.newBlockingStub(CHANNEL);
     }
 
     /**
@@ -26,7 +26,7 @@ public class RobotController {
      * @throws InterruptedException if shutdown was interrupted
      */
     public void stopController() throws InterruptedException {
-        channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
+        CHANNEL.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
     }
 
     /**
@@ -35,15 +35,15 @@ public class RobotController {
      * @throws RuntimeException if the robot was not reached
      */
     public void driveStraight(double distance) throws RuntimeException {
-       ArrayList<MotorRequest> motorsRequest = createMotorRequests(Type.l, OutPort.A, OutPort.D);
+       ArrayList<MotorRequest> motorsRequest = createMultipleMotorRequest(DEFAULT_SPEED, Type.l, OutPort.A, OutPort.D);
 
         DriveRequest driveRequest = DriveRequest.newBuilder()
                 .addAllMotors(motorsRequest)
                 .setDistance((float) distance)
-                .setSpeed(defaultSpeed)
+                .setSpeed(DEFAULT_SPEED)
                 .build();
 
-        client.drive(driveRequest);
+        CLIENT.drive(driveRequest);
     }
 
     /**
@@ -52,25 +52,33 @@ public class RobotController {
      * @throws RuntimeException if the robot was not reached
      */
     public void rotate(double degrees) throws RuntimeException {
-        ArrayList<MotorRequest> motorsRequest = createMotorRequests(Type.l, OutPort.A, OutPort.D);
+        ArrayList<MotorRequest> motorsRequest = createMultipleMotorRequest(DEFAULT_SPEED, Type.l, OutPort.A, OutPort.D);
 
         RotateRequest rotateRequest = RotateRequest.newBuilder()
                 .addAllMotors(motorsRequest)
                 .setDegrees((int) degrees)
-                .setSpeed(defaultSpeed)
+                .setSpeed(DEFAULT_SPEED)
                 .build();
 
-        client.rotate(rotateRequest);
+        CLIENT.rotate(rotateRequest);
 
     }
 
-    private ArrayList<MotorRequest> createMotorRequests(Type motorType, OutPort... ports) {
+    /**
+     * Creates an array of motor request.
+     * @param motorSpeed Assuming that the wheels always run with the same speed
+     * @param motorType Small, Medium or Large
+     * @param outPorts A, B, C, D
+     * @return an arraylist of motor requests
+     */
+    private ArrayList<MotorRequest> createMultipleMotorRequest(int motorSpeed, Type motorType, OutPort... outPorts) {
         ArrayList<MotorRequest> motorRequests = new ArrayList<>();
 
-        for (OutPort port : ports) {
+        for (OutPort port : outPorts) {
             motorRequests.add(MotorRequest.newBuilder()
-                    .setMotorPort(port)
+                    .setMotorSpeed(motorSpeed)
                     .setMotorType(motorType)
+                    .setMotorPort(port)
                     .build());
         }
 
