@@ -60,8 +60,12 @@ public class RobotController {
                 .setSpeed(DEFAULT_SPEED)
                 .build();
 
-        CLIENT.rotate(rotateRequest);
-
+        try {
+            CLIENT.rotate(rotateRequest);
+        }
+        catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     /**
