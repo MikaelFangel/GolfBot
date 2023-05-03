@@ -50,6 +50,6 @@ public class Algorithms {
     }
 
     public static double findRobotsDistanceToBall(Robot robot, Ball ball) {
-        return distanceBetweenTwoPoints(robot.center.x, robot.center.y, ball.getCenter().x, ball.getCenter().y);
+        return distanceBetweenTwoPoints(robot.center.x, robot.center.y, ball.getCenter().x, ball.getCenter().y) - robot.length;
     }
 }

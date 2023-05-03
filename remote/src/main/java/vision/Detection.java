@@ -76,14 +76,14 @@ public class Detection {
 
             // 2. Find Robot position and rotation
             if (!robotFound) {
-                robotFound = findRobot(frame, debugFrame);
+                robotFound = findRobot(frame);
                 if (!robotFound) continue;
                 System.out.println("Found Robot");
             }
 
             // 3. Find balls on the course.
             if (!ballsFound) {
-                ballsFound = findBalls(frame, debugFrame); // Parsed twice for debugging
+                ballsFound = findBalls(frame); // Parsed twice for debugging
                 if (!ballsFound) continue;
                 System.out.println("Found " + course.getBalls().size() + " balls");
                 course.getBalls().forEach(ball -> System.out.println(ball.getCenter().x));
@@ -102,8 +102,8 @@ public class Detection {
             debugFrame = frame;
 
             findCourseCorners(frame);
-            findRobot(frame, debugFrame);
-            findBalls(frame, debugFrame);
+            findRobot(frame);
+            findBalls(frame);
 
             debugGUI(debugFrame);
 
@@ -148,8 +148,8 @@ public class Detection {
         return true;
     }
 
-    private boolean findRobot(Mat frame, Mat debugFrame) {
-        Point[] robotMarkerCoords = getRotationCoordsFromFrame(frame, debugFrame);
+    private boolean findRobot(Mat frame) {
+        Point[] robotMarkerCoords = getRotationCoordsFromFrame(frame);
         if (robotMarkerCoords.length < 2) return false;
 
         // Get robots two markers
@@ -287,7 +287,7 @@ public class Detection {
      * @param frame that needs to be evaluated.
      * @return Returns array of points for the 2 markers.
      */
-    public Point[] getRotationCoordsFromFrame(Mat frame, Mat debugFrame) {
+    public Point[] getRotationCoordsFromFrame(Mat frame) {
         final int areaLowerThreshold = 60;
         final int areaUpperThreshold = 350;
 
@@ -296,13 +296,15 @@ public class Detection {
         Mat frameBlur = new Mat();
 
         Imgproc.cvtColor(frame, frameHSV, Imgproc.COLOR_BGR2HSV);
-        Imgproc.GaussianBlur(frame, frameBlur, new Size(7,7), 7, 0);
+        Imgproc.GaussianBlur(frameHSV, frameBlur, new Size(7,7), 7, 0);
 
         // Create a mask
         Mat mask = new Mat();
-        Scalar lower = new Scalar(100, 100, 50);
+        Scalar lower = new Scalar(100, 100, 120);
         Scalar upper = new Scalar(255, 255, 255);
         Core.inRange(frameBlur, lower, upper, mask);
+
+        //HighGui.imshow("robotmask", mask);
 
         // Get Contours
         List<MatOfPoint> contours = new ArrayList<>();
@@ -434,21 +436,31 @@ public class Detection {
 
         List<Ball> balls = course.getBalls();
         Robot robot = course.getRobot();
-        Point robotCenter = centimeterToPixel(robot.center);
-        Point robotRotate = centimeterToPixel(robot.rotationMarker);
 
         // Debug Balls
-        for (Ball ball : balls) {
-            Point ballPoint = centimeterToPixel(ball.getCenter());
+        if (balls.size() > 0)
+            for (Ball ball : balls) {
+                // Draw Ball
+                Point ballPoint = centimeterToPixel(ball.getCenter());
+                Imgproc.circle(debugFrame, ballPoint, 4, ballsColor, 1);
 
-            Imgproc.circle(debugFrame, ballPoint, 3, ballsColor, 1);
-            Imgproc.line(debugFrame, robotCenter, ballPoint, ballsColor, 1);
-        }
+                // Draw line from robot to balls
+                if (robot != null) {
+                    Point robotCenter = centimeterToPixel(robot.center);
+                    Imgproc.line(debugFrame, robotCenter, ballPoint, ballsColor, 1);
+                }
+
+            }
 
         // Debug Robot
-        Imgproc.circle(debugFrame, robotCenter, 5, robotColor, 2);
-        Imgproc.circle(debugFrame, robotRotate, 4, robotColor, 2);
-        Imgproc.line(debugFrame, robotCenter, robotRotate, robotColor, 2);
+        if (course.getRobot() != null) {
+            Point robotCenter = centimeterToPixel(robot.center);
+            Point robotRotate = centimeterToPixel(robot.rotationMarker);
+
+            Imgproc.circle(debugFrame, robotCenter, 5, robotColor, 2);
+            Imgproc.circle(debugFrame, robotRotate, 4, robotColor, 2);
+            Imgproc.line(debugFrame, robotCenter, robotRotate, robotColor, 2);
+        }
     }
 
     private Point centimeterToPixel(Point point) {
