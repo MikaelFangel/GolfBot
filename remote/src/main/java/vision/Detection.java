@@ -238,8 +238,6 @@ public class Detection {
         // Get the orange ball from the frame
         Imgproc.HoughCircles(frameBlur, orangeball, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, minRadius, maxRadius);
 
-        HighGui.imshow("orange", mask);
-
         // Delete the orange ball pixels from the frame,
         // to not disturb later detection for white balls
         Core.bitwise_not(frame, frame, mask);
