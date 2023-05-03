@@ -61,12 +61,31 @@ func getMotorHandle(port string, motor string) (*ev3dev.TachoMotor, error) {
 	return ev3dev.TachoMotorFor("ev3-ports:out"+port, "lego-ev3-"+motor+"-motor")
 }
 
+// getSensor Returns the requested sensor from the input ports of the robot
+func getSensor(inPort string, sensor string) (*ev3dev.Sensor, error) {
+	return ev3dev.SensorFor("ev3-ports:"+inPort, "lego-ev3-"+sensor)
+}
+
 // isRunning Returns true if the speed of the given motor is not zero, otherwise false.
 func isRunning(motor *ev3dev.TachoMotor) bool {
 	speed, _ := motor.Speed()
 
 	return speed != 0
 }
+
+// convertRobotRotationToWheelRotations Converts an input of degrees to how many degrees a wheel should rotate.
+func convertRobotRotationToWheelRotations(degrees int32) int {
+	rotationInCm := (wheelBaseCircumference * float64(degrees)) / 360.
+	return int(rotationInCm / (wheelCircumference / 360))
+}
+
+func convertDistanceToWheelRotation(distance float64) int {
+	return int((distance / wheelCircumference) * 360)
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// Global functions
+//----------------------------------------------------------------------------------------------------------------------
 
 // RunMotors Starts the motors given, and sets them to the speed specified on client side.
 func (s *motorServer) RunMotors(_ context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
@@ -199,21 +218,6 @@ func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.S
 	}
 
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
-}
-
-// convertRobotRotationToWheelRotations Converts an input of degrees to how many degrees a wheel should rotate.
-func convertRobotRotationToWheelRotations(degrees int32) int {
-	rotationInCm := (wheelBaseCircumference * float64(degrees)) / 360.
-	return int(rotationInCm / (wheelCircumference / 360))
-}
-
-func convertDistanceToWheelRotation(distance float64) int {
-	return int((distance / wheelCircumference) * 360)
-}
-
-// getSensor Returns the requested sensor from the input ports of the robot
-func getSensor(inPort string, sensor string) (*ev3dev.Sensor, error) {
-	return ev3dev.SensorFor("ev3-ports:"+inPort, "lego-ev3-"+sensor)
 }
 
 // GetDistanceInCm Returns the distance to the closest object from the ultrasonic sensor
