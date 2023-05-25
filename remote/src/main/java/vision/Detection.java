@@ -16,8 +16,8 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 
-import static vision.Calculations.angleBetweenTwoPoints;
-import static vision.Calculations.distanceBetweenTwoPoints;
+import static vision.math.Geometry.angleBetweenTwoPoints;
+import static vision.math.Geometry.distanceBetweenTwoPoints;
 
 public class Detection {
 
@@ -114,7 +114,7 @@ public class Detection {
         if (borderSet == null) return false;
 
         // Get camera coordinates
-        Point[] cornerCoords = borderSet.correctCoords;
+        Point[] cornerCoords = borderSet.getCorrectCoords();
 
 
         topLeft = new Point(cornerCoords[0].x, cornerCoords[0].y);
@@ -124,7 +124,7 @@ public class Detection {
 
         // Calculate conversion factor and save origin offset for
         conversionFactor = course.length / distanceBetweenTwoPoints(topLeft.x, topLeft.y, topRight.x, topRight.y);
-        originCameraOffset = borderSet.origin;
+        originCameraOffset = borderSet.getOrigin();
 
         // Get irl coordinates
         irlTopLeft = pixelToCentimeter(topLeft);
@@ -285,11 +285,11 @@ public class Detection {
         double[] centerCoords = {-1, -1}, directionCoords = {-1, -1};
 
         // Sort list to descending order.
-        contourSets.sort(Comparator.comparingDouble(set -> set.area));
+        contourSets.sort(Comparator.comparingDouble(ContourSet::getArea));
         Collections.reverse(contourSets);
 
         for (int i = 0; i < 2; i++) { // Loop through 2 biggest contours
-            MatOfPoint contour = contourSets.get(i).contour;
+            MatOfPoint contour = contourSets.get(i).getContour();
 
             // Get bounding rectangle
             Rect rect = Imgproc.boundingRect(contour);
@@ -404,15 +404,15 @@ public class Detection {
 
                 // Draw line from robot to balls
                 if (robot != null) {
-                    Point robotCenter = centimeterToPixel(robot.center);
+                    Point robotCenter = centimeterToPixel(robot.getCenter());
                     Imgproc.line(debugFrame, robotCenter, ballPoint, ballsColor, 1);
                 }
 
             }
 
         // Debug Robot
-        if (course.getRobot() != null) {
-            Point robotCenter = centimeterToPixel(robot.center);
+        if (robot != null) {
+            Point robotCenter = centimeterToPixel(robot.getCenter());
             Point robotRotate = centimeterToPixel(robot.rotationMarker);
 
             Imgproc.circle(debugFrame, robotCenter, 5, robotColor, 2);
