@@ -68,12 +68,19 @@ public class RobotController {
         }
     }
 
+    /**
+     * Either collects or releases balls depending on the boolean parameter given
+     * @param isCollecting collects if true and releases if false
+     */
     public void collectRelease(boolean isCollecting) {
         int motorSpeed = isCollecting ? -1200 : 900;
         MultipleMotors motorRequests = createMultipleMotorRequest(motorSpeed, Type.m, OutPort.B, OutPort.C);
         CLIENT.collectRelease(motorRequests);
     }
 
+    /**
+     * Stops the motors collecting/releasing the balls, which currently is port B and C
+     */
     public void stopCollectRelease() {
         MultipleMotors motorRequests = createMultipleMotorRequest(0, Type.m, OutPort.B, OutPort.C);
         CLIENT.stopMotors(motorRequests);

@@ -116,7 +116,7 @@ func (s *motorServer) RunMotors(_ context.Context, in *pBuff.MultipleMotors) (*p
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
-// StopMotors Stops the motors given, e.g. cleaning their MotorState.
+// StopMotors Stops the motors given, e.g. cleaning their MotorState and setting speed to zero
 func (s *motorServer) StopMotors(_ context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
 	// motorRequests stores the request and the motor, so we don't need to get them again in the 2nd loop
 	var motorRequests [2]motorRequest
@@ -183,6 +183,7 @@ func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
+// Drive Makes the robot drive straight forward or backward with a speed and distance specified client side
 func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.StatusReply, error) {
 	var motorRequests [2]motorRequest
 
@@ -217,6 +218,10 @@ func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.S
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
+// CollectRelease Either collects or releases balls. Whether it is collecting or releasing is handled client side.
+//
+//	If speed > 0 then the balls are released
+//	If speed < 0 then the balls are collected
 func (s *motorServer) CollectRelease(_ context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
 	// motorRequests stores the request and the motor, so we don't need to get them again in the 2nd loop
 	var motorRequests [2]motorRequest
