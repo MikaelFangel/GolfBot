@@ -128,6 +128,7 @@ func (s *motorServer) StopMotors(_ context.Context, in *pBuff.MultipleMotors) (*
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err
 		}
+		motor.SetSpeedSetpoint(0)
 		motorRequests[i] = motorRequest{request: request, motor: motor}
 	}
 
