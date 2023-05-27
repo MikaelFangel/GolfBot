@@ -43,6 +43,7 @@ service Motors {
   rpc Drive(DriveRequest) returns (StatusReply) {}
   rpc Rotate(RotateRequest) returns (StatusReply) {}
   rpc Grab(MultipleMotors) returns (StatusReply) {}
+  rpc CollectRelease(MultipleMotors) returns (StatusReply) {}
 }
 
 // MultipleMotors reuses the message MotorRequest

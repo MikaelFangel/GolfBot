@@ -217,6 +217,38 @@ func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.S
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
+func (s *motorServer) CollectRelease(_ context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
+	// motorRequests stores the request and the motor, so we don't need to get them again in the 2nd loop
+	var motorRequests [2]motorRequest
+
+	// Gets the motors and sets their speeds, which is specified on client side.
+	for i, request := range in.GetMotor() {
+		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
+		if err != nil {
+			return &pBuff.StatusReply{ReplyMessage: false}, err
+		}
+		if i%2 == 0 { // Currently port B
+			motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
+		} else { // Currently port C
+			motor.SetSpeedSetpoint(int(-request.GetMotorSpeed()))
+		}
+		motorRequests[i] = motorRequest{request: request, motor: motor}
+	}
+
+	// Start each motor
+	for i, motorRequest := range motorRequests {
+		motorRequest.motor.Command(run)
+
+		// Error handling
+		_, b, _ := ev3dev.Wait(motorRequests[i].motor, ev3dev.Running, ev3dev.Running, ev3dev.Stalled, false, -1)
+		if !b {
+			return &pBuff.StatusReply{ReplyMessage: false}, fmt.Errorf("motor %s is not running", motorRequest.request.MotorType)
+		}
+	}
+
+	return &pBuff.StatusReply{ReplyMessage: true}, nil
+}
+
 // GetDistanceInCm Returns the distance to the closest object from the ultrasonic sensor
 func GetDistanceInCm() float64 {
 	ultraSonicSensor, err := getSensor(pBuff.InPort_in1.String(), pBuff.Sensor_us.String())

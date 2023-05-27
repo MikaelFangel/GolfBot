@@ -69,9 +69,9 @@ public class RobotController {
     }
 
     public void collectRelease(boolean isCollecting) {
-        int motorSpeed = isCollecting ? -1200 : 1200;
+        int motorSpeed = isCollecting ? -1200 : 900;
         MultipleMotors motorRequests = createMultipleMotorRequest(motorSpeed, Type.m, OutPort.B, OutPort.C);
-        CLIENT.runMotors(motorRequests);
+        CLIENT.collectRelease(motorRequests);
     }
 
     public void stopCollectRelease() {
@@ -97,10 +97,8 @@ public class RobotController {
                     .build());
         }
 
-        MultipleMotors multipleMotors = MultipleMotors.newBuilder()
+        return MultipleMotors.newBuilder()
                 .addAllMotor(motorRequests)
                 .build();
-
-        return multipleMotors;
     }
 }
