@@ -1,35 +1,6 @@
 import math
-
 import numpy as np
 import cv2 as cv
-
-
-class BallsNotFoundException(Exception):
-    """Camera Exception raised for when not detecting any balls.
-
-        Attributes:
-            data -- the intercepted data of the camera
-            message -- explanation of the error
-        """
-
-    def __init__(self, data,
-                 message="Camera expected to detect at least 1 lines to be able to calculate coordinates"):
-        self.data = data
-        self.message = message
-
-
-class CourseFrameNotFoundException(Exception):
-    """Camera Exception raised for not detecting the course frame.
-
-        Attributes:
-            data -- the intercepted data of the camera
-            message -- explanation of the error
-        """
-
-    def __init__(self, data,
-                 message="Camera expected to detect exactly 4 lines from the course frame to be able to calculate a coordinate system"):
-        self.data = data
-        self.message = message
 
 
 def getCourseLinesFromFramesWithContours(frame_):
@@ -47,7 +18,7 @@ def getCourseLinesFromFramesWithContours(frame_):
 
     # Apply grayframe and blurs for noise reduction
     grayFrame = cv.cvtColor(courseFrame, cv.COLOR_BGR2GRAY)
-    blurFrame = cv.GaussianBlur(grayFrame, (9, 9), 0)
+    blurFrame = cv.GaussianBlur(grayFrame, (7, 7), 0)
 
     contours, _ = cv.findContours(blurFrame, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
 
@@ -60,37 +31,74 @@ def getCourseLinesFromFramesWithContours(frame_):
             cv.drawContours(frame_, [approx], 0, (0, 255, 0), 2)
             # Return the array of lines with x and y coordinates
             return approx
-        elif len(approx) == 16 or len(approx) == 15: # TODO A bit hacky way to detect the cross in the middle, but kinda works. Need to revisit this to be more stable.
-            cv.drawContours(frame_, [approx], 0, (0, 255, 0), 2)
-        else:
-            print(len(approx))
+
+
+def getOrangeBall(frame_):
+    hsvFrame = cv.cvtColor(frame_, cv.COLOR_BGR2HSV)
+
+    # Lower and upper RGB values for detection
+    lower = np.array([10, 140, 230])
+    upper = np.array([255, 255, 255])
+
+    orange_mask = cv.inRange(hsvFrame, lower, upper)
+
+    # Remove everything other than the mask
+    mask = cv.bitwise_and(frame_, frame_, mask=orange_mask)
+
+    # Apply grayFrame
+    grayFrame = cv.cvtColor(mask, cv.COLOR_BGR2GRAY)
+
+    # Apply blur for better edge detection
+    blurFrame = cv.GaussianBlur(grayFrame, (7, 7), 0)
+
+    orange_circle = cv.HoughCircles(image=blurFrame,
+                                    method=cv.HOUGH_GRADIENT,
+                                    dp=1,
+                                    minDist=5,
+                                    param1=25,  # gradient value used in the edge detection
+                                    param2=15,  # lower values allow more circles to be detected (false positives)
+                                    minRadius=1,  # limits the smallest circle to this size (via radius)
+                                    maxRadius=7  # similarly sets the limit for the largest circles
+                                    )
+
+    if orange_circle is not None:
+        orange_circle = np.uint(orange_circle)
+        for (x, y, r) in orange_circle[0, :]:
+            # draw the circle
+            cv.circle(frame, (x, y), r, (100, 255, 100), 1)
+        return orange_circle
 
 
 # https://docs.opencv.org/4.x/da/d53/tutorial_py_houghcircles.html
-def getCirclesFromFrames(frame):
-    # TODO: Explore different blurs
-    blurFrame = cv.GaussianBlur(frame, (9, 9), 0)
-    # blurFrame = cv.medianBlur(frame, 11)
-    grayFrame = cv.cvtColor(blurFrame, cv.COLOR_BGR2GRAY)
+def getCirclesFromFrames(frame_):
+    # Apply grayFrame
+    grayFrame = cv.cvtColor(frame_, cv.COLOR_BGR2GRAY)
+
+    # Pixel values under 175 is ignored
+    _, binary_frame = cv.threshold(grayFrame, 185, 255, cv.THRESH_BINARY)
+
+    cv.imshow("binary frame", binary_frame)
+
+    # Apply blur for noise reduction
+    blurFrame = cv.GaussianBlur(binary_frame, (7, 7), 0)
 
     # These configurations works okay with the current course setup
-    circles = cv.HoughCircles(image=grayFrame,
-                              method=cv.HOUGH_GRADIENT,
-                              dp=1,
-                              minDist=50,
-                              param1=25,  # gradient value used in the edge detection
-                              param2=17,  # lower values allow more circles to be detected (false positives)
-                              minRadius=4,  # limits the smallest circle to this size (via radius)
-                              maxRadius=8  # similarly sets the limit for the largest circles
-                              )
+    white_circles = cv.HoughCircles(image=blurFrame,
+                                    method=cv.HOUGH_GRADIENT,
+                                    dp=1,
+                                    minDist=5,
+                                    param1=20,  # gradient value used in the edge detection
+                                    param2=10,  # lower values allow more circles to be detected (false positives)
+                                    minRadius=1,  # limits the smallest circle to this size (via radius)
+                                    maxRadius=6  # similarly sets the limit for the largest circles
+                                    )
 
-    if circles is not None:
-        # Round the values to unsigned integers
-        circles = np.uint16(circles)
-        for (x, y, r) in circles[0, :]:
+    if white_circles is not None:
+        white_circles = np.uint(white_circles)
+        for (x, y, r) in white_circles[0, :]:
             # draw the circle
-            cv.circle(frame, (x, y), r, (0, 255, 0), 2)
-        return circles
+            cv.circle(frame, (x, y), r, (0, 255, 0), 1)
+        return white_circles
 
 
 # Calculate the distance given two points. Mostly used for accuracy tests
@@ -122,51 +130,62 @@ while True:
         break
 
     lines = getCourseLinesFromFramesWithContours(frame)
-    if len(lines) != 4:
-        print("Course frame not found. Skip this frame")
-        continue
 
-    # Origin
-    offset = lines[0][0]
+    if lines is None:
+        print("No course frame found")
+    else:
+        if len(lines) == 4:
+            # Origin
+            offset = lines[0][0]
+            #print(f"Offset: ${offset}")
 
-    # Calculate corners x and y with offset
-    corners = [point - offset for point in lines]
+            # Calculate corners x and y with offset
+            corners = [point - offset for point in lines]
 
-    # Unpack a layer of nested array that is not needed. TODO: Check where this extra array comes from
-    [corners] = [corners]
+            # Unpack a layer of nested array that is not needed. TODO: Check where this extra array comes from
+            [corners] = [corners]
 
-    # Unpack two points for each point that of the length of the course frame contains x and y coordinates
-    [top_left], [top_right], [bottom_right], [bottom_left] = corners
+            # Unpack two points for each point that of the length of the course frame contains x and y coordinates
+            [top_left], [top_right], [bottom_right], [bottom_left] = corners
 
-    # Find conversion factor by real-world width and calculated pixel width
-    conversion_factor = real_width / distance_in_pixels(top_left[0], top_left[1], top_right[0], top_right[1])
+            # Find conversion factor by real-world width and calculated pixel width
+            conversion_factor = real_width / distance_in_pixels(top_left[0], top_left[1], top_right[0], top_right[1])
 
-    # Calculate irl-coordinates for the corners
-    irl_corners = [corner * conversion_factor for corner in corners]
+            # Calculate irl-coordinates for the corners
+            irl_corners = [corner * conversion_factor for corner in corners]
 
-    print(corners)
+            #print("Corner coordinates")
+            #print(irl_corners)
 
-    circles = getCirclesFromFrames(frame)
+            orange_ball = getOrangeBall(frame)
 
-    if circles is None:
-        print("No balls found. Skipping this frame")
-        continue
+            if orange_ball is not None:
+                # Calculate irl_coordinates for the balls
+                ball = [ball * conversion_factor for ball in orange_ball[0, :]]
 
-    # Calculate irl_coordinates for the balls
-    balls = [ball * conversion_factor for ball in circles[0, :]]
+                # Unpack outer array of nested array that is not needed
+                [ball] = [ball]
 
-    # Unpack outer array of nested array that is not needed
-    [balls] = [balls]
+                # Print irl-coordinates for the orange ball
+                print("Orange ball: ")
+                print(ball)
 
-    # Print irl-coordinates for all balls
-    print(balls)
+            circles = getCirclesFromFrames(frame)
 
-    # For testing accuracy between two balls. TODO: Should be done elsewhere by calling this method
-    accuracy_test(balls)
+            if circles is not None:
+                # Calculate irl_coordinates for the balls
+                balls = [ball * conversion_factor for ball in circles[0, :]]
+
+                # Unpack outer array of nested array that is not needed
+                [balls] = [balls]
+
+                # Print irl-coordinates for all white balls
+                print("White balls: ")
+                print(balls)
 
     cv.imshow("frame", frame)
 
-    if cv.waitKey(1) & 0xFF == ord('q'):
+    if cv.waitKey(1000) & 0xFF == ord('q'):
         break
 
 video.release()
