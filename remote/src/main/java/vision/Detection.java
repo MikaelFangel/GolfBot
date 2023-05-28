@@ -413,7 +413,7 @@ public class Detection {
         // Debug Robot
         if (robot != null) {
             Point robotCenter = centimeterToPixel(robot.getCenter());
-            Point robotRotate = centimeterToPixel(robot.rotationMarker);
+            Point robotRotate = centimeterToPixel(robot.getRotationMarker());
 
             Imgproc.circle(debugFrame, robotCenter, 5, robotColor, 2);
             Imgproc.circle(debugFrame, robotRotate, 4, robotColor, 2);

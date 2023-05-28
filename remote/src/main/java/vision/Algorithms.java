@@ -19,7 +19,12 @@ public class Algorithms {
 
         // Starting point
         Ball closestBall = balls.get(0);
-        double closestDistance = Double.MAX_VALUE;
+        double closestDistance = distanceBetweenTwoPoints(
+                closestBall.getCenter().x,
+                closestBall.getCenter().y,
+                robotCenter.x,
+                robotCenter.y
+        );
 
         // Find ball with the least distance
         for (Ball ball : balls) {

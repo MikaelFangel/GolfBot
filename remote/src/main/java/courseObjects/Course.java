@@ -2,6 +2,7 @@ package courseObjects;
 
 import org.opencv.core.Point;
 
+import java.util.Collections;
 import java.util.List;
 
 public class Course {
@@ -50,7 +51,7 @@ public class Course {
     }
 
     public synchronized void setBalls(List<Ball> balls) {
-        this.balls = balls;
+        this.balls = Collections.synchronizedList(balls);
     }
 
     public synchronized Robot getRobot() {
