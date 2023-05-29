@@ -8,12 +8,12 @@ import static vision.Algorithms.*;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException, MissingArgumentException {
-        /*if (args.length < 1) {
+        if (args.length < 1) {
             throw new MissingArgumentException("Please provide an IP and port number (e.g 192.168.0.97:50051)");
-        }*/
+        }
 
-        RobotController controller = new RobotController("192.168.1.12:50051");
-        Detection detection = new Detection(2);
+        RobotController controller = new RobotController(args[0]); // Args[0] being and IP address
+        Detection detection = new Detection(0);
         Course course = detection.getCourse();
 
         Ball closestBall = findClosestBall(course.getBalls(), course.getRobot());
@@ -25,6 +25,7 @@ public class Main {
 
 
         Scanner scan  = new Scanner(System.in);
+        System.out.println("Press ENTER to trigger robot");
         scan.nextLine();
 
         controller.rotate(angle);
