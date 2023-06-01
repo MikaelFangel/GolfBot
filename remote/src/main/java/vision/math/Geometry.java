@@ -25,12 +25,13 @@ public class Geometry {
     public static double objectActualPosition(double heightCamera, double heightObject, double distanceToCamera){
         double largeTriangle_hypotenuse = Math.sqrt(Math.pow(heightCamera,2)+Math.pow(distanceToCamera,2));
         if (largeTriangle_hypotenuse == 0) return -1;
-        double angelGround = Math.asin(distanceToCamera/largeTriangle_hypotenuse);
+        double angelHeight = Math.toDegrees(Math.asin(heightCamera/largeTriangle_hypotenuse));
         double smallTriangle_height = heightCamera - heightObject;
-        double smallTriangle_heightAngel = 90 - angelGround;
-        if (Math.sin(smallTriangle_heightAngel) == 0) return -1;
-        double smallTriangle_length = Math.asin(smallTriangle_height*Math.sin(angelGround)/Math.sin(smallTriangle_heightAngel));
+        double smallTriangle_groundAngel = 90 - angelHeight;
+        if (Math.sin(smallTriangle_groundAngel) == 0) return -1;
+        double test = Math.sin(Math.toRadians(smallTriangle_groundAngel));
+        double smallTriangle_length = (smallTriangle_height*Math.sin(Math.toRadians(smallTriangle_groundAngel)))/Math.sin(Math.toRadians(angelHeight));
 
-        return smallTriangle_length;
+        return distanceToCamera-smallTriangle_length;
     }
 }
