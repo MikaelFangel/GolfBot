@@ -224,7 +224,7 @@ func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.S
 //	If speed < 0 then the balls are collected
 func (s *motorServer) CollectRelease(_ context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
 	// motorRequests stores the request and the motor, so we don't need to get them again in the 2nd loop
-	var motorRequests [2]motorRequest
+	var motorRequests []motorRequest
 
 	// Gets the motors and sets their speeds, which is specified on client side.
 	for i, request := range in.GetMotor() {
@@ -237,15 +237,15 @@ func (s *motorServer) CollectRelease(_ context.Context, in *pBuff.MultipleMotors
 		} else { // Currently port C
 			motor.SetSpeedSetpoint(int(-request.GetMotorSpeed()))
 		}
-		motorRequests[i] = motorRequest{request: request, motor: motor}
+		motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
 	}
 
 	// Start each motor
-	for i, motorRequest := range motorRequests {
+	for _, motorRequest := range motorRequests {
 		motorRequest.motor.Command(run)
 
 		// Error handling
-		_, b, _ := ev3dev.Wait(motorRequests[i].motor, ev3dev.Running, ev3dev.Running, ev3dev.Stalled, false, -1)
+		_, b, _ := ev3dev.Wait(motorRequest.motor, ev3dev.Running, ev3dev.Running, ev3dev.Stalled, false, -1)
 		if !b {
 			return &pBuff.StatusReply{ReplyMessage: false}, fmt.Errorf("motor %s is not running", motorRequest.request.MotorType)
 		}
