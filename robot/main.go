@@ -16,9 +16,9 @@ import (
 
 // Motor commands
 const (
-	run    = "run-forever"
-	stop   = "stop"
-	relPos = "run-to-rel-pos" // Not working..?
+	run  = "run-forever"
+	stop = "stop"
+	//relPos = "run-to-rel-pos" // Not working..?
 	absPos = "run-to-abs-pos"
 	reset  = "reset"
 )
@@ -90,24 +90,24 @@ func convertDistanceToWheelRotation(distance float64) int {
 // RunMotors Starts the motors given, and sets them to the speed specified on client side.
 func (s *motorServer) RunMotors(_ context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
 	// motorRequests stores the request and the motor, so we don't need to get them again in the 2nd loop
-	var motorRequests [2]motorRequest
+	var motorRequests []motorRequest
 
 	// Gets the motors and sets their speeds, which is specified on client side.
-	for i, request := range in.GetMotor() {
+	for _, request := range in.GetMotor() {
 		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err
 		}
 		motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
-		motorRequests[i] = motorRequest{request: request, motor: motor}
+		motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
 	}
 
 	// Start each motor
-	for i, motorRequest := range motorRequests {
+	for _, motorRequest := range motorRequests {
 		motorRequest.motor.Command(run)
 
 		// Error handling
-		_, b, _ := ev3dev.Wait(motorRequests[i].motor, ev3dev.Running, ev3dev.Running, ev3dev.Stalled, false, -1)
+		_, b, _ := ev3dev.Wait(motorRequest.motor, ev3dev.Running, ev3dev.Running, ev3dev.Stalled, false, -1)
 		if !b {
 			return &pBuff.StatusReply{ReplyMessage: false}, fmt.Errorf("motor %s is not running", motorRequest.request.MotorType)
 		}
@@ -152,7 +152,7 @@ func (s *motorServer) StopMotors(_ context.Context, in *pBuff.MultipleMotors) (*
 // Rotate Rotates the robot with a static speed, x degrees, which is specified on client side.
 func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff.StatusReply, error) {
 	// motorRequests stores the request and the motor, so we don't need to get them again in the 2nd loop
-	var motorRequests [2]motorRequest
+	var motorRequests []motorRequest
 
 	wheelRotations := convertRobotRotationToWheelRotations(in.Degrees)
 	fmt.Printf("Rotation in degrees: %d\n", wheelRotations)
@@ -172,7 +172,7 @@ func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff
 			motor.SetPositionSetpoint(-wheelRotations)
 			motor.SetSpeedSetpoint(int(-in.Speed))
 		}
-		motorRequests[i] = motorRequest{request: request, motor: motor}
+		motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
 	}
 
 	// Make the robot rotate the wheelRotations calculated above
@@ -185,13 +185,13 @@ func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff
 
 // Drive Makes the robot drive straight forward or backward with a speed and distance specified client side
 func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.StatusReply, error) {
-	var motorRequests [2]motorRequest
+	var motorRequests []motorRequest
 
 	numberOfRotations := -convertDistanceToWheelRotation(float64(in.Distance))
 	fmt.Printf("Drive degrees of rotation: %d\n", numberOfRotations)
 
 	// Fetch each motor
-	for i, request := range in.GetMotors().GetMotor() {
+	for _, request := range in.GetMotors().GetMotor() {
 		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err
@@ -207,7 +207,7 @@ func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.S
 		motor.Command(reset)
 		motor.SetSpeedSetpoint(dir * int(in.Speed))
 		motor.SetPositionSetpoint(numberOfRotations)
-		motorRequests[i] = motorRequest{request: request, motor: motor}
+		motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
 	}
 
 	// Give requests to motors
