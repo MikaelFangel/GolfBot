@@ -35,7 +35,8 @@ public class RobotController {
      * @throws RuntimeException if the robot was not reached
      */
     public void driveStraight(double distance) throws RuntimeException {
-       MultipleMotors motorsRequest = createMultipleMotorRequest(DEFAULT_SPEED, Type.l, OutPort.A, OutPort.D);
+       MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, DEFAULT_SPEED),
+               new MotorPair(OutPort.D, DEFAULT_SPEED));
 
         DriveRequest driveRequest = DriveRequest.newBuilder()
                 .setMotors(motorsRequest)
@@ -52,7 +53,8 @@ public class RobotController {
      * @throws RuntimeException if the robot was not reached
      */
     public void rotate(double degrees) throws RuntimeException {
-        MultipleMotors motorsRequest = createMultipleMotorRequest(DEFAULT_SPEED, Type.l, OutPort.A, OutPort.D);
+        MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, DEFAULT_SPEED),
+                new MotorPair(OutPort.D, DEFAULT_SPEED));
 
         RotateRequest rotateRequest = RotateRequest.newBuilder()
                 .setMotors(motorsRequest)
@@ -74,8 +76,8 @@ public class RobotController {
      */
     public void collectRelease(boolean isCollecting) {
         int motorSpeed = isCollecting ? -1200 : 400;
-        MultipleMotors motorRequests = isCollecting ? createMultipleMotorRequest(motorSpeed, Type.m, OutPort.B, OutPort.C) :
-                createMultipleMotorRequest(motorSpeed, Type.m, OutPort.B);
+        MultipleMotors motorRequests = isCollecting ? createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, motorSpeed), new MotorPair(OutPort.C, motorSpeed)) :
+                createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, motorSpeed));
         CLIENT.collectRelease(motorRequests);
     }
 
@@ -83,30 +85,42 @@ public class RobotController {
      * Stops the motors collecting/releasing the balls, which currently is port B and C
      */
     public void stopCollectRelease() {
-        MultipleMotors motorRequests = createMultipleMotorRequest(0, Type.m, OutPort.B, OutPort.C);
+        int motorSpeed = 0;
+        MultipleMotors motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, motorSpeed), new MotorPair(OutPort.C, motorSpeed));
         CLIENT.stopMotors(motorRequests);
     }
 
     /**
      * Creates an array of motor request.
-     * @param motorSpeed Assuming that the wheels always run with the same speed
      * @param motorType Small, Medium or Large
-     * @param outPorts A, B, C, D
+     * @param motorPairs One should be given for each motor you wish to create
      * @return an arraylist of motor requests
      */
-    private MultipleMotors createMultipleMotorRequest(int motorSpeed, Type motorType, OutPort... outPorts) {
+    private MultipleMotors createMultipleMotorRequest(Type motorType, MotorPair... motorPairs) {
         ArrayList<MotorRequest> motorRequests = new ArrayList<>();
 
-        for (OutPort port : outPorts) {
+        for (MotorPair motorPair : motorPairs) {
             motorRequests.add(MotorRequest.newBuilder()
-                    .setMotorSpeed(motorSpeed)
+                    .setMotorSpeed(motorPair.motorSpeed)
                     .setMotorType(motorType)
-                    .setMotorPort(port)
+                    .setMotorPort(motorPair.outPort)
                     .build());
         }
 
         return MultipleMotors.newBuilder()
                 .addAllMotor(motorRequests)
                 .build();
+    }
+
+    /**
+     * A pair consisting of an outputPort (A, B, C, D) and a speed associated with the port
+     */
+    private static class MotorPair {
+        private final OutPort outPort;
+        private final int motorSpeed;
+        MotorPair(OutPort outPort, int motorSpeed) {
+            this.outPort = outPort;
+            this.motorSpeed = motorSpeed;
+        }
     }
 }
