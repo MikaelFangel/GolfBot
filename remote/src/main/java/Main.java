@@ -1,4 +1,10 @@
 import exceptions.MissingArgumentException;
+import courseObjects.*;
+import vision.*;
+
+import java.util.Scanner;
+
+import static vision.Algorithms.*;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException, MissingArgumentException {
@@ -6,17 +12,26 @@ public class Main {
             throw new MissingArgumentException("Please provide an IP and port number (e.g 192.168.1.12:50051)");
         }
 
-        RobotController controller = new RobotController(args[0]);
+        RobotController controller = new RobotController(args[0]); // Args[0] being and IP address
+        Detection detection = new Detection(0);
+        Course course = detection.getCourse();
 
-        try {
-            //controller.driveStraight(30);
-            controller.rotate(-90);
+        Ball closestBall = findClosestBall(course.getBalls(), course.getRobot());
+        if (closestBall == null) return;
 
-        } catch (RuntimeException e) {
-            System.out.println("Robot was probably not reached");
+        double angle = findRobotsAngleToBall(course.getRobot(), closestBall);
+        double distance = findRobotsDistanceToBall(course.getRobot(), closestBall);
+        System.out.println("Driving distance: " + distance + "with angle: " + angle);
 
-        } finally {
-            controller.stopController();
-        }
+
+        Scanner scan  = new Scanner(System.in);
+        System.out.println("Press ENTER to trigger robot");
+        scan.nextLine();
+
+        controller.rotate(angle);
+        Thread.sleep(5000); // Find better way.
+        controller.driveStraight(distance);
+
+        controller.stopController();
     }
 }
