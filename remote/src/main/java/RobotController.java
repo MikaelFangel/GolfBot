@@ -113,14 +113,8 @@ public class RobotController {
     }
 
     /**
-     * A pair consisting of an outputPort (A, B, C, D) and a speed associated with the port
-     */
-    private static class MotorPair {
-        private final OutPort outPort;
-        private final int motorSpeed;
-        MotorPair(OutPort outPort, int motorSpeed) {
-            this.outPort = outPort;
-            this.motorSpeed = motorSpeed;
-        }
+         * A pair consisting of an outputPort (A, B, C, D) and a speed associated with the port
+         */
+        private record MotorPair(OutPort outPort, int motorSpeed) {
     }
 }
