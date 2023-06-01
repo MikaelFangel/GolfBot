@@ -119,31 +119,31 @@ func (s *motorServer) RunMotors(_ context.Context, in *pBuff.MultipleMotors) (*p
 // StopMotors Stops the motors given, e.g. cleaning their MotorState and setting speed to zero
 func (s *motorServer) StopMotors(_ context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
 	// motorRequests stores the request and the motor, so we don't need to get them again in the 2nd loop
-	var motorRequests [2]motorRequest
+	var motorRequests []motorRequest
 
 	// Gets the motors
-	for i, request := range in.GetMotor() {
+	for _, request := range in.GetMotor() {
 		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
 
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err
 		}
 		motor.SetSpeedSetpoint(0)
-		motorRequests[i] = motorRequest{request: request, motor: motor}
+		motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
 	}
 
 	// Stop each motor
-	for i := 0; i < len(in.Motor); i++ {
-		motorRequests[i].motor.Command(stop)
+	for _, motorRequest := range motorRequests {
+		motorRequest.motor.Command(stop)
 	}
 
 	// Can't use ev3dev.Wait() to make sure motors stop. This is the alternative used...
-	for i := 0; i < len(in.Motor); i++ {
+	for _, motorRequest := range motorRequests {
 		for {
-			if !isRunning(motorRequests[i].motor) {
+			if !isRunning(motorRequest.motor) {
 				break
 			}
-			motorRequests[i].motor.Command(stop)
+			motorRequest.motor.Command(stop)
 		}
 	}
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
