@@ -75,9 +75,17 @@ public class RobotController {
      * @param isCollecting collects if true and releases if false
      */
     public void collectRelease(boolean isCollecting) {
-        int motorSpeed = isCollecting ? -1200 : 400;
-        MultipleMotors motorRequests = isCollecting ? createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, motorSpeed), new MotorPair(OutPort.C, motorSpeed)) :
-                createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, motorSpeed));
+        MultipleMotors motorRequests;
+        if (isCollecting) {
+            int motorSpeed = -1200;
+            motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, motorSpeed), new MotorPair(OutPort.C, motorSpeed));
+        }
+        else {
+            int speedFrontMotor = 1200;
+            int speedSideMotors = 300;
+            motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, speedSideMotors), new MotorPair(OutPort.C, speedFrontMotor));
+        }
+
         CLIENT.collectRelease(motorRequests);
     }
 
