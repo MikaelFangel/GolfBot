@@ -77,11 +77,19 @@ public class RobotController {
     public void collectRelease(boolean isCollecting) {
         MultipleMotors motorRequests;
         if (isCollecting) {
+            // Just used the greatest speed
             int motorSpeed = -1200;
             motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, motorSpeed), new MotorPair(OutPort.C, motorSpeed));
         }
         else {
+            /* If the front motor is slow, the balls will hit each other and will thereby deviate from expected course.
+             * This is because they won't be able to leave the space between the motors before the next ball is
+             * released from storage
+             */
             int speedFrontMotor = 1200;
+            /* The motor releasing the balls from storage should be slow. Otherwise, the balls would hit each other and
+             * thereby deviate from expected course
+             */
             int speedSideMotors = 300;
             motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, speedSideMotors), new MotorPair(OutPort.C, speedFrontMotor));
         }
@@ -120,8 +128,8 @@ public class RobotController {
                 .build();
     }
 
-    /**
-         * A pair consisting of an outputPort (A, B, C, D) and a speed associated with the port
+        /**
+         * A record consisting of an outputPort (A, B, C, D) and a speed associated with the port
          */
         private record MotorPair(OutPort outPort, int motorSpeed) {
     }

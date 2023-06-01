@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -227,14 +228,23 @@ func (s *motorServer) CollectRelease(_ context.Context, in *pBuff.MultipleMotors
 	var motorRequests []motorRequest
 
 	// Gets the motors and sets their speeds, which is specified on client side.
-	for i, request := range in.GetMotor() {
-		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
+	for _, request := range in.GetMotor() {
+		var motorOutPort = request.GetMotorPort()
+		motor, err := getMotorHandle(motorOutPort.String(), request.GetMotorType().String())
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err
 		}
-		if i%2 == 0 { // Currently port B
+		switch motorOutPort {
+		case pBuff.OutPort_B:
 			motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
-		} else { // Currently port C
+		case pBuff.OutPort_C:
+			motor.SetSpeedSetpoint(int(-request.GetMotorSpeed()))
+		default:
+			return &pBuff.StatusReply{ReplyMessage: false}, errors.New("warning! Motor with wrong output port detected. Expected output ports are port B and C")
+		}
+		if motorOutPort == pBuff.OutPort_B {
+			motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
+		} else if motorOutPort == pBuff.OutPort_C {
 			motor.SetSpeedSetpoint(int(-request.GetMotorSpeed()))
 		}
 		motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
