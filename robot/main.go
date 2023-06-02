@@ -165,6 +165,18 @@ func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
+func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*pBuff.StatusReply, error) {
+	gyro, err := ev3dev.SensorFor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
+	if err != nil {
+		return nil, err
+	}
+
+	gyro.SetMode("GYRO-CAL")
+	gyro.SetMode("GYRO-ANG")
+
+	return &pBuff.StatusReply{ReplyMessage: true}, nil
+}
+
 func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.StatusReply, error) {
 	var motorRequests [2]motorRequest
 
