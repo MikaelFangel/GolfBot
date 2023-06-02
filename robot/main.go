@@ -13,13 +13,13 @@ import (
 	"google.golang.org/grpc"
 
 	pBuff "main/proto"
+	"main/util"
 )
 
 // Motor commands
 const (
-	run  = "run-forever"
-	stop = "stop"
-	// relPos = "run-to-rel-pos" // Not working..?
+	run    = "run-forever"
+	stop   = "stop"
 	absPos = "run-to-abs-pos"
 	reset  = "reset"
 )
@@ -33,9 +33,7 @@ type motorRequest struct {
 	motor   *ev3dev.TachoMotor
 }
 
-/*
- * main Setup of the server to listen for requests from clients.
- */
+// main Setup of the server to listen for requests from clients.
 func main() {
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
@@ -50,29 +48,39 @@ func main() {
 	}
 }
 
-// getMotorHandle Returns the TachoMotor equivalent to the port given (e.g. port "A").
-func getMotorHandle(port string, motor string) (*ev3dev.TachoMotor, error) {
-	return ev3dev.TachoMotorFor("ev3-ports:out"+port, "lego-ev3-"+motor+"-motor")
-}
+// Drive Makes the robot drive straight forward or backward with a speed and distance specified client side
+func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.StatusReply, error) {
+	var motorRequests []motorRequest
 
-// getSensor Returns the requested sensor from the input ports of the robot
-func getSensor(inPort string, sensor string) (*ev3dev.Sensor, error) {
-	return ev3dev.SensorFor("ev3-ports:"+inPort, "lego-ev3-"+sensor)
-}
+	numberOfRotations := -util.ConvertDistanceToWheelRotation(float64(in.Distance))
+	fmt.Printf("Drive degrees of rotation: %d\n", numberOfRotations)
 
-// isRunning Returns true if the speed of the given motor is not zero, otherwise false.
-func isRunning(motor *ev3dev.TachoMotor) bool {
-	speed, _ := motor.Speed()
+	// Fetch each motor
+	for _, request := range in.GetMotors().GetMotor() {
+		motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
+		if err != nil {
+			return &pBuff.StatusReply{ReplyMessage: false}, err
+		}
 
-	return speed != 0
-}
+		// Change speed value if distance is negative
+		dir := 1
+		if in.Speed < 0 {
+			dir = -1
+		}
 
-func convertDistanceToWheelRotation(distance float64) int {
-	// Radius values are in centimeters and the wheelBaseRadius is measured from the inner sides of the wheels.
-	const wheelRadius = 6.88 / 2
-	const wheelCircumference = 2 * wheelRadius * math.Pi
+		// Set values for request
+		motor.Command(reset)
+		motor.SetSpeedSetpoint(dir * int(in.Speed))
+		motor.SetPositionSetpoint(numberOfRotations)
+		motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
+	}
 
-	return int((distance / wheelCircumference) * 360)
+	// Give requests to motors
+	for _, motorRequest := range motorRequests {
+		motorRequest.motor.Command(absPos)
+	}
+
+	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
 // StopMotors Stops the motors given, e.g. cleaning their MotorState and setting speed to zero
@@ -82,7 +90,7 @@ func (s *motorServer) StopMotors(_ context.Context, in *pBuff.MultipleMotors) (*
 
 	// Gets the motors
 	for _, request := range in.GetMotor() {
-		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
+		motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
 
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err
@@ -99,7 +107,7 @@ func (s *motorServer) StopMotors(_ context.Context, in *pBuff.MultipleMotors) (*
 	// Can't use ev3dev.Wait() to make sure motors stop. This is the alternative used...
 	for _, motorRequest := range motorRequests {
 		for {
-			if !isRunning(motorRequest.motor) {
+			if !util.IsRunning(motorRequest.motor) {
 				break
 			}
 			motorRequest.motor.Command(stop)
@@ -110,7 +118,7 @@ func (s *motorServer) StopMotors(_ context.Context, in *pBuff.MultipleMotors) (*
 
 // RotateWGyro Rotates the robot given a speed using a gyro. This function has the side effect that it recalibrates the gyro.
 func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*pBuff.StatusReply, error) {
-	gyro, err := recalibrateGyro()
+	gyro, err := util.RecalibrateGyro()
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +132,7 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 	// Prepare the motors for running
 	var motorRequests []motorRequest
 	for _, request := range in.GetMotors().GetMotor() {
-		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
+		motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
 		if err != nil {
 			return nil, err
 		}
@@ -162,54 +170,6 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
-func recalibrateGyro() (*ev3dev.Sensor, error) {
-	gyro, err := getSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
-	if err != nil {
-		return nil, err
-	}
-
-	// Trigger the recalibration using a mode switch
-	gyro.SetMode("GYRO-CAL")
-	gyro.SetMode("GYRO-ANG")
-
-	return gyro, nil
-}
-
-// Drive Makes the robot drive straight forward or backward with a speed and distance specified client side
-func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.StatusReply, error) {
-	var motorRequests []motorRequest
-
-	numberOfRotations := -convertDistanceToWheelRotation(float64(in.Distance))
-	fmt.Printf("Drive degrees of rotation: %d\n", numberOfRotations)
-
-	// Fetch each motor
-	for _, request := range in.GetMotors().GetMotor() {
-		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
-		if err != nil {
-			return &pBuff.StatusReply{ReplyMessage: false}, err
-		}
-
-		// Change speed value if distance is negative
-		dir := 1
-		if in.Speed < 0 {
-			dir = -1
-		}
-
-		// Set values for request
-		motor.Command(reset)
-		motor.SetSpeedSetpoint(dir * int(in.Speed))
-		motor.SetPositionSetpoint(numberOfRotations)
-		motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
-	}
-
-	// Give requests to motors
-	for _, motorRequest := range motorRequests {
-		motorRequest.motor.Command(absPos)
-	}
-
-	return &pBuff.StatusReply{ReplyMessage: true}, nil
-}
-
 // CollectRelease Either collects or releases balls. Whether it is collecting or releasing is handled client side.
 //
 //	If speed > 0 then the balls are released
@@ -221,7 +181,7 @@ func (s *motorServer) CollectRelease(_ context.Context, in *pBuff.MultipleMotors
 	// Gets the motors and sets their speeds, which is specified on client side.
 	for _, request := range in.GetMotor() {
 		var motorOutPort = request.GetMotorPort()
-		motor, err := getMotorHandle(motorOutPort.String(), request.GetMotorType().String())
+		motor, err := util.GetMotorHandle(motorOutPort.String(), request.GetMotorType().String())
 		if err != nil {
 			return &pBuff.StatusReply{ReplyMessage: false}, err
 		}
@@ -253,16 +213,4 @@ func (s *motorServer) CollectRelease(_ context.Context, in *pBuff.MultipleMotors
 	}
 
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
-}
-
-// GetDistanceInCm Returns the distance to the closest object from the ultrasonic sensor
-func GetDistanceInCm() float64 {
-	ultraSonicSensor, err := getSensor(pBuff.InPort_in1.String(), pBuff.Sensor_us.String())
-	if err != nil {
-		return -1
-	}
-
-	distanceString, _ := ultraSonicSensor.Value(0)
-	distance, _ := strconv.ParseFloat(distanceString, 64)
-	return distance / 10
 }
