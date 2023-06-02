@@ -33,8 +33,8 @@ type motorRequest struct {
 }
 
 // Radius values are in centimeters and the wheelBaseRadius is measured from the inner sides of the wheels.
-const wheelRadius = 3.65
-const wheelBaseRadius = 12.5 / 2 // For diameter/2
+const wheelRadius = 6.88 / 2
+const wheelBaseRadius = 13.25 / 2 // For diameter/2
 
 const wheelCircumference = 2 * wheelRadius * math.Pi
 const wheelBaseCircumference = 2 * wheelBaseRadius * math.Pi
@@ -156,6 +156,9 @@ func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff
 		}
 		motorRequests[i] = motorRequest{request: request, motor: motor}
 	}
+	gyro, _ := getSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
+	gyroAngle1, _ := gyro.Value(0)
+	fmt.Printf("Before: %s\n", gyroAngle1)
 
 	// Make the robot rotate the wheelRotations calculated above
 	for _, motorRequest := range motorRequests {
