@@ -22,16 +22,25 @@ public class Geometry {
         return angle;
     }
 
+    /**
+     * @param heightCamera Height from floor to camera
+     * @param heightObject Height from floor to measure point on object
+     * @param distanceToCamera distance from object to camera, in a perpendicular line to the camera.
+     * @return the distance in centimeter from the camera to the object.
+     */
     public static double objectActualPosition(double heightCamera, double heightObject, double distanceToCamera){
-        double largeTriangle_hypotenuse = Math.sqrt(Math.pow(heightCamera,2)+Math.pow(distanceToCamera,2));
-        if (largeTriangle_hypotenuse == 0) return -1;
-        double angelHeight = Math.toDegrees(Math.asin(heightCamera/largeTriangle_hypotenuse));
-        double smallTriangle_height = heightCamera - heightObject;
-        double smallTriangle_groundAngel = 90 - angelHeight;
-        if (Math.sin(smallTriangle_groundAngel) == 0) return -1;
-        double test = Math.sin(Math.toRadians(smallTriangle_groundAngel));
-        double smallTriangle_length = (smallTriangle_height*Math.sin(Math.toRadians(smallTriangle_groundAngel)))/Math.sin(Math.toRadians(angelHeight));
+        double largeTriangleHypotenuse = Math.sqrt(Math.pow(heightCamera,2)+Math.pow(distanceToCamera,2));
+        if (largeTriangleHypotenuse == 0) return -1; //to prevent division with 0
+        //calculate the angel opposite of the height using the sinus relation
+        double angelHeight = Math.toDegrees(Math.asin(heightCamera/largeTriangleHypotenuse));
+        //finds the height of the small triangle
+        double smallTriangleHeight = heightCamera - heightObject;
+        double smallTriangleGroundAngel = 90 - angelHeight;
+        if (Math.sin(smallTriangleGroundAngel) == 0) return -1; //to prevent division with 0
+        //finds the length of the small triangle using the sinus relation
+        double smallTriangleLength =
+                (smallTriangleHeight*Math.sin(Math.toRadians(smallTriangleGroundAngel)))/Math.sin(Math.toRadians(angelHeight));
 
-        return distanceToCamera-smallTriangle_length;
+        return distanceToCamera-smallTriangleLength;
     }
 }
