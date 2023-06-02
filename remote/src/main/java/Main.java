@@ -8,12 +8,16 @@ import static vision.Algorithms.*;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException, MissingArgumentException {
-        if (args.length < 1) {
-            throw new MissingArgumentException("Please provide an IP and port number (e.g 192.168.0.97:50051)");
+        if (args.length < 2) {
+            throw new MissingArgumentException("Please provide an IP and port number (e.g 192.168.0.97:50051) and Camera Index");
         }
 
         RobotController controller = new RobotController(args[0]); // Args[0] being and IP address
+<<<<<<< HEAD
         Detection detection = new Detection(2);
+=======
+        Detection detection = new Detection(Integer.parseInt(args[1]));
+>>>>>>> 63-correct-camera-view-to-actual-course-layout
         Course course = detection.getCourse();
 
         Ball closestBall = findClosestBall(course.getBalls(), course.getRobot());
