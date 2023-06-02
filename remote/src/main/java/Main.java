@@ -13,11 +13,7 @@ public class Main {
         }
 
         RobotController controller = new RobotController(args[0]); // Args[0] being and IP address
-<<<<<<< HEAD
-        Detection detection = new Detection(2);
-=======
         Detection detection = new Detection(Integer.parseInt(args[1]));
->>>>>>> 63-correct-camera-view-to-actual-course-layout
         Course course = detection.getCourse();
 
         Ball closestBall = findClosestBall(course.getBalls(), course.getRobot());
