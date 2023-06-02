@@ -52,24 +52,6 @@ public class RobotController {
      * @param degrees postive values for counter-clockwise and negative for clockwise
      * @throws RuntimeException if the robot was not reached
      */
-    public void rotate(double degrees) throws RuntimeException {
-        MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, DEFAULT_SPEED),
-                new MotorPair(OutPort.D, DEFAULT_SPEED));
-
-        RotateRequest rotateRequest = RotateRequest.newBuilder()
-                .setMotors(motorsRequest)
-                .setDegrees((int) degrees)
-                .setSpeed(DEFAULT_SPEED)
-                .build();
-
-        try {
-            CLIENT.rotate(rotateRequest);
-        }
-        catch (RuntimeException e) {
-            System.out.println(e.getMessage());
-        }
-    }
-
     public void rotateWGyro(double degrees) throws RuntimeException {
         int speed = 150;
         MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),

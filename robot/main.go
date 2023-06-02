@@ -33,13 +33,6 @@ type motorRequest struct {
 	motor   *ev3dev.TachoMotor
 }
 
-// Radius values are in centimeters and the wheelBaseRadius is measured from the inner sides of the wheels.
-const wheelRadius = 6.88 / 2
-const wheelBaseRadius = 13.25 / 2 // For diameter/2
-
-const wheelCircumference = 2 * wheelRadius * math.Pi
-const wheelBaseCircumference = 2 * wheelBaseRadius * math.Pi
-
 /*
  * main Setup of the server to listen for requests from clients.
  */
@@ -74,13 +67,11 @@ func isRunning(motor *ev3dev.TachoMotor) bool {
 	return speed != 0
 }
 
-// convertRobotRotationToWheelRotations Converts an input of degrees to how many degrees a wheel should rotate.
-func convertRobotRotationToWheelRotations(degrees int32) int {
-	rotationInCm := (wheelBaseCircumference * float64(degrees)) / 360.
-	return int(rotationInCm / (wheelCircumference / 360))
-}
-
 func convertDistanceToWheelRotation(distance float64) int {
+	// Radius values are in centimeters and the wheelBaseRadius is measured from the inner sides of the wheels.
+	const wheelRadius = 6.88 / 2
+	const wheelCircumference = 2 * wheelRadius * math.Pi
+
 	return int((distance / wheelCircumference) * 360)
 }
 
@@ -114,40 +105,6 @@ func (s *motorServer) StopMotors(_ context.Context, in *pBuff.MultipleMotors) (*
 			motorRequest.motor.Command(stop)
 		}
 	}
-	return &pBuff.StatusReply{ReplyMessage: true}, nil
-}
-
-// Rotate Rotates the robot with a static speed, x degrees, which is specified on client side.
-func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff.StatusReply, error) {
-	// motorRequests stores the request and the motor, so we don't need to get them again in the 2nd loop
-	var motorRequests []motorRequest
-
-	wheelRotations := convertRobotRotationToWheelRotations(in.Degrees)
-	fmt.Printf("Rotation in degrees: %d\n", wheelRotations)
-
-	// Gets the motors and sets their speeds to a static speed, making the wheels turn in different directions
-	for i, request := range in.GetMotors().GetMotor() {
-		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
-		if err != nil {
-			return &pBuff.StatusReply{ReplyMessage: false}, err
-		}
-
-		motor.Command(reset) // Reset motors
-		if i%2 == 0 {
-			motor.SetPositionSetpoint(wheelRotations)
-			motor.SetSpeedSetpoint(int(in.Speed))
-		} else {
-			motor.SetPositionSetpoint(-wheelRotations)
-			motor.SetSpeedSetpoint(int(-in.Speed))
-		}
-		motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
-	}
-
-	// Make the robot rotate the wheelRotations calculated above
-	for _, motorRequest := range motorRequests {
-		motorRequest.motor.Command(absPos)
-	}
-
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 

@@ -28,7 +28,6 @@ public class Main {
         System.out.println("Press ENTER to trigger robot");
         scan.nextLine();
 
-        controller.rotate(angle);
         Thread.sleep(5000); // Find better way.
         controller.driveStraight(distance);
 
