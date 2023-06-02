@@ -80,7 +80,7 @@ func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.S
 		motorRequest.motor.Command(absPos)
 	}
 
-	return &pBuff.StatusReply{ReplyMessage: true}, nil
+	return stopMotorsIfNotAllAreRunning(motorRequests)
 }
 
 // StopMotors Stops the motors given, e.g. cleaning their MotorState and setting speed to zero
@@ -99,20 +99,8 @@ func (s *motorServer) StopMotors(_ context.Context, in *pBuff.MultipleMotors) (*
 		motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
 	}
 
-	// Stop each motor
-	for _, motorRequest := range motorRequests {
-		motorRequest.motor.Command(stop)
-	}
+	stopAllMotors(motorRequests)
 
-	// Can't use ev3dev.Wait() to make sure motors stop. This is the alternative used...
-	for _, motorRequest := range motorRequests {
-		for {
-			if !util.IsRunning(motorRequest.motor) {
-				break
-			}
-			motorRequest.motor.Command(stop)
-		}
-	}
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
@@ -143,7 +131,7 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 		case pBuff.OutPort_D:
 			motor.SetSpeedSetpoint(-rotateSpeed)
 		default:
-			return &pBuff.StatusReply{ReplyMessage: false}, errors.New("Not a valid motor")
+			return &pBuff.StatusReply{ReplyMessage: false}, errors.New("not a valid motor")
 		}
 
 		motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
@@ -154,6 +142,11 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 		motorRequest.motor.Command(run)
 	}
 
+	status, err := stopMotorsIfNotAllAreRunning(motorRequests)
+	if err != nil {
+		return status, err
+	}
+
 	// Busy wait until the robot has completed the rotation or have superseded the given degrees
 	var gyroValStr, _ = gyro.Value(0)
 	var gyroVal, _ = strconv.Atoi(gyroValStr)
@@ -162,10 +155,7 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 		gyroVal, _ = strconv.Atoi(gyroValStr)
 	}
 
-	// Stop the motors
-	for _, motorRequest := range motorRequests {
-		motorRequest.motor.Command(stop)
-	}
+	stopAllMotors(motorRequests)
 
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
@@ -193,24 +183,41 @@ func (s *motorServer) CollectRelease(_ context.Context, in *pBuff.MultipleMotors
 		default:
 			return &pBuff.StatusReply{ReplyMessage: false}, errors.New("warning! Motor with wrong output port detected. Expected output ports are port B and C")
 		}
-		if motorOutPort == pBuff.OutPort_B {
-			motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
-		} else if motorOutPort == pBuff.OutPort_C {
-			motor.SetSpeedSetpoint(int(-request.GetMotorSpeed()))
-		}
+
 		motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
 	}
 
 	// Start each motor
 	for _, motorRequest := range motorRequests {
 		motorRequest.motor.Command(run)
+	}
 
-		// Error handling
+	return stopMotorsIfNotAllAreRunning(motorRequests)
+}
+
+func stopMotorsIfNotAllAreRunning(motorRequests []motorRequest) (*pBuff.StatusReply, error) {
+	for _, motorRequest := range motorRequests {
+		// Block until running
 		_, b, _ := ev3dev.Wait(motorRequest.motor, ev3dev.Running, ev3dev.Running, ev3dev.Stalled, false, -1)
 		if !b {
+			stopAllMotors(motorRequests)
+
 			return &pBuff.StatusReply{ReplyMessage: false}, fmt.Errorf("motor %s is not running", motorRequest.request.MotorType)
 		}
 	}
 
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
+}
+
+func stopAllMotors(motorRequests []motorRequest) {
+	// Can't use ev3dev.Wait() to make sure motors stop. This is the alternative used...
+	for _, motorRequest := range motorRequests {
+		motorRequest.motor.Command(stop)
+
+		for {
+			if !util.IsRunning(motorRequest.motor) {
+				break
+			}
+		}
+	}
 }
