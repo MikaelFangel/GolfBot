@@ -84,39 +84,6 @@ func convertDistanceToWheelRotation(distance float64) int {
 	return int((distance / wheelCircumference) * 360)
 }
 
-//----------------------------------------------------------------------------------------------------------------------
-// Global functions
-//----------------------------------------------------------------------------------------------------------------------
-
-// RunMotors Starts the motors given, and sets them to the speed specified on client side.
-func (s *motorServer) RunMotors(_ context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
-	// motorRequests stores the request and the motor, so we don't need to get them again in the 2nd loop
-	var motorRequests []motorRequest
-
-	// Gets the motors and sets their speeds, which is specified on client side.
-	for _, request := range in.GetMotor() {
-		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
-		if err != nil {
-			return &pBuff.StatusReply{ReplyMessage: false}, err
-		}
-		motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
-		motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
-	}
-
-	// Start each motor
-	for _, motorRequest := range motorRequests {
-		motorRequest.motor.Command(run)
-
-		// Error handling
-		_, b, _ := ev3dev.Wait(motorRequest.motor, ev3dev.Running, ev3dev.Running, ev3dev.Stalled, false, -1)
-		if !b {
-			return &pBuff.StatusReply{ReplyMessage: false}, fmt.Errorf("motor %s is not running", motorRequest.request.MotorType)
-		}
-	}
-
-	return &pBuff.StatusReply{ReplyMessage: true}, nil
-}
-
 // StopMotors Stops the motors given, e.g. cleaning their MotorState and setting speed to zero
 func (s *motorServer) StopMotors(_ context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
 	// motorRequests stores the request and the motor, so we don't need to get them again in the 2nd loop
