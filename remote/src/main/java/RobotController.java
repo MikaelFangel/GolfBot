@@ -7,18 +7,18 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 public class RobotController {
-    private ManagedChannel channel;
-    private MotorsGrpc.MotorsBlockingStub client;
+    private final ManagedChannel CHANNEL;
+    private final MotorsGrpc.MotorsBlockingStub CLIENT;
 
-    private final int defaultSpeed = 100;
+    private final int DEFAULT_SPEED = 100;
 
     /**
      * Initializes channel and client to connect with the robot.
      * @param ip_port the ip and port of the robot on the subnet. e.g. 192.168.1.12:50051
      */
     public RobotController(String ip_port) {
-        channel = Grpc.newChannelBuilder(ip_port, InsecureChannelCredentials.create()).build();
-        client = MotorsGrpc.newBlockingStub(channel);
+        CHANNEL = Grpc.newChannelBuilder(ip_port, InsecureChannelCredentials.create()).build();
+        CLIENT = MotorsGrpc.newBlockingStub(CHANNEL);
     }
 
     /**
@@ -26,7 +26,7 @@ public class RobotController {
      * @throws InterruptedException if shutdown was interrupted
      */
     public void stopController() throws InterruptedException {
-        channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
+        CHANNEL.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
     }
 
     /**
@@ -35,15 +35,16 @@ public class RobotController {
      * @throws RuntimeException if the robot was not reached
      */
     public void driveStraight(double distance) throws RuntimeException {
-       ArrayList<MotorRequest> motorsRequest = createMotorRequests(Type.l, OutPort.A, OutPort.D);
+       MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, DEFAULT_SPEED),
+               new MotorPair(OutPort.D, DEFAULT_SPEED));
 
         DriveRequest driveRequest = DriveRequest.newBuilder()
-                .addAllMotors(motorsRequest)
+                .setMotors(motorsRequest)
                 .setDistance((float) distance)
-                .setSpeed(defaultSpeed)
+                .setSpeed(DEFAULT_SPEED)
                 .build();
 
-        client.drive(driveRequest);
+        CLIENT.drive(driveRequest);
     }
 
     /**
@@ -52,28 +53,84 @@ public class RobotController {
      * @throws RuntimeException if the robot was not reached
      */
     public void rotate(double degrees) throws RuntimeException {
-        ArrayList<MotorRequest> motorsRequest = createMotorRequests(Type.l, OutPort.A, OutPort.D);
+        MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, DEFAULT_SPEED),
+                new MotorPair(OutPort.D, DEFAULT_SPEED));
 
         RotateRequest rotateRequest = RotateRequest.newBuilder()
-                .addAllMotors(motorsRequest)
+                .setMotors(motorsRequest)
                 .setDegrees((int) degrees)
-                .setSpeed(defaultSpeed)
+                .setSpeed(DEFAULT_SPEED)
                 .build();
 
-        client.rotate(rotateRequest);
-
+        try {
+            CLIENT.rotate(rotateRequest);
+        }
+        catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
-    private ArrayList<MotorRequest> createMotorRequests(Type motorType, OutPort... ports) {
+    /**
+     * Either collects or releases balls depending on the boolean parameter given
+     * @param isCollecting collects if true and releases if false
+     */
+    public void collectRelease(boolean isCollecting) {
+        MultipleMotors motorRequests;
+        if (isCollecting) {
+            // Just used the greatest speed
+            int motorSpeed = -1200;
+            motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, motorSpeed), new MotorPair(OutPort.C, motorSpeed));
+        }
+        else {
+            /* If the front motor is slow, the balls will hit each other and will thereby deviate from expected course.
+             * This is because they won't be able to leave the space between the motors before the next ball is
+             * released from storage
+             */
+            int speedFrontMotor = 1200;
+            /* The motor releasing the balls from storage should be slow. Otherwise, the balls would hit each other and
+             * thereby deviate from expected course
+             */
+            int speedSideMotors = 300;
+            motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, speedSideMotors), new MotorPair(OutPort.C, speedFrontMotor));
+        }
+
+        CLIENT.collectRelease(motorRequests);
+    }
+
+    /**
+     * Stops the motors collecting/releasing the balls, which currently is port B and C
+     */
+    public void stopCollectRelease() {
+        int motorSpeed = 0;
+        MultipleMotors motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, motorSpeed), new MotorPair(OutPort.C, motorSpeed));
+        CLIENT.stopMotors(motorRequests);
+    }
+
+    /**
+     * Creates an array of motor request.
+     * @param motorType Small, Medium or Large
+     * @param motorPairs One should be given for each motor you wish to create
+     * @return an arraylist of motor requests
+     */
+    private MultipleMotors createMultipleMotorRequest(Type motorType, MotorPair... motorPairs) {
         ArrayList<MotorRequest> motorRequests = new ArrayList<>();
 
-        for (OutPort port : ports) {
+        for (MotorPair motorPair : motorPairs) {
             motorRequests.add(MotorRequest.newBuilder()
-                    .setMotorPort(port)
+                    .setMotorSpeed(motorPair.motorSpeed)
                     .setMotorType(motorType)
+                    .setMotorPort(motorPair.outPort)
                     .build());
         }
 
-        return motorRequests;
+        return MultipleMotors.newBuilder()
+                .addAllMotor(motorRequests)
+                .build();
+    }
+
+        /**
+         * A record consisting of an outputPort (A, B, C, D) and a speed associated with the port
+         */
+        private record MotorPair(OutPort outPort, int motorSpeed) {
     }
 }
