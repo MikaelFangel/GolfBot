@@ -184,16 +184,71 @@ func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
+// RotateWGyro Rotates the robot given a speed using a gyro. This function has the side effect that it recalibrates the gyro.
 func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*pBuff.StatusReply, error) {
+	gyro, err := recalibrateGyro()
+	if err != nil {
+		return nil, err
+	}
+
+	// Change the rotation direction
+	var rotateSpeed = int(in.Speed)
+	if in.Degrees > 0 {
+		rotateSpeed = int(in.Speed * -1)
+	}
+
+	// Prepare the motors for running
+	var motorRequests []motorRequest
+	for _, request := range in.GetMotors().GetMotor() {
+		motor, err := getMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
+		if err != nil {
+			return nil, err
+		}
+
+		switch request.GetMotorPort() {
+		case pBuff.OutPort_A:
+			motor.SetSpeedSetpoint(rotateSpeed)
+		case pBuff.OutPort_D:
+			motor.SetSpeedSetpoint(-rotateSpeed)
+		default:
+			return &pBuff.StatusReply{ReplyMessage: false}, errors.New("Not a valid motor")
+		}
+
+		motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
+	}
+
+	// Start the motors
+	for _, motorRequest := range motorRequests {
+		motorRequest.motor.Command(run)
+	}
+
+	// Busy wait until the robot has completed the rotation or have superseded the given degrees
+	var gyroValStr, _ = gyro.Value(0)
+	var gyroVal, _ = strconv.Atoi(gyroValStr)
+	for math.Abs(float64(gyroVal)) <= math.Abs(float64(in.Degrees)) {
+		gyroValStr, _ = gyro.Value(0)
+		gyroVal, _ = strconv.Atoi(gyroValStr)
+	}
+
+	// Stop the motors
+	for _, motorRequest := range motorRequests {
+		motorRequest.motor.Command(stop)
+	}
+
+	return &pBuff.StatusReply{ReplyMessage: true}, nil
+}
+
+func recalibrateGyro() (*ev3dev.Sensor, error) {
 	gyro, err := getSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
 	if err != nil {
 		return nil, err
 	}
 
+	// Trigger the recalibration using a mode switch
 	gyro.SetMode("GYRO-CAL")
 	gyro.SetMode("GYRO-ANG")
 
-	return &pBuff.StatusReply{ReplyMessage: true}, nil
+	return gyro, nil
 }
 
 // Drive Makes the robot drive straight forward or backward with a speed and distance specified client side

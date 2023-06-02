@@ -70,6 +70,25 @@ public class RobotController {
         }
     }
 
+    public void rotateWGyro(double degrees) throws RuntimeException {
+        int speed = 150;
+        MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
+                new MotorPair(OutPort.D, speed));
+
+        RotateRequest rotateRequest = RotateRequest.newBuilder()
+                .setMotors(motorsRequest)
+                .setDegrees((int) degrees)
+                .setSpeed(speed)
+                .build();
+
+        try {
+            CLIENT.rotateWGyro(rotateRequest);
+        }
+        catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
     /**
      * Either collects or releases balls depending on the boolean parameter given
      * @param isCollecting collects if true and releases if false
