@@ -33,13 +33,11 @@ public class Geometry {
         if (largeTriangleHypotenuse == 0) return -1; //to prevent division with 0
         //calculate the angel opposite of the height using the sinus relation
         double angelHeight = Math.toDegrees(Math.asin(heightCamera/largeTriangleHypotenuse));
-        //finds the height of the small triangle
-        double smallTriangleHeight = heightCamera - heightObject;
         double smallTriangleGroundAngel = 90 - angelHeight;
         if (Math.sin(smallTriangleGroundAngel) == 0) return -1; //to prevent division with 0
         //finds the length of the small triangle using the sinus relation
         double smallTriangleLength =
-                (smallTriangleHeight*Math.sin(Math.toRadians(smallTriangleGroundAngel)))/Math.sin(Math.toRadians(angelHeight));
+                (heightObject*Math.sin(Math.toRadians(smallTriangleGroundAngel)))/Math.sin(Math.toRadians(angelHeight));
 
         return distanceToCamera-smallTriangleLength;
     }
