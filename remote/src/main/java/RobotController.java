@@ -48,6 +48,25 @@ public class RobotController {
     }
 
     /**
+     * Makes the robot drive straight either forward or backwards by using the gyro
+     * @param distance Positive values in cm for forward and negative for backwards
+     * @throws RuntimeException if the robot was not reached
+     */
+    public void driveWGyro(double distance) throws RuntimeException {
+        int speed = 175;
+        MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
+                new MotorPair(OutPort.D, speed));
+
+        DriveRequest driveRequest = DriveRequest.newBuilder()
+                .setMotors(motorsRequest)
+                .setDistance((float) distance) // Note: Currently not used on the robot
+                .setSpeed(speed) // This speed worked well, other speeds could be researched
+                .build();
+
+        CLIENT.driveWGyro(driveRequest);
+    }
+
+    /**
      * Rotates the robot with itself as its center
      * @param degrees postive values for counter-clockwise and negative for clockwise
      * @throws RuntimeException if the robot was not reached
