@@ -4,16 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/ev3go/ev3dev"
+	"google.golang.org/grpc"
 	"log"
+	pBuff "main/proto"
+	"main/util"
 	"math"
 	"net"
 	"strconv"
-
-	"github.com/ev3go/ev3dev"
-	"google.golang.org/grpc"
-
-	pBuff "main/proto"
-	"main/util"
+	"time"
 )
 
 // Motor commands
