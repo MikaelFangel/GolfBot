@@ -203,45 +203,72 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 	// Change the rotation direction
 	var rotateSpeed = int(in.Speed)
 	if in.Degrees > 0 {
-		rotateSpeed = int(in.Speed * -1)
+		rotateSpeed *= -1
 	}
+
+	// PD constant, how much we want to correct errors of each term
+	var kp = 0.5
+	var kd = 0.25
+
+	// Read gyro values
+	var gyroValStr, _ = gyro.Value(0)
+	var gyroValInt, _ = strconv.Atoi(gyroValStr)
+	var gyroValF = float64(gyroValInt)
+
+	// Target is the degrees left to rotate
+	var target = gyroValF - float64(in.Degrees)
+
+	// Used to calculate error derivative
+	var lastError = 0.0
 
 	// Prepare the motors for running
 	var motorRequests []motorRequest
-	for _, request := range in.GetMotors().GetMotor() {
-		motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
-		if err != nil {
-			return nil, err
-		}
-
-		switch request.GetMotorPort() {
-		case pBuff.OutPort_A:
-			motor.SetSpeedSetpoint(rotateSpeed)
-		case pBuff.OutPort_D:
-			motor.SetSpeedSetpoint(-rotateSpeed)
-		default:
-			return &pBuff.StatusReply{ReplyMessage: false}, errors.New("not a valid motor")
-		}
-
-		motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
-	}
-
-	// Start the motors
-	for _, motorRequest := range motorRequests {
-		motorRequest.motor.Command(run)
-	}
-
-	status, err := stopMotorsIfNotAllAreRunning(motorRequests)
-	if err != nil {
-		return status, err
-	}
 
 	// Busy wait until the robot has completed the rotation or have superseded the given degrees
-	var gyroValStr, _ = gyro.Value(0)
-	var gyroVal, _ = strconv.Atoi(gyroValStr)
-	for math.Abs(float64(gyroVal)) <= math.Abs(float64(in.Degrees)) {
+	for math.Abs(gyroValF) <= math.Abs(float64(in.Degrees)) {
 		gyroValStr, _ = gyro.Value(0)
-		gyroVal, _ = strconv.Atoi(gyroValStr)
+		gyroValInt, _ = strconv.Atoi(gyroValStr)
+		gyroValF = float64(gyroValInt)
+		target = gyroValF - float64(in.Degrees)
+
+		// Error derivative try to predict the next error, from the previous error
+		var derivative = target - lastError
+
+		lastError = target
+
+		// "P term", how much we want to change the motors' power in proportion with the error
+		// "D term", correcting for the next error
+		var turn = (kp * target) + (kd * derivative)
+
+		for _, request := range in.GetMotors().GetMotor() {
+			motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
+			if err != nil {
+				return nil, err
+			}
+
+			var power = rotateSpeed + int(turn)
+
+			switch request.GetMotorPort() {
+			case pBuff.OutPort_A:
+				motor.SetSpeedSetpoint(power)
+			case pBuff.OutPort_D:
+				motor.SetSpeedSetpoint(-power)
+			default:
+				return &pBuff.StatusReply{ReplyMessage: false}, errors.New("not a valid motor")
+			}
+
+			motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
+		}
+
+		// Start the motors
+		for _, motorRequest := range motorRequests {
+			motorRequest.motor.Command(run)
+		}
+
+		status, err := stopMotorsIfNotAllAreRunning(motorRequests)
+		if err != nil {
+			return status, err
+		}
 	}
 
 	stopAllMotors(motorRequests)
