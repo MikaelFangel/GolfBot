@@ -38,13 +38,10 @@ enum OutPort {
 
 // Functions that can be called through the interface
 service Motors {
-  rpc RunMotors(MultipleMotors) returns (StatusReply) {} // Takes an array. Usable for all amounts of motors at a time
-  rpc StopMotors(MultipleMotors) returns (StatusReply) {}
   rpc Drive(DriveRequest) returns (StatusReply) {}
   rpc DriveWGyro(DriveRequest) returns (StatusReply) {}
-  rpc Rotate(RotateRequest) returns (StatusReply) {}
+  rpc StopMotors(MultipleMotors) returns (StatusReply) {}
   rpc RotateWGyro(RotateRequest) returns (StatusReply) {}
-  rpc Grab(MultipleMotors) returns (StatusReply) {}
   rpc CollectRelease(MultipleMotors) returns (StatusReply) {}
 }
 
@@ -72,6 +69,17 @@ message DriveRequest {
   MultipleMotors motors = 1;
   float distance = 2;
   int32 speed = 3;
+}
+
+// TODO: Potential use in future for combining driving and rotation with PID
+message DrivePIDRequest {
+  MultipleMotors motors = 1;
+  float distance = 2;
+  int32 degrees = 3;
+  int32 speed = 4;
+  float kp = 5;
+  float ki = 6;
+  float kd = 7;
 }
 
 message StatusReply {
