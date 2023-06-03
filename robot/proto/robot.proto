@@ -39,7 +39,7 @@ enum OutPort {
 // Functions that can be called through the interface
 service Motors {
   rpc Drive(DriveRequest) returns (StatusReply) {}
-  rpc DriveWGyro(DriveRequest) returns (StatusReply) {}
+  rpc DriveWGyro(stream DriveRequest) returns (StatusReply) {} // TODO: Why do we need to send motor request over network
   rpc StopMotors(MultipleMotors) returns (StatusReply) {}
   rpc RotateWGyro(RotateRequest) returns (StatusReply) {}
   rpc CollectRelease(MultipleMotors) returns (StatusReply) {}

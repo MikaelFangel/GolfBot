@@ -82,14 +82,18 @@ func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.S
 	return stopMotorsIfNotAllAreRunning(motorRequests)
 }
 
-// DriveWGyro Rotates the robot given a speed using a gyro. This function has the side effect that it recalibrates the gyro.
-func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pBuff.StatusReply, error) {
+// DriveWGyro Rotates the robot given a speed using the gyro. This function has the side effect that it recalibrates the gyro.
+func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
 	gyro, err := util.RecalibrateGyro()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	// PID constant, how much we want to correct errors of each term
+	var driveRequest, _ = in.Recv()
+
+	var distance = int(driveRequest.Distance)
+
+	// PID constants, how much we want to correct errors of each term
 	var kp = 2.0
 	var ki = 1.0
 	var kd = 1.0
@@ -104,37 +108,41 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pB
 	var motorRequests []motorRequest
 
 	// TODO: For testing purposes run until i < 20, but should be until length to target <= 0. Research RPC client streaming
-	for i := 0; i < 20; i++ {
+	for distance > 0 {
+		println("Distance ", distance)
+		var message, _ = in.Recv()
+		distance = int(message.Distance)
 
 		// Read gyro values, eg. the current error
 		var gyroValStr, _ = gyro.Value(0)
 		var gyroVal, _ = strconv.Atoi(gyroValStr)
 		var gyroErr = float64(gyroVal)
-		var target = gyroErr
 
 		integral += gyroErr
 
+		// Error derivative try to predict the next error from the previous error
 		var derivative = gyroErr - lastError
 
 		lastError = gyroErr
 
 		// "P term", how much we want to change the motors' power in proportion with the error
 		// "I term", the running sum of errors to correct for
-		var turn = (kp * target) + (ki * integral) + (kd * derivative)
+		// "D term", correcting for the next error
+		var turn = (kp * gyroErr) + (ki * integral) + (kd * derivative)
 
-		for _, request := range in.GetMotors().GetMotor() {
+		for _, request := range driveRequest.GetMotors().GetMotor() {
 			motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
 			if err != nil {
-				return &pBuff.StatusReply{ReplyMessage: false}, err
+				return err
 			}
 
 			// Change speed value if distance is negative
 			dir := 1
-			if in.Speed < 0 {
+			if driveRequest.Speed < 0 {
 				dir = -1
 			}
 
-			var power = int(in.Speed)
+			var power = int(driveRequest.Speed)
 
 			// TODO: Should ramp be set for all iterations or only first and last? I found that the these values worked well
 			motor.SetRampUpSetpoint(3 * time.Second)
@@ -145,7 +153,7 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pB
 			case pBuff.OutPort_D:
 				motor.SetSpeedSetpoint(-(dir * power) - int(turn))
 			default:
-				return &pBuff.StatusReply{ReplyMessage: false}, errors.New("not a valid motor")
+				return err
 			}
 
 			motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
@@ -158,18 +166,21 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pB
 		}
 
 		// Handle error if both motors does not run
-		status, err := stopMotorsIfNotAllAreRunning(motorRequests)
+		_, err := stopMotorsIfNotAllAreRunning(motorRequests)
 		if err != nil {
-			return status, err
+			return err
 		}
-
-		// Run the motors with these settings for 0.4 second then adjust
-		time.Sleep(400 * time.Millisecond)
 	}
 
 	stopAllMotors(motorRequests)
 
-	return &pBuff.StatusReply{ReplyMessage: true}, nil
+	// Stop streaming connection
+	err = in.SendAndClose(&pBuff.StatusReply{ReplyMessage: true})
+	if err != nil {
+		return err
+	}
+
+	return err
 }
 
 // StopMotors Stops the motors given, e.g. cleaning their MotorState and setting speed to zero
