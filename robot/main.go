@@ -47,41 +47,6 @@ func main() {
 	}
 }
 
-// Drive Makes the robot drive straight forward or backward with a speed and distance specified client side
-func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.StatusReply, error) {
-	var motorRequests []motorRequest
-
-	numberOfRotations := -util.ConvertDistanceToWheelRotation(float64(in.Distance))
-	fmt.Printf("Drive degrees of rotation: %d\n", numberOfRotations)
-
-	// Fetch each motor
-	for _, request := range in.GetMotors().GetMotor() {
-		motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
-		if err != nil {
-			return &pBuff.StatusReply{ReplyMessage: false}, err
-		}
-
-		// Change speed value if distance is negative
-		dir := 1
-		if in.Speed < 0 {
-			dir = -1
-		}
-
-		// Set values for request
-		motor.Command(reset)
-		motor.SetSpeedSetpoint(dir * int(in.Speed))
-		motor.SetPositionSetpoint(numberOfRotations)
-		motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
-	}
-
-	// Give requests to motors
-	for _, motorRequest := range motorRequests {
-		motorRequest.motor.Command(absPos)
-	}
-
-	return stopMotorsIfNotAllAreRunning(motorRequests)
-}
-
 // DriveWGyro Rotates the robot given a speed using a gyro. This function has the side effect that it recalibrates the gyro.
 func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pBuff.StatusReply, error) {
 	gyro, err := util.RecalibrateGyro()
