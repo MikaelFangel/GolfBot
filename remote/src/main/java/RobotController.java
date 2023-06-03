@@ -1,9 +1,12 @@
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
+import io.grpc.Status;
+import io.grpc.stub.StreamObserver;
 import proto.*;
 
 import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class RobotController {
@@ -30,30 +33,12 @@ public class RobotController {
     }
 
     /**
-     * Makes the robot drive straight either forward or backwards for the distance given as argument
-     * @param distance Positive values in cm for forward and negative for backwards
-     * @throws RuntimeException if the robot was not reached
-     */
-    public void driveStraight(double distance) throws RuntimeException {
-       MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, DEFAULT_SPEED),
-               new MotorPair(OutPort.D, DEFAULT_SPEED));
-
-        DriveRequest driveRequest = DriveRequest.newBuilder()
-                .setMotors(motorsRequest)
-                .setDistance((float) distance)
-                .setSpeed(DEFAULT_SPEED)
-                .build();
-
-        CLIENT.drive(driveRequest);
-    }
-
-    /**
      * Makes the robot drive straight either forward or backwards by using the gyro
      * @param distance Positive values in cm for forward and negative for backwards
      * @throws RuntimeException if the robot was not reached
      */
     public void driveWGyro(double distance) throws RuntimeException {
-        int speed = 175;
+        int speed = 200;
         MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
                 new MotorPair(OutPort.D, speed));
 
@@ -72,7 +57,7 @@ public class RobotController {
      * @throws RuntimeException if the robot was not reached
      */
     public void rotateWGyro(double degrees) throws RuntimeException {
-        int speed = 150;
+        int speed = 40;
         MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
                 new MotorPair(OutPort.D, speed));
 

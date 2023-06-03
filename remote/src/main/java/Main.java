@@ -29,7 +29,7 @@ public class Main {
         scan.nextLine();
 
         Thread.sleep(5000); // Find better way.
-        controller.driveStraight(distance);
+        controller.driveWGyro(distance);
 
         controller.stopController();
     }
