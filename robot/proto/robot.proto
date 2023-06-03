@@ -41,7 +41,9 @@ service Motors {
   rpc RunMotors(MultipleMotors) returns (StatusReply) {} // Takes an array. Usable for all amounts of motors at a time
   rpc StopMotors(MultipleMotors) returns (StatusReply) {}
   rpc Drive(DriveRequest) returns (StatusReply) {}
+  rpc DriveWGyro(DriveRequest) returns (StatusReply) {}
   rpc Rotate(RotateRequest) returns (StatusReply) {}
+  rpc RotateWGyro(RotateRequest) returns (StatusReply) {}
   rpc Grab(MultipleMotors) returns (StatusReply) {}
   rpc CollectRelease(MultipleMotors) returns (StatusReply) {}
 }
