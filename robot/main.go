@@ -89,20 +89,38 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pB
 		return nil, err
 	}
 
-	// Proportional constant, how much we want to correct errors
-	var kp = 2.75
+	// PID constant, how much we want to correct errors of each term
+	var kp = 2.0
+	var ki = 1.0
+	var kd = 1.0
+
+	// the running sum of errors
+	var integral = 0.0
+
+	// Used to calculate derivative, and predict errors in future
+	var lastError = 0.0
 
 	// Prepare the motors for running
 	var motorRequests []motorRequest
 
-	// TODO: For testing purposes run until i < 12, but should be until length to target <= 0. Research RPC client streaming
-	for i := 0; i < 12; i++ {
+	// TODO: For testing purposes run until i < 20, but should be until length to target <= 0. Research RPC client streaming
+	for i := 0; i < 20; i++ {
 
-		// Read gyro values
+		// Read gyro values, eg. the current error
 		var gyroValStr, _ = gyro.Value(0)
 		var gyroVal, _ = strconv.Atoi(gyroValStr)
-		// the "P term", how much we want to change the motors' power in proportion with the error
-		var turn = kp * float64(gyroVal)
+		var gyroErr = float64(gyroVal)
+		var target = gyroErr
+
+		integral += gyroErr
+
+		var derivative = gyroErr - lastError
+
+		lastError = gyroErr
+
+		// "P term", how much we want to change the motors' power in proportion with the error
+		// "I term", the running sum of errors to correct for
+		var turn = (kp * target) + (ki * integral) + (kd * derivative)
 
 		for _, request := range in.GetMotors().GetMotor() {
 			motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
@@ -117,13 +135,13 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pB
 			}
 
 			// TODO: Should ramp be set for all iterations or only first and last? I found that 2 second ramp worked well
-			motor.SetRampUpSetpoint(2 * time.Second)
-			motor.SetRampDownSetpoint(2 * time.Second)
+			motor.SetRampUpSetpoint(3 * time.Second)
+			motor.SetRampDownSetpoint(3 * time.Second)
 			switch request.GetMotorPort() {
 			case pBuff.OutPort_A:
-				motor.SetSpeedSetpoint((dir * int(in.Speed)) + int(turn))
+				motor.SetSpeedSetpoint(-(dir * int(in.Speed)) + int(turn))
 			case pBuff.OutPort_D:
-				motor.SetSpeedSetpoint((dir * int(in.Speed)) - int(turn))
+				motor.SetSpeedSetpoint(-(dir * int(in.Speed)) - int(turn))
 			default:
 				return &pBuff.StatusReply{ReplyMessage: false}, errors.New("not a valid motor")
 			}
@@ -143,8 +161,8 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pB
 			return status, err
 		}
 
-		// Run the motors with these settings for 1 second then adjust
-		time.Sleep(1000 * time.Millisecond)
+		// Run the motors with these settings for 0.5 second then adjust
+		time.Sleep(500 * time.Millisecond)
 	}
 
 	stopAllMotors(motorRequests)
