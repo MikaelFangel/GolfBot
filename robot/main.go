@@ -97,7 +97,7 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pB
 	// the running sum of errors
 	var integral = 0.0
 
-	// Used to calculate derivative, and predict errors in future
+	// Used to calculate error derivative
 	var lastError = 0.0
 
 	// Prepare the motors for running
@@ -134,14 +134,16 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pB
 				dir = -1
 			}
 
-			// TODO: Should ramp be set for all iterations or only first and last? I found that 2 second ramp worked well
+			var power = int(in.Speed)
+
+			// TODO: Should ramp be set for all iterations or only first and last? I found that the these values worked well
 			motor.SetRampUpSetpoint(3 * time.Second)
 			motor.SetRampDownSetpoint(3 * time.Second)
 			switch request.GetMotorPort() {
 			case pBuff.OutPort_A:
-				motor.SetSpeedSetpoint(-(dir * int(in.Speed)) + int(turn))
+				motor.SetSpeedSetpoint(-(dir * power) + int(turn))
 			case pBuff.OutPort_D:
-				motor.SetSpeedSetpoint(-(dir * int(in.Speed)) - int(turn))
+				motor.SetSpeedSetpoint(-(dir * power) - int(turn))
 			default:
 				return &pBuff.StatusReply{ReplyMessage: false}, errors.New("not a valid motor")
 			}
@@ -161,8 +163,8 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pB
 			return status, err
 		}
 
-		// Run the motors with these settings for 0.5 second then adjust
-		time.Sleep(500 * time.Millisecond)
+		// Run the motors with these settings for 0.4 second then adjust
+		time.Sleep(400 * time.Millisecond)
 	}
 
 	stopAllMotors(motorRequests)
