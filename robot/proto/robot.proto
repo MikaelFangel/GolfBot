@@ -71,6 +71,17 @@ message DriveRequest {
   int32 speed = 3;
 }
 
+// TODO: Potential use in future for combining driving and rotation with PID
+message DrivePIDRequest {
+  MultipleMotors motors = 1;
+  float distance = 2;
+  int32 degrees = 3;
+  int32 speed = 4;
+  float kp = 5;
+  float ki = 6;
+  float kd = 7;
+}
+
 message StatusReply {
   bool replyMessage = 1; // Success
 }
