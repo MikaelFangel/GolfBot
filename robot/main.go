@@ -82,6 +82,76 @@ func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.S
 	return stopMotorsIfNotAllAreRunning(motorRequests)
 }
 
+// DriveWGyro Rotates the robot given a speed using a gyro. This function has the side effect that it recalibrates the gyro.
+func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pBuff.StatusReply, error) {
+	gyro, err := util.RecalibrateGyro()
+	if err != nil {
+		return nil, err
+	}
+
+	// Proportional constant, how much we want to correct errors
+	var kp = 2.75
+
+	// Prepare the motors for running
+	var motorRequests []motorRequest
+
+	// TODO: For testing purposes run until i < 12, but should be until length to target <= 0. Research RPC client streaming
+	for i := 0; i < 12; i++ {
+
+		// Read gyro values
+		var gyroValStr, _ = gyro.Value(0)
+		var gyroVal, _ = strconv.Atoi(gyroValStr)
+		// the "P term", how much we want to change the motors' power in proportion with the error
+		var turn = kp * float64(gyroVal)
+
+		for _, request := range in.GetMotors().GetMotor() {
+			motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
+			if err != nil {
+				return &pBuff.StatusReply{ReplyMessage: false}, err
+			}
+
+			// Change speed value if distance is negative
+			dir := 1
+			if in.Speed < 0 {
+				dir = -1
+			}
+
+			// TODO: Should ramp be set for all iterations or only first and last? I found that 2 second ramp worked well
+			motor.SetRampUpSetpoint(2 * time.Second)
+			motor.SetRampDownSetpoint(2 * time.Second)
+			switch request.GetMotorPort() {
+			case pBuff.OutPort_A:
+				motor.SetSpeedSetpoint((dir * int(in.Speed)) + int(turn))
+			case pBuff.OutPort_D:
+				motor.SetSpeedSetpoint((dir * int(in.Speed)) - int(turn))
+			default:
+				return &pBuff.StatusReply{ReplyMessage: false}, errors.New("not a valid motor")
+			}
+
+			motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
+		}
+
+		// TODO: Maybe we could switch around the motor order for each iteration, so that the start/stop delay is evened out
+		// Start the motors
+		for _, motorRequest := range motorRequests {
+			motorRequest.motor.Command(run)
+		}
+
+		// Handle error if both motors does not run
+		status, err := stopMotorsIfNotAllAreRunning(motorRequests)
+		if err != nil {
+			return status, err
+		}
+
+		// Run the motors with these settings for 1 second then adjust
+		time.Sleep(1000 * time.Millisecond)
+	}
+
+	stopAllMotors(motorRequests)
+
+	return &pBuff.StatusReply{ReplyMessage: true}, nil
+}
+
 // StopMotors Stops the motors given, e.g. cleaning their MotorState and setting speed to zero
 func (s *motorServer) StopMotors(_ context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
 	// motorRequests stores the request and the motor, so we don't need to get them again in the 2nd loop
