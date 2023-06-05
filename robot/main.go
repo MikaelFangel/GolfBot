@@ -71,22 +71,18 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pB
 		return nil, err
 	}
 	for i := 0; i < 20; i++ {
-
 		// Read gyro values, eg. the current error
 		gyroValStr, _ := gyro.Value(0)
-		gyroVal, _ := strconv.Atoi(gyroValStr)
-		gyroErr := float64(gyroVal)
+		gyroErr, _ := strconv.ParseFloat(gyroValStr, 64)
 		target := gyroErr
-
 		integral += gyroErr
 
 		derivative := gyroErr - lastError
-
 		lastError = gyroErr
 
 		// "P term", how much we want to change the motors' power in proportion with the error
 		// "I term", the running sum of errors to correct for
-		var turn = (kp * target) + (ki * integral) + (kd * derivative)
+		turn := (kp * target) + (ki * integral) + (kd * derivative)
 
 		for _, request := range in.GetMotors().GetMotor() {
 			motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
@@ -134,7 +130,6 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pB
 	}
 
 	stopAllMotors(motorRequests)
-
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
@@ -155,7 +150,6 @@ func (s *motorServer) StopMotors(_ context.Context, in *pBuff.MultipleMotors) (*
 	}
 
 	stopAllMotors(motorRequests)
-
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
@@ -215,7 +209,6 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 	}
 
 	stopAllMotors(motorRequests)
-
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
