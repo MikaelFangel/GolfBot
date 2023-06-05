@@ -274,11 +274,5 @@ func stopAllMotors(motorRequests []motorRequest) {
 	// Can't use ev3dev.Wait() to make sure motors stop. This is the alternative used...
 	for _, motorRequest := range motorRequests {
 		motorRequest.motor.Command(stop)
-
-		for {
-			if !util.IsRunning(motorRequest.motor) {
-				break
-			}
-		}
 	}
 }
