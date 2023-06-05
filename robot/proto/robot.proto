@@ -42,6 +42,7 @@ service Motors {
   rpc StopMotors(MultipleMotors) returns (StatusReply) {}
   rpc RotateWGyro(RotateRequest) returns (StatusReply) {}
   rpc CollectRelease(MultipleMotors) returns (StatusReply) {}
+  rpc RecalibrateGyro(EmptyRequest) returns (StatusReply) {}
 }
 
 // MultipleMotors reuses the message MotorRequest
@@ -80,6 +81,8 @@ message DrivePIDRequest {
   float ki = 6;
   float kd = 7;
 }
+
+message EmptyRequest {}
 
 message StatusReply {
   bool replyMessage = 1; // Success

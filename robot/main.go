@@ -51,11 +51,6 @@ func main() {
 
 // DriveWGyro Rotates the robot given a speed using a gyro. This function has the side effect that it recalibrates the gyro.
 func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pBuff.StatusReply, error) {
-	gyro, err := util.RecalibrateGyro()
-	if err != nil {
-		return nil, err
-	}
-
 	// PID constant, how much we want to correct errors of each term
 	kp := 2.0
 	ki := 1.0
@@ -71,6 +66,10 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pB
 	var motorRequests []motorRequest
 
 	// TODO: For testing purposes run until i < 20, but should be until length to target <= 0. Research RPC client streaming
+	gyro, err := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
+	if err != nil {
+		return nil, err
+	}
 	for i := 0; i < 20; i++ {
 
 		// Read gyro values, eg. the current error
@@ -162,11 +161,6 @@ func (s *motorServer) StopMotors(_ context.Context, in *pBuff.MultipleMotors) (*
 
 // RotateWGyro Rotates the robot given a speed using a gyro. This function has the side effect that it recalibrates the gyro.
 func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*pBuff.StatusReply, error) {
-	gyro, err := util.RecalibrateGyro()
-	if err != nil {
-		return nil, err
-	}
-
 	// Change the rotation direction
 	var rotateSpeed = int(in.Speed)
 	if in.Degrees > 0 {
@@ -204,6 +198,10 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 	}
 
 	// Busy wait until the robot has completed the rotation or have superseded the given degrees
+	gyro, err := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
+	if err != nil {
+		return nil, err
+	}
 	gyroValStr, err := gyro.Value(0)
 	var gyroVal, _ = strconv.ParseFloat(gyroValStr, 64)
 	for math.Abs(gyroVal) <= math.Abs(float64(in.Degrees)) {
@@ -254,6 +252,19 @@ func (s *motorServer) CollectRelease(_ context.Context, in *pBuff.MultipleMotors
 	}
 
 	return stopMotorsIfNotAllAreRunning(motorRequests)
+}
+
+func (s *motorServer) RecalibrateGyro(_ context.Context, _ *pBuff.EmptyRequest) (*pBuff.StatusReply, error) {
+	gyro, err := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
+	if err != nil {
+		return nil, err
+	}
+
+	// Trigger the recalibration using a mode switch
+	gyro.SetMode("GYRO-CAL")
+	gyro.SetMode("GYRO-ANG")
+
+	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
 func stopMotorsIfNotAllAreRunning(motorRequests []motorRequest) (*pBuff.StatusReply, error) {
