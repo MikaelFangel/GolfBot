@@ -53,7 +53,7 @@ func main() {
 func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pBuff.StatusReply, error) {
 	// PID constant, how much we want to correct errors of each term
 	kp := 2.0
-	ki := 1.0
+	ki := 0.5
 	kd := 1.0
 
 	// the running sum of errors
@@ -76,11 +76,11 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pB
 	if err != nil {
 		return nil, err
 	}
-	for i := 0; i < 20; i++ {
+	for i := 0; i < 12; i++ {
+
 		// Read gyro values, eg. the current error
 		gyroValStr, _ := gyro.Value(0)
 		gyroErr, _ := strconv.ParseFloat(gyroValStr, 64)
-		target := gyroErr
 		integral += gyroErr
 
 		derivative := gyroErr - lastError
@@ -89,7 +89,7 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pB
 		// "P term", how much we want to change the motors' power in proportion with the error
 		// "I term", the running sum of errors to correct for
 		// "D term", trying to predict next error
-		turn := (kp * target) + (ki * integral) + (kd * derivative)
+		turn := (kp * gyroErr) + (ki * integral) + (kd * derivative)
 
 		for _, request := range in.GetMotors().GetMotor() {
 			motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())

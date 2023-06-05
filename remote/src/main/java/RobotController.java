@@ -38,7 +38,7 @@ public class RobotController {
      * @throws RuntimeException if the robot was not reached
      */
     public void driveWGyro(double distance) throws RuntimeException {
-        int speed = 200;
+        int speed = 250;
         MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
                 new MotorPair(OutPort.D, speed));
 
@@ -57,7 +57,7 @@ public class RobotController {
      * @throws RuntimeException if the robot was not reached
      */
     public void rotateWGyro(double degrees) throws RuntimeException {
-        int speed = 40;
+        int speed = 75;
         MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
                 new MotorPair(OutPort.D, speed));
 
@@ -69,6 +69,21 @@ public class RobotController {
 
         try {
             CLIENT.rotateWGyro(rotateRequest);
+        }
+        catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    /**
+     * Recalibrates the
+     * @throws RuntimeException if the robot was not reached
+     */
+    public void recalibrateGyro() throws RuntimeException {
+        EmptyRequest emptyRequest = EmptyRequest.newBuilder().build();
+
+        try {
+            CLIENT.recalibrateGyro(emptyRequest);
         }
         catch (RuntimeException e) {
             System.out.println(e.getMessage());
