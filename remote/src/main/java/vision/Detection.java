@@ -37,7 +37,7 @@ public class Detection {
     private final int maxRadius = 8;  // similarly sets the limit for the largest circles
 
     public Detection(int cameraIndex) {
-        course = new Course();
+        course = new Course(166);
 
         // Setup video capture
         OpenCV.loadLocally();
@@ -205,6 +205,13 @@ public class Detection {
                 double[] center = whiteballs.get(0, i);
                 // Create the irl coordinates and create the ball object with the Color white
                 Point coordinates = new Point((center[0] - originCameraOffset.x) * conversionFactor, (center[1] - originCameraOffset.y) * conversionFactor);
+                System.out.println(coordinates);
+                Imgproc.circle(frame,coordinates,2,new Scalar(124,252,0));
+                //coordinates = Algorithms.correctedCoordinatesOfObject(coordinates, 4, course, conversionFactor,originCameraOffset);
+                //Imgproc.circle(frame,coordinates,2,new Scalar(100,100,100));
+                //coordinates.x = originCameraOffset.x;
+                //coordinates.y = originCameraOffset.y;
+
                 balls.add(new Ball(coordinates, Color.WHITE));
             }
         }

@@ -7,10 +7,16 @@ import java.util.List;
 
 public class Course {
     public final double length = 167.0, width = 122.0;
+    private Point cameraPosition;
 
     private Point topLeft, topRight, bottomLeft, bottomRight;
     private List<Ball> balls;
     private Robot robot;
+    private double cameraHeight;
+
+    public Course(double cameraHeight){
+        this.cameraHeight = cameraHeight;
+    }
 
 
     // Getters and setters
@@ -60,5 +66,17 @@ public class Course {
 
     public synchronized void setRobot(Robot robot) {
         this.robot = robot;
+    }
+
+    public double getCameraHeight() {
+        return cameraHeight;
+    }
+
+    public Point getCameraPosition() {
+        return cameraPosition;
+    }
+
+    public void setCameraPosition(Point cameraPosition) {
+        this.cameraPosition = cameraPosition;
     }
 }
