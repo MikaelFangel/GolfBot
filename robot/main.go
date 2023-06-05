@@ -57,15 +57,15 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pB
 	}
 
 	// PID constant, how much we want to correct errors of each term
-	var kp = 2.0
-	var ki = 1.0
-	var kd = 1.0
+	kp := 2.0
+	ki := 1.0
+	kd := 1.0
 
 	// the running sum of errors
-	var integral = 0.0
+	integral := 0.0
 
 	// Used to calculate error derivative
-	var lastError = 0.0
+	lastError := 0.0
 
 	// Prepare the motors for running
 	var motorRequests []motorRequest
@@ -74,20 +74,20 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pB
 	for i := 0; i < 20; i++ {
 
 		// Read gyro values, eg. the current error
-		var gyroValStr, _ = gyro.Value(0)
-		var gyroVal, _ = strconv.Atoi(gyroValStr)
-		var gyroErr = float64(gyroVal)
-		var target = gyroErr
+		gyroValStr, _ := gyro.Value(0)
+		gyroVal, _ := strconv.Atoi(gyroValStr)
+		gyroErr := float64(gyroVal)
+		target := gyroErr
 
 		integral += gyroErr
 
-		var derivative = gyroErr - lastError
+		derivative := gyroErr - lastError
 
 		lastError = gyroErr
 
 		// "P term", how much we want to change the motors' power in proportion with the error
 		// "I term", the running sum of errors to correct for
-		var turn = (kp * target) + (ki * integral) + (kd * derivative)
+		turn := (kp * target) + (ki * integral) + (kd * derivative)
 
 		for _, request := range in.GetMotors().GetMotor() {
 			motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
@@ -101,7 +101,7 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pB
 				dir = -1
 			}
 
-			var power = int(in.Speed)
+			power := int(in.Speed)
 
 			// TODO: Should ramp be set for all iterations or only first and last? I found that the these values worked well
 			motor.SetRampUpSetpoint(3 * time.Second)
