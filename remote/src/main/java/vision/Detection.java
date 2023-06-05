@@ -35,6 +35,14 @@ public class Detection {
     private final int minRadius = 1;  // limits the smallest circle to this size (via radius)
     private final int maxRadius = 8;  // similarly sets the limit for the largest circles
 
+
+    // Color thresholds
+    private Scalar lRobot = new Scalar(100, 100, 0);
+    private Scalar uRobot = new Scalar(255, 255, 20);
+
+    private int lWhiteBall = 210;
+    private int uWhiteBall = 255;
+
     public Detection(int cameraIndex) {
         course = new Course();
 
@@ -176,8 +184,8 @@ public class Detection {
         ArrayList<Ball> balls = new ArrayList<>();
 
         // Find the orange ball
-        Optional<Ball> orangeBall = findOrangeBall(frame);
-        orangeBall.ifPresent(balls::add);
+        //Optional<Ball> orangeBall = findOrangeBall(frame);
+        //orangeBall.ifPresent(balls::add);
 
         // Apply gray frame for detecting white balls
         Mat frameGray = new Mat();
@@ -185,7 +193,9 @@ public class Detection {
 
         // Apply a binary threshold mask to seperate out all colors than white.
         Mat binaryFrame = new Mat();
-        Imgproc.threshold(frameGray, binaryFrame, 195, 255, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(frameGray, binaryFrame, lWhiteBall, uWhiteBall, Imgproc.THRESH_BINARY);
+
+        HighGui.imshow("ballMask", binaryFrame);
 
         // Apply blur for better noise reduction
         Mat frameBlur = new Mat();
@@ -264,19 +274,14 @@ public class Detection {
         final int areaUpperThreshold = 350;
 
         // Transform frame
-        Mat frameHSV = new Mat();
         Mat frameBlur = new Mat();
-
-        Imgproc.cvtColor(frame, frameHSV, Imgproc.COLOR_BGR2HSV);
-        Imgproc.GaussianBlur(frameHSV, frameBlur, new Size(7,7), 7, 0);
+        Imgproc.GaussianBlur(frame, frameBlur, new Size(7,7), 7, 0);
 
         // Create a mask
         Mat mask = new Mat();
-        Scalar lower = new Scalar(100, 100, 120);
-        Scalar upper = new Scalar(255, 255, 255);
-        Core.inRange(frameBlur, lower, upper, mask);
+        Core.inRange(frameBlur, lRobot, uRobot, mask);
 
-        //HighGui.imshow("robotmask", mask);
+        HighGui.imshow("robotmask", mask);
 
         // Get Contours
         List<MatOfPoint> contours = new ArrayList<>();
