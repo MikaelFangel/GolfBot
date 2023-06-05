@@ -13,7 +13,9 @@ public class Main {
         }
 
         RobotController controller = new RobotController(args[0]); // Args[0] being and IP address
-        Detection detection = new Detection(2);
+
+        int cameraIndex = 2;
+        Detection detection = new Detection(cameraIndex);
         Course course = detection.getCourse();
 
         Ball closestBall = findClosestBall(course.getBalls(), course.getRobot());

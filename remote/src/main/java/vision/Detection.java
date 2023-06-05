@@ -9,6 +9,7 @@ import org.opencv.core.Point;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
+import org.opencv.videoio.Videoio;
 import vision.helperClasses.BorderSet;
 import vision.helperClasses.ContourSet;
 
@@ -25,26 +26,27 @@ public class Detection {
     private double conversionFactor;
     private Point originCameraOffset;
 
-    private final Thread backgroundThread;
-
-    // HoughCircles parameters. These configurations works okay with the current course setup
-    private final int dp = 1;
+    // HoughCircles parameters. These configurations works okay with the current course setup (Most likely pixel values)
+    private final int dp = 1; // Don't question or change
     private final int minDist = 5; // Minimum distance between balls
     private final int param1 = 20;  // gradient value used in the edge detection
     private final int param2 = 12;  // lower values allow more circles to be detected (false positives)
-    private final int minRadius = 3;  // limits the smallest circle to this size (via radius)
-    private final int maxRadius = 10;  // similarly sets the limit for the largest circles
+    private final int minBallRadius = 3;  // limits the smallest circle to this size (via radius) on camera feed
+    private final int maxBallRadius = 10;  // similarly sets the limit for the largest circles on camera feed
 
 
-    // Color thresholds
-    private Scalar lRobot = new Scalar(100, 100, 0);
-    private Scalar uRobot = new Scalar(255, 255, 20);
+    // Blue markers threshold (BGR)
+    private final Scalar lRobot = new Scalar(100, 100, 0);
+    private final Scalar uRobot = new Scalar(255, 255, 20);
 
-    private int lWhiteBall = 205;
-    private int uWhiteBall = 255;
-
+    // Orange balls threshold (BGR)
     private Scalar lOrangeBall = new Scalar(0, 100, 220);
     private Scalar uOrangeBall = new Scalar(170, 255, 255);
+
+
+    // White balls grey scale threshold (0-255)
+    private final int lWhiteBall = 205;
+    private final int uWhiteBall = 255;
 
     public Detection(int cameraIndex) {
         course = new Course();
@@ -53,15 +55,17 @@ public class Detection {
         OpenCV.loadLocally();
         VideoCapture capture = new VideoCapture();
         capture.open(cameraIndex);
-        capture.set(3, 1024);
-        capture.set(4, 768);
+
+        // Set capture resolution to 1024x768
+        capture.set(Videoio.CAP_PROP_FRAME_WIDTH, 1024);
+        capture.set(Videoio.CAP_PROP_FRAME_HEIGHT, 768);
 
         if (!capture.isOpened()) throw new RuntimeException("Camera Capture was not opened");
 
         initializeCourse(capture);
 
         // Spawn background thread;
-        backgroundThread = new Thread(() -> detectCourse(capture));
+        Thread backgroundThread = new Thread(() -> detectCourse(capture));
         backgroundThread.start();
 
         System.out.println("Spawned Background Detection Thread");
@@ -111,7 +115,6 @@ public class Detection {
     }
 
     private void detectCourse(VideoCapture capture) {
-        int i = 0;
         while (true) {
             Mat frame = new Mat(), debugFrame;
             capture.read(frame);
@@ -123,10 +126,9 @@ public class Detection {
 
             debugGUI(debugFrame);
 
+            // Show debug frame
             HighGui.imshow("frame", debugFrame);
-            HighGui.waitKey(1);
-
-            System.out.println(i++);
+            HighGui.waitKey(1); // Wait 1ms per frame
         }
     }
 
@@ -193,6 +195,7 @@ public class Detection {
         ArrayList<Ball> balls = new ArrayList<>();
 
         // Find the orange ball
+        // TODO Orange balls needs to be remade. For now it can sometimes be recognized using the white balls, as it is gray scaled.
         //Optional<Ball> orangeBall = findOrangeBall(frame);
         //orangeBall.ifPresent(balls::add);
 
@@ -204,7 +207,7 @@ public class Detection {
         Mat binaryFrame = new Mat();
         Imgproc.threshold(frameGray, binaryFrame, lWhiteBall, uWhiteBall, Imgproc.THRESH_BINARY);
 
-        //HighGui.imshow("ballMask", binaryFrame);
+        //HighGui.imshow("ballMask", binaryFrame); // Debug Only
 
         // Apply blur for better noise reduction
         Mat frameBlur = new Mat();
@@ -212,7 +215,7 @@ public class Detection {
 
         // Get white balls from frame
         Mat whiteballs = new Mat();
-        Imgproc.HoughCircles(frameBlur, whiteballs, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, minRadius, maxRadius);
+        Imgproc.HoughCircles(frameBlur, whiteballs, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, minBallRadius, maxBallRadius);
 
         if (!whiteballs.empty()) {
             // Add detected whiteballs to balls arraylist
@@ -248,7 +251,7 @@ public class Detection {
         Core.inRange(frameHsv, lOrangeBall, uOrangeBall, mask);
 
         // Show Mask
-        //HighGui.imshow("orangeMask", mask);
+        //HighGui.imshow("orangeMask", mask); // Debug Only
 
         // Apply blur for noise reduction
         Mat frameBlur = new Mat();
@@ -258,7 +261,7 @@ public class Detection {
         Mat orangeball = new Mat();
 
         // Get the orange ball from the frame
-        Imgproc.HoughCircles(frameBlur, orangeball, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, minRadius, maxRadius);
+        Imgproc.HoughCircles(frameBlur, orangeball, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, minBallRadius, maxBallRadius);
 
         // Delete the orange ball pixels from the frame, to not disturb later detection for white balls
         // TODO: Should be explored later if this is method should be used
@@ -275,25 +278,26 @@ public class Detection {
     }
 
     /**
-     * Returns and 2 long list of coordinates. First coordinates for the biggest marker
+     * Returns a list of coordinates of length two. First coordinates for the biggest marker
      * the second for the next biggest one. Both on the robot.
      * The markers have to be blue.
      * @param frame that needs to be evaluated.
      * @return Returns array of points for the 2 markers.
      */
     public Point[] getRotationCoordsFromFrame(Mat frame) {
+        // Size of contours (number of pixels in cohesive area)
         final int areaLowerThreshold = 100;
         final int areaUpperThreshold = 1000;
 
-        // Transform frame
+        // Blur frame to smooth out color inconsistencies
         Mat frameBlur = new Mat();
         Imgproc.GaussianBlur(frame, frameBlur, new Size(7,7), 7, 0);
 
-        // Create a mask
+        // Create a mask to filter out unnecessary contours
         Mat mask = new Mat();
         Core.inRange(frameBlur, lRobot, uRobot, mask);
 
-        //HighGui.imshow("robotmask", mask);
+        //HighGui.imshow("robotmask", mask); // Debug Only
 
         // Get Contours
         List<MatOfPoint> contours = new ArrayList<>();
