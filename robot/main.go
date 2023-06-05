@@ -170,7 +170,7 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 	// Change the rotation direction
 	var rotateSpeed = int(in.Speed)
 	if in.Degrees > 0 {
-		rotateSpeed = int(in.Speed * -1)
+		rotateSpeed *= -1
 	}
 
 	// Prepare the motors for running
