@@ -11,6 +11,7 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 import vision.helperClasses.BorderSet;
 import vision.helperClasses.ContourSet;
+import vision.math.Geometry;
 
 import java.awt.*;
 import java.util.*;
@@ -105,6 +106,9 @@ public class Detection {
             findCourseCorners(frame);
             findRobot(frame);
             findBalls(frame);
+
+            //display course corners
+
 
             debugGUI(debugFrame);
 
@@ -408,6 +412,29 @@ public class Detection {
 
         List<Ball> balls = course.getBalls();
         Robot robot = course.getRobot();
+
+
+        //show corners
+        Point[] corners = new Point[]{
+                course.getTopLeft(),
+                course.getTopRight(),
+                course.getBottomLeft(),
+                course.getBottomRight()
+        };
+
+        for (Point p : corners) {
+            Point temp = centimeterToPixel(p);
+            temp.x += originCameraOffset.x;
+            temp.y += originCameraOffset.y;
+
+            Imgproc.circle(
+                    debugFrame,
+                    temp,
+                    2,
+                    new Scalar(124, 252, 0),
+                    3
+            );
+        }
 
         // Debug Balls
         if (balls.size() > 0)
