@@ -79,8 +79,8 @@ public class Detection {
 
             if (frame.empty()) throw new RuntimeException("Empty frame");
 
-            //HighGui.imshow("startFrame", debugFrame);
-            //HighGui.waitKey(1);
+            HighGui.imshow("startFrame", debugFrame);
+            HighGui.waitKey(1);
 
             // 1. Find course corner to establish conversion factor
             if (!courseFound) {
@@ -204,7 +204,7 @@ public class Detection {
         Mat binaryFrame = new Mat();
         Imgproc.threshold(frameGray, binaryFrame, lWhiteBall, uWhiteBall, Imgproc.THRESH_BINARY);
 
-        HighGui.imshow("ballMask", binaryFrame);
+        //HighGui.imshow("ballMask", binaryFrame);
 
         // Apply blur for better noise reduction
         Mat frameBlur = new Mat();
