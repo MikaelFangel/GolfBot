@@ -204,11 +204,16 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 	}
 
 	// Busy wait until the robot has completed the rotation or have superseded the given degrees
-	var gyroValStr, _ = gyro.Value(0)
-	var gyroVal, _ = strconv.Atoi(gyroValStr)
-	for math.Abs(float64(gyroVal)) <= math.Abs(float64(in.Degrees)) {
-		gyroValStr, _ = gyro.Value(0)
-		gyroVal, _ = strconv.Atoi(gyroValStr)
+	gyroValStr, err := gyro.Value(0)
+	var gyroVal, _ = strconv.ParseFloat(gyroValStr, 64)
+	for math.Abs(gyroVal) <= math.Abs(float64(in.Degrees)) {
+		gyroValStr, err = gyro.Value(0)
+		gyroVal, _ = strconv.ParseFloat(gyroValStr, 64)
+	}
+
+	// Return if there was a gyro reading error
+	if err != nil {
+		return &pBuff.StatusReply{ReplyMessage: false}, err
 	}
 
 	stopAllMotors(motorRequests)
