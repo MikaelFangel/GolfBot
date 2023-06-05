@@ -4,15 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/ev3go/ev3dev"
-	"google.golang.org/grpc"
 	"log"
-	pBuff "main/proto"
-	"main/util"
 	"math"
 	"net"
 	"strconv"
 	"time"
+
+	"github.com/ev3go/ev3dev"
+	"google.golang.org/grpc"
+
+	pBuff "main/proto"
+	"main/util"
 )
 
 // Motor commands
@@ -181,7 +183,7 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 	var gyroValF = float64(gyroValInt)
 
 	// Target is the degrees left to rotate
-	var target = gyroValF - float64(in.Degrees)
+	var target float64
 
 	// Used to calculate error derivative
 	var lastError = 0.0
