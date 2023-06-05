@@ -52,9 +52,9 @@ func main() {
 // DriveWGyro Rotates the robot given a speed using a gyro. This function has the side effect that it recalibrates the gyro.
 func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pBuff.StatusReply, error) {
 	// PID constant, how much we want to correct errors of each term
-	kp := 2.0
-	ki := 0.5
-	kd := 1.0
+	kp := 0.5
+	ki := 0.25
+	kd := 0.1
 
 	// the running sum of errors
 	integral := 0.0
@@ -251,11 +251,15 @@ func (s *motorServer) RecalibrateGyro(_ context.Context, _ *pBuff.EmptyRequest) 
 	if err != nil {
 		return nil, err
 	}
+	// Sleep before calibration to settle possible vibrations
+	time.Sleep(500 * time.Millisecond)
 
 	// Trigger the recalibration using a mode switch
 	gyro.SetMode("GYRO-CAL")
 	gyro.SetMode("GYRO-ANG")
 
+	// Sleep to ensure recalibration has finished before any other commands are run
+	time.Sleep(500 * time.Millisecond)
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
