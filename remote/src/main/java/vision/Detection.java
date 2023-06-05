@@ -32,16 +32,19 @@ public class Detection {
     private final int minDist = 5; // Minimum distance between balls
     private final int param1 = 20;  // gradient value used in the edge detection
     private final int param2 = 12;  // lower values allow more circles to be detected (false positives)
-    private final int minRadius = 1;  // limits the smallest circle to this size (via radius)
-    private final int maxRadius = 8;  // similarly sets the limit for the largest circles
+    private final int minRadius = 3;  // limits the smallest circle to this size (via radius)
+    private final int maxRadius = 10;  // similarly sets the limit for the largest circles
 
 
     // Color thresholds
     private Scalar lRobot = new Scalar(100, 100, 0);
     private Scalar uRobot = new Scalar(255, 255, 20);
 
-    private int lWhiteBall = 210;
+    private int lWhiteBall = 205;
     private int uWhiteBall = 255;
+
+    private Scalar lOrangeBall = new Scalar(0, 100, 220);
+    private Scalar uOrangeBall = new Scalar(170, 255, 255);
 
     public Detection(int cameraIndex) {
         course = new Course();
@@ -50,6 +53,9 @@ public class Detection {
         OpenCV.loadLocally();
         VideoCapture capture = new VideoCapture();
         capture.open(cameraIndex);
+        capture.set(3, 1024);
+        capture.set(4, 768);
+
         if (!capture.isOpened()) throw new RuntimeException("Camera Capture was not opened");
 
         initializeCourse(capture);
@@ -73,8 +79,8 @@ public class Detection {
 
             if (frame.empty()) throw new RuntimeException("Empty frame");
 
-            HighGui.imshow("startFrame", debugFrame);
-            HighGui.waitKey(1);
+            //HighGui.imshow("startFrame", debugFrame);
+            //HighGui.waitKey(1);
 
             // 1. Find course corner to establish conversion factor
             if (!courseFound) {
@@ -105,6 +111,7 @@ public class Detection {
     }
 
     private void detectCourse(VideoCapture capture) {
+        int i = 0;
         while (true) {
             Mat frame = new Mat(), debugFrame;
             capture.read(frame);
@@ -118,6 +125,8 @@ public class Detection {
 
             HighGui.imshow("frame", debugFrame);
             HighGui.waitKey(1);
+
+            System.out.println(i++);
         }
     }
 
@@ -217,6 +226,8 @@ public class Detection {
 
         if (balls.size() == 0) return false;
 
+        System.out.println(balls.get(0).getCenter());
+
         // Update ball positions
         course.setBalls(balls);
         return true;
@@ -234,13 +245,14 @@ public class Detection {
 
         // Create a mask to seperate the orange ball
         Mat mask = new Mat();
-        Scalar lower = new Scalar(11, 50, 220);
-        Scalar upper = new Scalar(30, 240, 255);
-        Core.inRange(frameHsv, lower, upper, mask);
+        Core.inRange(frameHsv, lOrangeBall, uOrangeBall, mask);
+
+        // Show Mask
+        //HighGui.imshow("orangeMask", mask);
 
         // Apply blur for noise reduction
         Mat frameBlur = new Mat();
-        Imgproc.GaussianBlur(mask, frameBlur, new Size(9,9), 0);
+        Imgproc.GaussianBlur(mask, frameBlur, new Size(7,7), 0);
 
         // Stores orange circles from the HoughCircles algorithm
         Mat orangeball = new Mat();
@@ -270,8 +282,8 @@ public class Detection {
      * @return Returns array of points for the 2 markers.
      */
     public Point[] getRotationCoordsFromFrame(Mat frame) {
-        final int areaLowerThreshold = 60;
-        final int areaUpperThreshold = 350;
+        final int areaLowerThreshold = 100;
+        final int areaUpperThreshold = 1000;
 
         // Transform frame
         Mat frameBlur = new Mat();
@@ -281,7 +293,7 @@ public class Detection {
         Mat mask = new Mat();
         Core.inRange(frameBlur, lRobot, uRobot, mask);
 
-        HighGui.imshow("robotmask", mask);
+        //HighGui.imshow("robotmask", mask);
 
         // Get Contours
         List<MatOfPoint> contours = new ArrayList<>();
