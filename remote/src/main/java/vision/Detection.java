@@ -399,6 +399,8 @@ public class Detection {
             corners[i] = new Point(point.x - offsetX, point.y - offsetY);
         }
 
+        corners = Arrays.stream(corners).sorted((p1,p2) -> (int) ((p1.x+p1.y) - (p2.x+p2.y))).toArray(Point[]::new);
+
         return new BorderSet(corners, new Point(offsetX, offsetY));
     }
 
