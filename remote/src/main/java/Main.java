@@ -1,6 +1,9 @@
 import exceptions.MissingArgumentException;
 import courseObjects.*;
+import vision.Algorithms;
 import vision.detection.DetectionController;
+
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException, MissingArgumentException {
