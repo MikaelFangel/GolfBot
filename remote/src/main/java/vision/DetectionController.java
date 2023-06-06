@@ -1,4 +1,4 @@
-package vision.detection;
+package vision;
 
 import courseObjects.Ball;
 import courseObjects.Course;
@@ -11,6 +11,10 @@ import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
+import vision.detection.BallDetector;
+import vision.detection.BorderDetector;
+import vision.detection.RobotDetector;
+import vision.detection.SubDetector;
 import vision.helperClasses.BorderSet;
 import vision.helperClasses.MaskSet;
 

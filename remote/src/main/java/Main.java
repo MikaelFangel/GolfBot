@@ -1,6 +1,6 @@
 import exceptions.MissingArgumentException;
 import courseObjects.*;
-import vision.detection.DetectionController;
+import vision.DetectionController;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException, MissingArgumentException {
