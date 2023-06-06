@@ -15,8 +15,9 @@ public class BorderDetector implements SubDetector {
     Scalar lower = new Scalar(0, 150, 150);
     Scalar upper = new Scalar(10, 255, 255);
 
-
+    private BorderSet borderSet;
     List<MaskSet> maskSets;
+
     public BorderDetector() {
         maskSets = new ArrayList<>();
     }
@@ -98,6 +99,10 @@ public class BorderDetector implements SubDetector {
         }
 
         return new BorderSet(corners, new Point(offsetX, offsetY));
+    }
+
+    public BorderSet getBorderSet() {
+        return borderSet;
     }
 
     @Override

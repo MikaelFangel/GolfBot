@@ -24,7 +24,9 @@ public class RobotDetector implements SubDetector {
     final int areaUpperThreshold = 1000;
 
 
+    private Robot robot;
     List<MaskSet> maskSets;
+
     public RobotDetector() {
         maskSets = new ArrayList<>();
     }
@@ -101,6 +103,10 @@ public class RobotDetector implements SubDetector {
         coords[1] = new Point(directionCoords);
 
         return coords;
+    }
+
+    public Robot getRobot() {
+        return robot;
     }
 
     @Override

@@ -21,7 +21,7 @@ public class BallDetector implements SubDetector {
     private final int lWhiteBall = 205;
     private final int uWhiteBall = 255;
 
-
+    private List<Ball> balls;
     List<MaskSet> maskSets;
 
     public BallDetector(){
@@ -121,6 +121,10 @@ public class BallDetector implements SubDetector {
 
             balls.add(new Ball(coords, Color.ORANGE));
         }
+    }
+
+    public List<Ball> getBalls() {
+        return balls;
     }
 
     @Override

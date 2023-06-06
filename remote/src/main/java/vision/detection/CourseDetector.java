@@ -5,10 +5,12 @@ import courseObjects.Course;
 import courseObjects.Robot;
 import nu.pattern.OpenCV;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
 import org.opencv.highgui.HighGui;
+import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
-import vision.helperClasses.BorderSet;
 import vision.helperClasses.MaskSet;
 
 import java.util.List;
@@ -20,11 +22,6 @@ public class CourseDetector {
     private BorderDetector borderDetector;
     private RobotDetector robotDetector;
     private List<SubDetector> subDetectors;
-
-    // All values in these are stored as pixel values
-    private BorderSet borderSet;
-    private Robot robot;
-    private List<Ball> balls;
 
 
     public CourseDetector(Course course, int cameraIndex){
@@ -67,13 +64,13 @@ public class CourseDetector {
             if (frame.empty()) throw new RuntimeException("Empty frame");
 
             // 1. Find corners of course to setup relative coordinates
-            borderSet = borderDetector.detectBorder(frame);
+            borderDetector.detectBorder(frame);
 
             // 2. Find robot before we drive
-            robot = robotDetector.detectRobot(frame);
+            robotDetector.detectRobot(frame);
 
             // 3. Find balls before we drive
-            balls = ballDetector.detectBalls(frame);
+            ballDetector.detectBalls(frame);
 
             // Display Frame to verify camera is positioned correctly and objects are seen.
 
@@ -87,9 +84,9 @@ public class CourseDetector {
             capture.read(frame);
 
             // Get Objects (in pixel values)
-            borderSet = borderDetector.detectBorder(frame);
-            robot = robotDetector.detectRobot(frame);
-            balls = ballDetector.detectBalls(frame);
+            borderDetector.detectBorder(frame);
+            robotDetector.detectRobot(frame);
+            ballDetector.detectBalls(frame);
 
             // Correct Objects
             correctObjects();
@@ -99,6 +96,12 @@ public class CourseDetector {
 
             // Debug Overlay
             showOverlay();
+
+            // Show Masks
+            showMasks();
+
+            // Set frame rate
+            HighGui.waitKey(frameDelay);
         }
     }
 
@@ -112,19 +115,52 @@ public class CourseDetector {
 
     private void showOverlay() {
         // Mark objects on Overlay
+        createOverlay();
 
         // Display overlay
         HighGui.imshow("overlay", frame);
+    }
 
+    private void createOverlay() {
+        Scalar cornerColor = new Scalar(0, 255, 0);
+        Scalar robotMarkerColor = new Scalar(255, 0, 255);
+        Scalar ballColor = new Scalar(255, 255, 0);
 
-        // Display all Masks
+        Point[] corners = borderDetector.getBorderSet().getCorrectCoords();
+        Robot robot = robotDetector.getRobot();
+        List<Ball> balls = ballDetector.getBalls();
+
+        overlayFrame = frame; // Create overlay frame
+
+        // Draw Corners
+        for (Point corner : corners)
+            Imgproc.circle(overlayFrame, corner, 2, cornerColor, 3);
+
+        // Draw Robot Markers
+        if (robot != null) {
+            Imgproc.circle(overlayFrame, robot.getCenter(), 5, robotMarkerColor, 2);
+            Imgproc.circle(overlayFrame, robot.getFront(), 4, robotMarkerColor, 2);
+            Imgproc.line(overlayFrame, robot.getCenter(), robot.getFront(), robotMarkerColor, 2);
+        }
+
+        // Draw Balls
+        for (Ball ball : balls) {
+            Imgproc.circle(overlayFrame, ball.getCenter(), 4, ballColor, 1);
+        }
+
+        // Draw Lines between robot and balls
+        if (robot != null && balls.size() > 0) {
+            for (Ball ball : balls) {
+                Imgproc.line(overlayFrame, robot.getCenter(), ball.getCenter(), ballColor, 1);
+            }
+        }
+    }
+
+    private void showMasks() {
         for (SubDetector subDetector : subDetectors) {
             for (MaskSet maskSet : subDetector.getMaskSets()) {
                 HighGui.imshow(maskSet.getMaskName(), maskSet.getMask());
             }
         }
-
-        // Set frame rate
-        HighGui.waitKey(frameDelay);
     }
 }
