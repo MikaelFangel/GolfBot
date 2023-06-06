@@ -50,11 +50,22 @@ func main() {
 }
 
 // DriveWGyro Rotates the robot given a speed using a gyro. This function has the side effect that it recalibrates the gyro.
-func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pBuff.StatusReply, error) {
-	// PID constant, how much we want to correct errors of each term
+func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DrivePIDRequest) (*pBuff.StatusReply, error) {
+	// PID values that have been previously successful
 	kp := 0.5
 	ki := 0.25
 	kd := 0.1
+
+	// Change the values to the user input if provided
+	switch {
+	case in.Kp != nil:
+		kp = float64(*in.Kp)
+	case in.Ki != nil:
+		ki = float64(*in.Ki)
+	case in.Kd != nil:
+		kd = float64(*in.Kd)
+
+	}
 
 	// the running sum of errors
 	integral := 0.0
@@ -76,7 +87,7 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pB
 	if err != nil {
 		return nil, err
 	}
-	for i := 0; i < 12; i++ {
+	for i := 0; i < int(in.Distance); i++ {
 
 		// Read gyro values, eg. the current error
 		gyroValStr, _ := gyro.Value(0)
@@ -123,9 +134,6 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pB
 		if err != nil {
 			return status, err
 		}
-
-		// Run the motors with these settings for 0.4 second then adjust
-		time.Sleep(400 * time.Millisecond)
 	}
 
 	stopAllMotors(motorRequests)

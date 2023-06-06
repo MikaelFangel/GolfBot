@@ -42,10 +42,13 @@ public class RobotController {
         MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
                 new MotorPair(OutPort.D, speed));
 
-        DriveRequest driveRequest = DriveRequest.newBuilder()
+        DrivePIDRequest driveRequest = DrivePIDRequest.newBuilder()
                 .setMotors(motorsRequest)
                 .setDistance((float) distance) // Note: Currently not used on the robot
                 .setSpeed(speed) // This speed worked well, other speeds could be researched
+                .setKp(0.5f)
+                .setKi(0.25f)
+                .setKd(0.1f)
                 .build();
 
         CLIENT.driveWGyro(driveRequest);
