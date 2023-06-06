@@ -49,8 +49,8 @@ func main() {
 	}
 }
 
-// DriveWGyro Rotates the robot given a speed using a gyro. This function has the side effect that it recalibrates the gyro.
-func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pBuff.StatusReply, error) {
+// DriveWGyro Rotates the robot given a speed using the gyro. This function has the side effect that it recalibrates the gyro.
+func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
 	// PID constant, how much we want to correct errors of each term
 	kp := 0.5
 	ki := 0.25
@@ -65,17 +65,23 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pB
 	// Prepare the motors for running
 	var motorRequests []motorRequest
 
+	// Begin stream from client
+	driveRequest, _ := in.Recv()
+
+	distance := int(driveRequest.Distance)
+
 	// Change speed value if distance is negative
-	speed := -int(in.Speed)
-	if in.Speed < 0 {
+	speed := -int(driveRequest.Speed)
+	if speed < 0 {
 		speed *= -1
 	}
 
-	// TODO: For testing purposes run until i < 20, but should be until length to target <= 0. Research RPC client streaming
 	gyro, err := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
 	if err != nil {
-		return nil, err
+		return err
 	}
+
+	// TODO: For testing purposes run until i < 20, but should be until length to target <= 0. Research RPC client streaming
 	for distance > 0 {
 		println("Distance ", distance)
 		var message, _ = in.Recv()
@@ -86,6 +92,7 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pB
 		gyroErr, _ := strconv.ParseFloat(gyroValStr, 64)
 		integral += gyroErr
 
+		// Error derivative try to predict the next error from the previous error
 		derivative := gyroErr - lastError
 		lastError = gyroErr
 

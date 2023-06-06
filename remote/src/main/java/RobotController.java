@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 public class RobotController {
     private final ManagedChannel CHANNEL;
     private final MotorsGrpc.MotorsBlockingStub CLIENT;
+    private final MotorsGrpc.MotorsStub ASYNCCLIENT;
 
     private final int DEFAULT_SPEED = 100;
 
@@ -22,6 +23,7 @@ public class RobotController {
     public RobotController(String ip_port) {
         CHANNEL = Grpc.newChannelBuilder(ip_port, InsecureChannelCredentials.create()).build();
         CLIENT = MotorsGrpc.newBlockingStub(CHANNEL);
+        ASYNCCLIENT = MotorsGrpc.newStub(CHANNEL);
     }
 
     /**
@@ -38,17 +40,71 @@ public class RobotController {
      * @throws RuntimeException if the robot was not reached
      */
     public void driveWGyro(double distance) throws RuntimeException {
-        int speed = 250;
+        int speed = -200;
         MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
                 new MotorPair(OutPort.D, speed));
 
-        DriveRequest driveRequest = DriveRequest.newBuilder()
-                .setMotors(motorsRequest)
-                .setDistance((float) distance) // Note: Currently not used on the robot
-                .setSpeed(speed) // This speed worked well, other speeds could be researched
-                .build();
+        final CountDownLatch finishLatch = new CountDownLatch(1);
 
-        CLIENT.driveWGyro(driveRequest);
+        StreamObserver<StatusReply> responseObserver = new StreamObserver<>() {
+            @Override
+            public void onNext(StatusReply statusReply) {
+                System.out.println("Ok " + statusReply.getReplyMessage());
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                System.out.println("Something failed...!" + Status.fromThrowable(t));
+                finishLatch.countDown();
+            }
+
+            @Override
+            public void onCompleted() {
+                System.out.println("Finished");
+                finishLatch.countDown();
+            }
+        };
+
+        StreamObserver<DriveRequest> requestObserver = ASYNCCLIENT.driveWGyro(responseObserver);
+        try {
+            // Countdown distance, simulates distance to target.
+            for (int i = 10; i >= 0; --i) {
+
+                DriveRequest drivePIDRequest = DriveRequest.newBuilder()
+                        .setMotors(motorsRequest)
+                        .setDistance((float) i) // Note: Currently not used on the robot
+                        .setSpeed(speed) // This speed worked well, other speeds could be researched
+                        .build();
+
+                requestObserver.onNext(drivePIDRequest);
+                System.out.println("Send distance value " + i);
+                // Sleep for a bit before sending the next one.
+                Thread.sleep(700);
+                if (finishLatch.getCount() == 0) {
+                    // RPC completed or errored before we finished sending.
+                    // Sending further requests won't error, but they will just be thrown away.
+                    return;
+                }
+            }
+        } catch (RuntimeException e) {
+            // Cancel RPC
+            requestObserver.onError(e);
+            throw e;
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        // Mark the end of requests
+        requestObserver.onCompleted();
+
+        try {
+            // Receiving happens asynchronously
+            if (!finishLatch.await(1, TimeUnit.MINUTES)) {
+                System.out.println("recordRoute can not finish within 1 minutes");
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     /**
