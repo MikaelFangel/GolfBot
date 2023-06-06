@@ -23,8 +23,10 @@ public class BorderDetector implements SubDetector {
         maskSets = new ArrayList<>();
     }
 
-    public void detectBorder(Mat frame) {
+    public boolean detectBorder(Mat frame) {
         borderSet = getBorderFromFrame(frame);
+
+        return borderSet != null;
     }
 
     /**
@@ -105,10 +107,6 @@ public class BorderDetector implements SubDetector {
             Point temp = sortedCorners.get(1);
             sortedCorners.set(1, sortedCorners.get(2));
             sortedCorners.set(2, temp);
-        }
-
-        for (Point corner : sortedCorners){
-            System.out.println(sortedCorners);
         }
 
         return new BorderSet(sortedCorners.toArray(Point[]::new), new Point(offsetX, offsetY));

@@ -29,11 +29,13 @@ public class BallDetector implements SubDetector {
         balls = new ArrayList<>();
     }
 
-    public void detectBalls(Mat frame) {
+    public boolean detectBalls(Mat frame) {
         balls = new ArrayList<>();
 
         findWhiteBalls(frame, balls);
         //findOrangeBalls(frame, balls);
+
+        return !balls.isEmpty();
     }
 
 

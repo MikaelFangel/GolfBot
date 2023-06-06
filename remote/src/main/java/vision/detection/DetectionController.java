@@ -20,7 +20,7 @@ import static vision.math.Geometry.distanceBetweenTwoPoints;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CourseDetector {
+public class DetectionController {
     private final int frameDelay = 1;
     protected Mat frame, overlayFrame;
     private BallDetector ballDetector;
@@ -32,7 +32,7 @@ public class CourseDetector {
     private final boolean showMasks;
     private final Course course;
 
-    public CourseDetector(Course course, int cameraIndex, boolean showMasks){
+    public DetectionController(Course course, int cameraIndex, boolean showMasks){
         this.showMasks = showMasks;
         this.course = course;
 
@@ -60,63 +60,90 @@ public class CourseDetector {
         subDetectors.add(borderDetector);
 
         // Run setup to get initial objects
-        // TODO runDetectionSetup(capture);
+        runDetectionSetup(capture); // Blocks until the course has all objects
 
-        // Run background detection
-        Thread backgroundThread = new Thread(() -> detectCourse(capture));
-        backgroundThread.start();
+        // Start background detection
+        startBackgroundDetection(capture);
     }
 
     private void runDetectionSetup(VideoCapture capture) {
+        boolean borderFound = false, robotFound = false, ballFound = false;
+
+        System.out.println("Starting Setup");
+
         while (true) {
-            // Read frame
+            // Grab frame
             frame = new Mat();
             capture.read(frame);
-
-            // Throw Exception if frames are empty. Should only happen if something is truly wrong
-            if (frame.empty()) throw new RuntimeException("Empty frame");
-
-            // 1. Find corners of course to setup relative coordinates
-            borderDetector.detectBorder(frame);
-
-            // 2. Find robot before we drive
-            robotDetector.detectRobot(frame);
-
-            // 3. Find balls before we drive
-            ballDetector.detectBalls(frame);
-
-            // Display Frame to verify camera is positioned correctly and objects are seen.
-
-        }
-
-    }
-
-    private void detectCourse(VideoCapture capture) {
-        while (true) {
-            frame = new Mat();
-            capture.read(frame);
-
-            // Get Objects (in pixel values)
-            borderDetector.detectBorder(frame);
-            robotDetector.detectRobot(frame);
-            ballDetector.detectBalls(frame);
-
-            // Correct Objects
-            correctObjects(); // TODO
-
-            // Push to course
-            updateCourse(); // TODO
 
             // Debug Overlay
             showOverlay();
-
-            // Show Masks
-            if (showMasks)
-                showMasks();
-
-            // Set frame rate
             HighGui.waitKey(frameDelay);
+
+            // Run sub detectors. To get objects in neccessary order
+            if (!borderFound) {
+                borderFound = borderDetector.detectBorder(frame);
+                if (!borderFound) continue;
+
+                System.out.println("Found Corners");
+            }
+
+
+            if (!robotFound) {
+                robotFound = robotDetector.detectRobot(frame);
+                if (!robotFound) continue;
+
+                System.out.println("Found Robot");
+            }
+
+            if (!ballFound) {
+                ballFound = ballDetector.detectBalls(frame);
+                if (!ballFound) continue;
+
+                System.out.println("Found least a ball");
+            }
+
+            // Exit when all objects are found
+            System.out.println("Exiting Setup");
+            break;
         }
+    }
+
+    private void startBackgroundDetection(VideoCapture capture) {
+        System.out.println("Start Background Detection");
+
+        Thread backgroundThread = new Thread(() -> {
+            while (true)
+                detectCourse(capture);
+        });
+        backgroundThread.start();
+    }
+
+    private void detectCourse(VideoCapture capture) {
+        // Grab frame
+        frame = new Mat();
+        capture.read(frame);
+
+        // Run sub detectors. They store the objects
+        borderDetector.detectBorder(frame);
+        robotDetector.detectRobot(frame);
+        ballDetector.detectBalls(frame);
+
+        // Correct Objects
+        correctObjects();
+
+        // Push to course
+        updateCourse();
+
+        // Debug Overlay
+        showOverlay();
+
+        // Show Masks
+        if (showMasks)
+            showMasks();
+
+        // Set frame rate
+        HighGui.waitKey(frameDelay);
     }
 
     private void correctObjects() {
