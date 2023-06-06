@@ -141,7 +141,7 @@ public class Detection {
         if (borderSet == null) return false;
 
         // Get camera coordinates
-        Point[] cornerCoords = borderSet.getCorrectCoords();
+        Point[] cornerCoords = borderSet.getCoords();
 
 
         topLeft = new Point(cornerCoords[0].x, cornerCoords[0].y);

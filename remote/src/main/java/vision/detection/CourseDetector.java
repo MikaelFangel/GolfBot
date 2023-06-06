@@ -14,6 +14,7 @@ import org.opencv.videoio.Videoio;
 import vision.helperClasses.BorderSet;
 import vision.helperClasses.MaskSet;
 
+import static vision.math.Geometry.angleBetweenTwoPoints;
 import static vision.math.Geometry.distanceBetweenTwoPoints;
 
 import java.util.ArrayList;
@@ -122,11 +123,69 @@ public class CourseDetector {
         // TODO nothing yet to do.
     }
 
+
+    private Point[] corners;
+    private double conversionFactor = 0; // Dummy value
+    private Point pixelOffset;
     private void updateCourse() {
-        // Find conversion factor to translate units
+        if (borderDetector.getBorderSet() != null) {
+            // Find conversion factor to translate units from pixel to CM
+            corners = borderDetector.getBorderSet().getCoords();
+            Point topLeft = corners[0];
+            Point topRight = corners[1];
 
+            conversionFactor = course.length / distanceBetweenTwoPoints(topLeft.x, topLeft.y, topRight.x, topRight.y);
+            pixelOffset = borderDetector.getBorderSet().getOrigin();
+        }
 
+        if (corners == null) return; // Cant calculate if these are null
+
+        updateCourseCorners();
+        updateCourseRobot();
+        updateCourseBalls();
     }
+
+    private void updateCourseCorners() {
+        // Set Course corners in CM
+        Point[] convertedCorners = corners;
+        for (int i = 0; i < corners.length; i++) {
+            Point corner = corners[i];
+            convertedCorners[i] = convertPixelPointToCmPoint(corner, pixelOffset);
+        }
+
+        course.setTopLeft(convertedCorners[0]);
+        course.setTopRight(convertedCorners[1]);
+        course.setBottomLeft(convertedCorners[2]);
+        course.setBottomRight(convertedCorners[3]);
+    }
+
+    private void updateCourseRobot() {
+        Robot robot = robotDetector.getRobot();
+
+        Point correctedCenter = convertPixelPointToCmPoint(robot.getCenter(), pixelOffset);
+        Point correctedFront = convertPixelPointToCmPoint(robot.getFront(), pixelOffset);
+        double correctedAngle = angleBetweenTwoPoints(correctedCenter.x, correctedCenter.y, correctedFront.x, correctedFront.y);
+
+        Robot correctedRobot = new Robot(correctedCenter, correctedFront, correctedAngle);
+        course.setRobot(correctedRobot);
+    }
+
+    private void updateCourseBalls() {
+        List<Ball> balls = ballDetector.getBalls();
+
+        List<Ball> correctedBalls = new ArrayList<>();
+        for (Ball ball : balls) {
+            Point correctedCenter = convertPixelPointToCmPoint(ball.getCenter(), pixelOffset);
+
+            Ball correctedBall = new Ball(correctedCenter, ball.getColor());
+            correctedBalls.add(correctedBall);
+        }
+    }
+
+    private Point convertPixelPointToCmPoint(Point point, Point pixelOffset) {
+        return new Point((point.x - pixelOffset.x) * conversionFactor, (point.y - pixelOffset.y) * conversionFactor);
+    }
+
 
     private void showOverlay() {
         // Mark objects on Overlay
@@ -144,7 +203,7 @@ public class CourseDetector {
         Point[] corners = null;
         BorderSet borderSet = borderDetector.getBorderSet();
         if (borderSet != null)
-            corners = borderSet.getCorrectCoords();
+            corners = borderSet.getCoords();
 
         Robot robot = robotDetector.getRobot();
         List<Ball> balls = ballDetector.getBalls();

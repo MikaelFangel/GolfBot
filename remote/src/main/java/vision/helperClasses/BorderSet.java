@@ -3,23 +3,23 @@ package vision.helperClasses;
 import org.opencv.core.Point;
 
 public class BorderSet {
-    private Point[] correctCoords;
+    private Point[] coords;
     private Point origin;
 
-    public BorderSet(Point[] correctCoords, Point origin) {
-        this.correctCoords = correctCoords;
+    public BorderSet(Point[] coords, Point origin) {
+        this.coords = coords;
         this.origin = origin;
     }
 
-    public void setCorrectCoords(Point[] correctCoords) {
-        this.correctCoords = correctCoords;
+    public void setCoords(Point[] coords) {
+        this.coords = coords;
     }
 
     /**
      * @return list of length 4 in order {TopLeft, TopRight, BottomLeft, BottomRight}
      */
-    public Point[] getCorrectCoords() {
-        return correctCoords;
+    public Point[] getCoords() {
+        return coords;
     }
 
     public void setOrigin(Point origin) {
