@@ -11,8 +11,10 @@ import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
+import vision.helperClasses.BorderSet;
 import vision.helperClasses.MaskSet;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CourseDetector {
@@ -24,7 +26,13 @@ public class CourseDetector {
     private List<SubDetector> subDetectors;
 
 
-    public CourseDetector(Course course, int cameraIndex){
+    private final boolean showMasks;
+    private final Course course;
+
+    public CourseDetector(Course course, int cameraIndex, boolean showMasks){
+        this.showMasks = showMasks;
+        this.course = course;
+
         // Initialize OpenCV
         OpenCV.loadLocally();
 
@@ -42,19 +50,21 @@ public class CourseDetector {
         ballDetector = new BallDetector();
         robotDetector = new RobotDetector();
         borderDetector = new BorderDetector();
+
+        subDetectors = new ArrayList<>();
         subDetectors.add(ballDetector);
         subDetectors.add(robotDetector);
         subDetectors.add(borderDetector);
 
         // Run setup to get initial objects
-        runDetectionSetup(capture);
+        // TODO runDetectionSetup(capture);
 
         // Run background detection
         Thread backgroundThread = new Thread(() -> detectCourse(capture));
         backgroundThread.start();
     }
 
-    public void runDetectionSetup(VideoCapture capture) {
+    private void runDetectionSetup(VideoCapture capture) {
         while (true) {
             // Read frame
             frame = new Mat();
@@ -78,7 +88,7 @@ public class CourseDetector {
 
     }
 
-    public void detectCourse(VideoCapture capture) {
+    private void detectCourse(VideoCapture capture) {
         while (true) {
             frame = new Mat();
             capture.read(frame);
@@ -89,16 +99,17 @@ public class CourseDetector {
             ballDetector.detectBalls(frame);
 
             // Correct Objects
-            correctObjects();
+            correctObjects(); // TODO
 
             // Push to course
-            updateCourse();
+            updateCourse(); // TODO
 
             // Debug Overlay
             showOverlay();
 
             // Show Masks
-            showMasks();
+            if (showMasks)
+                showMasks();
 
             // Set frame rate
             HighGui.waitKey(frameDelay);
@@ -126,15 +137,20 @@ public class CourseDetector {
         Scalar robotMarkerColor = new Scalar(255, 0, 255);
         Scalar ballColor = new Scalar(255, 255, 0);
 
-        Point[] corners = borderDetector.getBorderSet().getCorrectCoords();
+        Point[] corners = null;
+        BorderSet borderSet = borderDetector.getBorderSet();
+        if (borderSet != null)
+            corners = borderSet.getCorrectCoords();
+
         Robot robot = robotDetector.getRobot();
         List<Ball> balls = ballDetector.getBalls();
 
         overlayFrame = frame; // Create overlay frame
 
         // Draw Corners
-        for (Point corner : corners)
-            Imgproc.circle(overlayFrame, corner, 2, cornerColor, 3);
+        if (corners != null)
+            for (Point corner : corners)
+                Imgproc.circle(overlayFrame, corner, 2, cornerColor, 3);
 
         // Draw Robot Markers
         if (robot != null) {

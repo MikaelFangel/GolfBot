@@ -31,15 +31,18 @@ public class RobotDetector implements SubDetector {
         maskSets = new ArrayList<>();
     }
 
-    public Robot detectRobot(Mat frame) {
+    public void detectRobot(Mat frame) {
         Point[] markers = getRobotMarkers(frame);
-        Point center = markers[0];
-        Point front = markers[1];
 
-        // Calculate angle of the robot
-        double robotAngle = angleBetweenTwoPoints(center.x, center.y, front.x, front.y);
+        if (markers != null) {
+            Point center = markers[0];
+            Point front = markers[1];
 
-        return new Robot(markers[0], markers[1], robotAngle);
+            // Calculate angle of the robot
+            double robotAngle = angleBetweenTwoPoints(center.x, center.y, front.x, front.y);
+
+            robot = new Robot(markers[0], markers[1], robotAngle);
+        }
     }
 
     public Point[] getRobotMarkers(Mat frame) {
@@ -69,7 +72,7 @@ public class RobotDetector implements SubDetector {
         }
 
         // Exit if there are not two coordinates
-        if (contourSets.size() < 2) return new Point[]{};
+        if (contourSets.size() < 2) return null;
 
         // ! Find coords of markers !
         double[] centerCoords = {-1, -1}, directionCoords = {-1, -1};

@@ -22,9 +22,8 @@ public class BorderDetector implements SubDetector {
         maskSets = new ArrayList<>();
     }
 
-    public BorderSet detectBorder(Mat frame) {
-        BorderSet borderSet = getBorderFromFrame(frame);
-        return borderSet;
+    public void detectBorder(Mat frame) {
+        borderSet = getBorderFromFrame(frame);
     }
 
     /**

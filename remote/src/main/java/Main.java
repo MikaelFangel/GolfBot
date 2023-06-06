@@ -1,6 +1,7 @@
 import exceptions.MissingArgumentException;
 import courseObjects.*;
 import vision.*;
+import vision.detection.CourseDetector;
 
 import java.util.Scanner;
 
@@ -15,25 +16,7 @@ public class Main {
         RobotController controller = new RobotController(args[0]); // Args[0] being and IP address
 
         int cameraIndex = 2;
-        Detection detection = new Detection(cameraIndex);
-        Course course = detection.getCourse();
-
-        Ball closestBall = findClosestBall(course.getBalls(), course.getRobot());
-        if (closestBall == null) return;
-
-        double angle = findRobotsAngleToBall(course.getRobot(), closestBall);
-        double distance = findRobotsDistanceToBall(course.getRobot(), closestBall);
-        System.out.println("Driving distance: " + distance + "with angle: " + angle);
-
-
-        Scanner scan  = new Scanner(System.in);
-        System.out.println("Press ENTER to trigger robot");
-        scan.nextLine();
-
-        controller.rotate(angle);
-        Thread.sleep(5000); // Find better way.
-        controller.driveStraight(distance);
-
-        controller.stopController();
+        Course course = new Course();
+        CourseDetector courseDetector = new CourseDetector(course, cameraIndex, true);
     }
 }

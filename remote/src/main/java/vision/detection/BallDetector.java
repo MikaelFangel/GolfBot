@@ -26,15 +26,14 @@ public class BallDetector implements SubDetector {
 
     public BallDetector(){
         maskSets = new ArrayList<>();
+        balls = new ArrayList<>();
     }
 
-    public List<Ball> detectBalls(Mat frame) {
-        List<Ball> balls = new ArrayList<>();
+    public void detectBalls(Mat frame) {
+        balls = new ArrayList<>();
 
         findWhiteBalls(frame, balls);
         //findOrangeBalls(frame, balls);
-
-        return balls;
     }
 
 
