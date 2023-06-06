@@ -8,38 +8,36 @@ import vision.helperClasses.MaskSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 
 public class BorderDetector implements SubDetector {
-
     // Red color thresholds
-    Scalar lower = new Scalar(0, 0, 180);
-    Scalar upper = new Scalar(100, 100, 255);
+    private final Scalar lower = new Scalar(0, 0, 180);
+    private final Scalar upper = new Scalar(100, 100, 255);
 
     private BorderSet borderSet;
-    List<MaskSet> maskSets;
+    private final List<MaskSet> maskSets = new ArrayList<>();;
 
-    public BorderDetector() {
-        maskSets = new ArrayList<>();
-    }
-
+    /**
+     * Detects the border from the frame and stores the objects in its own objects.
+     * @param frame The frame to be detected.
+     * @return a boolean symbolizing if objects were found or not.
+     */
     public boolean detectBorder(Mat frame) {
-        borderSet = getBorderFromFrame(frame);
+        this.borderSet = getBorderFromFrame(frame);
 
         return borderSet != null;
     }
 
     /**
-     * Returns the coordinates of the border of the course.
+     * Finds the border and calculates the corners from an approximation of line intersections.
      * @param frame to be evaluated
-     * @return null if there are not found exactly 4 lines, else the 4 coordinates of the border intersections.
+     * @return A BorderSet with the border corners and the offset from the camera.
      */
     private  BorderSet getBorderFromFrame(Mat frame) {
         Mat maskRed = new Mat();
         Mat frameCourse = new Mat();
         Mat frameGray = new Mat();
         Mat frameBlur = new Mat();
-
 
         // Remove everything from frame except border (which is red)
         Core.inRange(frame, lower, upper, maskRed);

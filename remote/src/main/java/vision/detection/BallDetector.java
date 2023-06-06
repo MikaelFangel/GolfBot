@@ -22,24 +22,6 @@ public class BallDetector implements SubDetector {
     private final int lWhiteBall = 205;
     private final int uWhiteBall = 255;
 
-    private List<Ball> balls;
-    List<MaskSet> maskSets;
-
-    public BallDetector(){
-        maskSets = new ArrayList<>();
-        balls = new ArrayList<>();
-    }
-
-    public boolean detectBalls(Mat frame) {
-        balls = new ArrayList<>();
-
-        findWhiteBalls(frame, balls);
-        //findOrangeBalls(frame, balls);
-
-        return !balls.isEmpty();
-    }
-
-
     // HoughCircles parameters. These configurations works okay with the current course setup (Most likely pixel values)
     private final int dp = 1; // Don't question or change
     private final int minDist = 5; // Minimum distance between balls
@@ -48,6 +30,22 @@ public class BallDetector implements SubDetector {
     private final int minBallRadius = 3;  // limits the smallest circle to this size (via radius) on camera feed
     private final int maxBallRadius = 10;  // similarly sets the limit for the largest circles on camera feed
 
+    private List<Ball> balls = new ArrayList<>();
+    List<MaskSet> maskSets = new ArrayList<>();
+
+    /**
+     * Detects the balls on the frame
+     * @param frame the frame to evaluated
+     * @return A boolean symbolizing if balls were found or not
+     */
+    public boolean detectBalls(Mat frame) {
+        balls = new ArrayList<>();
+
+        findWhiteBalls(frame, balls);
+        //findOrangeBalls(frame, balls);
+
+        return !balls.isEmpty();
+    }
 
     /**
      * Updates the balls argument with the white balls found on the frame.

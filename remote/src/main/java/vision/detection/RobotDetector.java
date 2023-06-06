@@ -25,15 +25,17 @@ public class RobotDetector implements SubDetector {
 
 
     private Robot robot;
-    List<MaskSet> maskSets;
+    List<MaskSet> maskSets = new ArrayList<>();
 
-    public RobotDetector() {
-        maskSets = new ArrayList<>();
-    }
-
+    /**
+     * Detects the robot from the frame and stores it in the objects
+     * @param frame The frame to be evaluated.
+     * @return a boolean symbolizing if the robot was found or not.
+     */
     public boolean detectRobot(Mat frame) {
         Point[] markers = getRobotMarkers(frame);
 
+        // Store robot if robot markers were found
         if (markers != null) {
             Point center = markers[0];
             Point front = markers[1];
@@ -47,6 +49,11 @@ public class RobotDetector implements SubDetector {
         return robot != null;
     }
 
+    /**
+     * Finds the coordinates of the robots marker from the frame
+     * @param frame The frame to be evaluated
+     * @return Return a Point array of length always 2, or null if not found
+     */
     public Point[] getRobotMarkers(Mat frame) {
         // Blur frame to smooth out color inconsistencies
         Mat frameBlur = new Mat();

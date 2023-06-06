@@ -267,7 +267,7 @@ public class DetectionController {
     }
 
     /**
-     * Puts an overlay frame to the display pile.
+     * Draws an overlay on the frame and puts it in the display pile.
      */
     private Mat createOverlay() {
         // Define colors for different objects
@@ -275,23 +275,19 @@ public class DetectionController {
         Scalar robotMarkerColor = new Scalar(255, 0, 255); // Magenta
         Scalar ballColor = new Scalar(255, 255, 0); // Cyan
 
-        // Get corners of the course
+        Mat overlayFrame = this.frame.clone();
+
+        // Draw Corners
         BorderSet borderSet = this.borderDetector.getBorderSet();
         Point[] corners = borderSet != null ? borderSet.getCoords() : null;
 
-        // Get other objects
-        Robot robot = this.robotDetector.getRobot();
-        List<Ball> balls = this.ballDetector.getBalls();
-
-        // Begin drawing on frame
-        Mat overlayFrame = this.frame.clone(); // Create overlay frame
-
-        // Draw Corners
         if (corners != null)
             for (Point corner : corners)
                 Imgproc.circle(overlayFrame, corner, 2, cornerColor, 3);
 
         // Draw Robot Markers
+        Robot robot = this.robotDetector.getRobot();
+
         if (robot != null) {
             Imgproc.circle(overlayFrame, robot.getCenter(), 5, robotMarkerColor, 2);
             Imgproc.circle(overlayFrame, robot.getFront(), 4, robotMarkerColor, 2);
@@ -299,20 +295,23 @@ public class DetectionController {
         }
 
         // Draw Balls
+        List<Ball> balls = this.ballDetector.getBalls();
+
         for (Ball ball : balls) {
             Imgproc.circle(overlayFrame, ball.getCenter(), 4, ballColor, 1);
-        }
 
-        // Draw Lines between robot and balls
-        if (robot != null && balls.size() > 0) {
-            for (Ball ball : balls) {
+            // Draw Lines between robot and balls
+            if (robot != null)
                 Imgproc.line(overlayFrame, robot.getCenter(), ball.getCenter(), ballColor, 1);
-            }
         }
 
         return overlayFrame;
     }
 
+    /**
+     * Adds the different masks to the display pile.
+     * Debugging Tool
+     */
     private void showMasks() {
         for (SubDetector subDetector : this.subDetectors) {
             for (MaskSet maskSet : subDetector.getMaskSets()) {
