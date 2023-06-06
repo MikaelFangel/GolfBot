@@ -51,9 +51,9 @@ public class DetectionController {
      * @param cameraIndex The camera index of intended camera (computer specific).
      * @param showMasks Only needed for debugging masks. If true, displays mask windows.
      */
-    public DetectionController(Course course, int cameraIndex, boolean showMasks) {
+    public DetectionController(int cameraIndex, boolean showMasks) {
         this.showMasks = showMasks;
-        this.course = course;
+        this.course = new Course();
 
         // Initialize OpenCV
         OpenCV.loadLocally();
@@ -69,9 +69,9 @@ public class DetectionController {
         if (!capture.isOpened()) throw new RuntimeException("Camera Capture was not opened");
 
         // Add detectors to list
-        this.subDetectors.add(ballDetector);
-        this.subDetectors.add(robotDetector);
-        this.subDetectors.add(borderDetector);
+        subDetectors.add(ballDetector);
+        subDetectors.add(robotDetector);
+        subDetectors.add(borderDetector);
 
         // Run setup to get initial objects
         runDetectionSetup(capture);
@@ -90,33 +90,35 @@ public class DetectionController {
 
         while (true) {
             frame = new Mat();
-            capture.read(this.frame);
+            capture.read(frame);
 
             // Display frame in popup window
             showOverlay();
-            HighGui.waitKey(this.refreshRate);
+            HighGui.waitKey(refreshRate);
 
             // Run sub detectors. To get objects in necessary order
             if (!borderFound) {
-                borderFound = this.borderDetector.detectBorder(this.frame);
+                borderFound = borderDetector.detectBorder(frame);
                 if (!borderFound) continue;
 
                 System.out.println("Found Corners");
             }
 
             if (!robotFound) {
-                robotFound = this.robotDetector.detectRobot(this.frame);
+                robotFound = robotDetector.detectRobot(frame);
                 if (!robotFound) continue;
 
                 System.out.println("Found Robot");
             }
 
             if (!ballFound) {
-                ballFound = this.ballDetector.detectBalls(this.frame);
+                ballFound = ballDetector.detectBalls(frame);
                 if (!ballFound) continue;
 
                 System.out.println("Found least a ball");
             }
+
+            updateCourse();
 
             // Exit when all objects are found
             System.out.println("Exiting Setup");
@@ -148,23 +150,23 @@ public class DetectionController {
     private void detectCourse(VideoCapture capture) {
         // Grab frame
         frame = new Mat();
-        capture.read(this.frame);
+        capture.read(frame);
 
         // Run sub detectors. They store the objects
-        this.borderDetector.detectBorder(this.frame);
-        this.robotDetector.detectRobot(this.frame);
-        this.ballDetector.detectBalls(this.frame);
+        borderDetector.detectBorder(frame);
+        robotDetector.detectRobot(frame);
+        ballDetector.detectBalls(frame);
 
         correctObjects();
         updateCourse();
         showOverlay();
 
         // Display masks for debugging
-        if (this.showMasks)
+        if (showMasks)
             showMasks();
 
         // Open all window pop-ups
-        HighGui.waitKey(this.refreshRate);
+        HighGui.waitKey(refreshRate);
     }
 
     private void correctObjects() {
@@ -176,24 +178,24 @@ public class DetectionController {
      * This converts the pixel values to centimetres, so that the course only has real world units.
      */
     private void updateCourse() {
-        BorderSet borderSet = this.borderDetector.getBorderSet();
+        BorderSet borderSet = borderDetector.getBorderSet();
 
         // Find the corners at least once to allow updating of other course objects
         if (borderSet != null) { // True when a border is found
 
             // Find conversion factor to translate units from pixel to CM
-            this.corners = borderSet.getCoords().clone();
+            corners = borderSet.getCoords().clone();
             Point topLeft = corners[0];
             Point topRight = corners[1];
             Point bottomLeft = corners[2];
 
             // Calculate conversion factors and get offset
-            this.conversionFactorX = this.course.length / distanceBetweenTwoPoints(topLeft.x, topLeft.y, topRight.x, topRight.y);
-            this.conversionFactorY = this.course.width / distanceBetweenTwoPoints(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y);
-            this.pixelOffset = borderSet.getOrigin();
+            conversionFactorX = course.length / distanceBetweenTwoPoints(topLeft.x, topLeft.y, topRight.x, topRight.y);
+            conversionFactorY = course.width / distanceBetweenTwoPoints(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y);
+            pixelOffset = borderSet.getOrigin();
         }
 
-        if (this.corners == null) return; // Cant calculate if these are null
+        if (corners == null) return; // Cant calculate if these are null
 
         updateCourseCorners();
         updateCourseRobot();
@@ -204,50 +206,50 @@ public class DetectionController {
      * Updates the corner positions of Course object, in centimetres.
      */
     private void updateCourseCorners() {
-        Point[] convertedCorners = this.corners.clone();
+        Point[] convertedCorners = corners.clone();
 
         // Convert from pixel to cm.
         for (int i = 0; i < convertedCorners.length; i++)
-            convertedCorners[i] = convertPixelPointToCmPoint(convertedCorners[i], this.pixelOffset);
+            convertedCorners[i] = convertPixelPointToCmPoint(convertedCorners[i], pixelOffset);
 
         // Update Course
-        this.course.setTopLeft(convertedCorners[0]);
-        this.course.setTopRight(convertedCorners[1]);
-        this.course.setBottomLeft(convertedCorners[2]);
-        this.course.setBottomRight(convertedCorners[3]);
+        course.setTopLeft(convertedCorners[0]);
+        course.setTopRight(convertedCorners[1]);
+        course.setBottomLeft(convertedCorners[2]);
+        course.setBottomRight(convertedCorners[3]);
     }
 
     /**
      * Updates the Course robot's position, in centimetres.
      */
     private void updateCourseRobot() {
-        Robot robot = this.robotDetector.getRobot();
+        Robot robot = robotDetector.getRobot();
 
         // Convert from pixel to centimetres
-        Point correctedCenter = convertPixelPointToCmPoint(robot.getCenter(), this.pixelOffset);
-        Point correctedFront = convertPixelPointToCmPoint(robot.getFront(), this.pixelOffset);
+        Point correctedCenter = convertPixelPointToCmPoint(robot.getCenter(), pixelOffset);
+        Point correctedFront = convertPixelPointToCmPoint(robot.getFront(), pixelOffset);
         double correctedAngle = angleBetweenTwoPoints(correctedCenter.x, correctedCenter.y, correctedFront.x, correctedFront.y);
 
         Robot correctedRobot = new Robot(correctedCenter, correctedFront, correctedAngle);
-        this.course.setRobot(correctedRobot);
+        course.setRobot(correctedRobot);
     }
 
     /**
      * Updates the Course's balls positions
      */
     private void updateCourseBalls() {
-        List<Ball> balls = this.ballDetector.getBalls();
+        List<Ball> balls = ballDetector.getBalls();
         List<Ball> correctedBalls = new ArrayList<>();
 
         // Convert position from pixel to cm
         for (Ball ball : balls) {
-            Point correctedCenter = convertPixelPointToCmPoint(ball.getCenter(), this.pixelOffset);
+            Point correctedCenter = convertPixelPointToCmPoint(ball.getCenter(), pixelOffset);
 
             Ball correctedBall = new Ball(correctedCenter, ball.getColor());
             correctedBalls.add(correctedBall);
         }
 
-        this.course.setBalls(correctedBalls);
+        course.setBalls(correctedBalls);
     }
 
     /**
@@ -257,7 +259,7 @@ public class DetectionController {
      * @return The new converted point in centimetres.
      */
     private Point convertPixelPointToCmPoint(Point point, Point pixelOffset) {
-        return new Point((point.x - pixelOffset.x) * this.conversionFactorX, (point.y - pixelOffset.y) * this.conversionFactorY);
+        return new Point((point.x - pixelOffset.x) * conversionFactorX, (point.y - pixelOffset.y) * conversionFactorY);
     }
 
     /**
@@ -279,10 +281,10 @@ public class DetectionController {
         Scalar robotMarkerColor = new Scalar(255, 0, 255); // Magenta
         Scalar ballColor = new Scalar(255, 255, 0); // Cyan
 
-        Mat overlayFrame = this.frame.clone();
+        Mat overlayFrame = frame.clone();
 
         // Draw Corners
-        BorderSet borderSet = this.borderDetector.getBorderSet();
+        BorderSet borderSet = borderDetector.getBorderSet();
         Point[] corners = borderSet != null ? borderSet.getCoords() : null;
 
         if (corners != null)
@@ -290,7 +292,7 @@ public class DetectionController {
                 Imgproc.circle(overlayFrame, corner, 2, cornerColor, 3);
 
         // Draw Robot Markers
-        Robot robot = this.robotDetector.getRobot();
+        Robot robot = robotDetector.getRobot();
 
         if (robot != null) {
             Imgproc.circle(overlayFrame, robot.getCenter(), 5, robotMarkerColor, 2);
@@ -299,7 +301,7 @@ public class DetectionController {
         }
 
         // Draw Balls
-        List<Ball> balls = this.ballDetector.getBalls();
+        List<Ball> balls = ballDetector.getBalls();
 
         for (Ball ball : balls) {
             Imgproc.circle(overlayFrame, ball.getCenter(), 4, ballColor, 1);
@@ -317,7 +319,7 @@ public class DetectionController {
      * Debugging Tool
      */
     private void showMasks() {
-        for (SubDetector subDetector : this.subDetectors) {
+        for (SubDetector subDetector : subDetectors) {
             for (MaskSet maskSet : subDetector.getMaskSets()) {
                 HighGui.imshow(maskSet.getMaskName(), maskSet.getMask());
             }
@@ -325,6 +327,6 @@ public class DetectionController {
     }
 
     public Course getCourse() {
-        return this.course;
+        return course;
     }
 }

@@ -23,7 +23,6 @@ public class RobotDetector implements SubDetector {
     final int areaLowerThreshold = 100;
     final int areaUpperThreshold = 1000;
 
-
     private Robot robot;
     List<MaskSet> maskSets = new ArrayList<>();
 
