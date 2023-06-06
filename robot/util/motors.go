@@ -17,10 +17,10 @@ func IsRunning(motor *ev3dev.TachoMotor) bool {
 	return speed != 0
 }
 
-func ConvertDistanceToWheelRotation(distance float64) int {
+// ConvertDistanceToWheelRotation converters a wheel radius into the number of motor pulses.
+func ConvertDistanceToWheelRotation(distance float64, wheelRadius float64) int {
 	// Radius values are in centimeters and is measured from the inner sides of the wheels.
-	const wheelRadius = 6.88 / 2
-	const wheelCircumference = 2 * wheelRadius * math.Pi
+	wheelCircumference := 2 * wheelRadius * math.Pi
 
 	return int((distance / wheelCircumference) * 360)
 }

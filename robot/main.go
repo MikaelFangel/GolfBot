@@ -4,15 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/ev3go/ev3dev"
-	"google.golang.org/grpc"
 	"log"
-	pBuff "main/proto"
-	"main/util"
 	"math"
 	"net"
 	"strconv"
 	"time"
+
+	"github.com/ev3go/ev3dev"
+	"google.golang.org/grpc"
+
+	pBuff "main/proto"
+	"main/util"
 )
 
 // Motor commands
@@ -47,88 +49,50 @@ func main() {
 	}
 }
 
-// Drive Makes the robot drive straight forward or backward with a speed and distance specified client side
-func (s *motorServer) Drive(_ context.Context, in *pBuff.DriveRequest) (*pBuff.StatusReply, error) {
-	var motorRequests []motorRequest
-
-	numberOfRotations := -util.ConvertDistanceToWheelRotation(float64(in.Distance))
-	fmt.Printf("Drive degrees of rotation: %d\n", numberOfRotations)
-
-	// Fetch each motor
-	for _, request := range in.GetMotors().GetMotor() {
-		motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
-		if err != nil {
-			return &pBuff.StatusReply{ReplyMessage: false}, err
-		}
-
-		// Change speed value if distance is negative
-		dir := 1
-		if in.Speed < 0 {
-			dir = -1
-		}
-
-		// Set values for request
-		motor.Command(reset)
-		motor.SetSpeedSetpoint(dir * int(in.Speed))
-		motor.SetPositionSetpoint(numberOfRotations)
-		motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
-	}
-
-	// Give requests to motors
-	for _, motorRequest := range motorRequests {
-		motorRequest.motor.Command(absPos)
-	}
-
-	return stopMotorsIfNotAllAreRunning(motorRequests)
-}
-
-// DriveWGyro Rotates the robot given a speed using the gyro. This function has the side effect that it recalibrates the gyro.
-func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
-	gyro, err := util.RecalibrateGyro()
-	if err != nil {
-		return err
-	}
-
-	var driveRequest, _ = in.Recv()
-
-	var distance = int(driveRequest.Distance)
-
-	// PID constants, how much we want to correct errors of each term
-	var kp = 2.0
-	var ki = 1.0
-	var kd = 1.0
+// DriveWGyro Rotates the robot given a speed using a gyro. This function has the side effect that it recalibrates the gyro.
+func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DriveRequest) (*pBuff.StatusReply, error) {
+	// PID constant, how much we want to correct errors of each term
+	kp := 0.5
+	ki := 0.25
+	kd := 0.1
 
 	// the running sum of errors
-	var integral = 0.0
+	integral := 0.0
 
 	// Used to calculate error derivative
-	var lastError = 0.0
+	lastError := 0.0
 
 	// Prepare the motors for running
 	var motorRequests []motorRequest
 
+	// Change speed value if distance is negative
+	speed := -int(in.Speed)
+	if in.Speed < 0 {
+		speed *= -1
+	}
+
 	// TODO: For testing purposes run until i < 20, but should be until length to target <= 0. Research RPC client streaming
+	gyro, err := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
+	if err != nil {
+		return nil, err
+	}
 	for distance > 0 {
 		println("Distance ", distance)
 		var message, _ = in.Recv()
 		distance = int(message.Distance)
 
 		// Read gyro values, eg. the current error
-		var gyroValStr, _ = gyro.Value(0)
-		var gyroVal, _ = strconv.Atoi(gyroValStr)
-		var gyroErr = float64(gyroVal)
-
+		gyroValStr, _ := gyro.Value(0)
+		gyroErr, _ := strconv.ParseFloat(gyroValStr, 64)
 		integral += gyroErr
 
-		// Error derivative try to predict the next error from the previous error
-		var derivative = gyroErr - lastError
-
+		derivative := gyroErr - lastError
 		lastError = gyroErr
 
 		// "P term", how much we want to change the motors' power in proportion with the error
 		// "I term", the running sum of errors to correct for
-		// "D term", correcting for the next error
-		var turn = (kp * gyroErr) + (ki * integral) + (kd * derivative)
+		// "D term", trying to predict next error
+		turn := (kp * gyroErr) + (ki * integral) + (kd * derivative)
 
 		for _, request := range driveRequest.GetMotors().GetMotor() {
 			motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
@@ -136,22 +100,14 @@ func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
 				return err
 			}
 
-			// Change speed value if distance is negative
-			dir := 1
-			if driveRequest.Speed < 0 {
-				dir = -1
-			}
-
-			var power = int(driveRequest.Speed)
-
 			// TODO: Should ramp be set for all iterations or only first and last? I found that the these values worked well
 			motor.SetRampUpSetpoint(3 * time.Second)
 			motor.SetRampDownSetpoint(3 * time.Second)
 			switch request.GetMotorPort() {
 			case pBuff.OutPort_A:
-				motor.SetSpeedSetpoint(-(dir * power) + int(turn))
+				motor.SetSpeedSetpoint(speed + int(turn))
 			case pBuff.OutPort_D:
-				motor.SetSpeedSetpoint(-(dir * power) - int(turn))
+				motor.SetSpeedSetpoint(speed - int(turn))
 			default:
 				return err
 			}
@@ -200,90 +156,65 @@ func (s *motorServer) StopMotors(_ context.Context, in *pBuff.MultipleMotors) (*
 	}
 
 	stopAllMotors(motorRequests)
-
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
 // RotateWGyro Rotates the robot given a speed using a gyro. This function has the side effect that it recalibrates the gyro.
 func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*pBuff.StatusReply, error) {
-	gyro, err := util.RecalibrateGyro()
-	if err != nil {
-		return nil, err
-	}
-
 	// Change the rotation direction
 	var rotateSpeed = int(in.Speed)
 	if in.Degrees > 0 {
 		rotateSpeed *= -1
 	}
 
-	// PD constant, how much we want to correct errors of each term
-	var kp = 0.5
-	var kd = 0.25
-
-	// Read gyro values
-	var gyroValStr, _ = gyro.Value(0)
-	var gyroValInt, _ = strconv.Atoi(gyroValStr)
-	var gyroValF = float64(gyroValInt)
-
-	// Target is the degrees left to rotate
-	var target = gyroValF - float64(in.Degrees)
-
-	// Used to calculate error derivative
-	var lastError = 0.0
-
 	// Prepare the motors for running
 	var motorRequests []motorRequest
+	for _, request := range in.GetMotors().GetMotor() {
+		motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
+		if err != nil {
+			return nil, err
+		}
+
+		switch request.GetMotorPort() {
+		case pBuff.OutPort_A:
+			motor.SetSpeedSetpoint(rotateSpeed)
+		case pBuff.OutPort_D:
+			motor.SetSpeedSetpoint(-rotateSpeed)
+		default:
+			return &pBuff.StatusReply{ReplyMessage: false}, errors.New("not a valid motor")
+		}
+
+		motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
+	}
+
+	// Start the motors
+	for _, motorRequest := range motorRequests {
+		motorRequest.motor.Command(run)
+	}
+
+	status, err := stopMotorsIfNotAllAreRunning(motorRequests)
+	if err != nil {
+		return status, err
+	}
 
 	// Busy wait until the robot has completed the rotation or have superseded the given degrees
-	for math.Abs(gyroValF) <= math.Abs(float64(in.Degrees)) {
-		gyroValStr, _ = gyro.Value(0)
-		gyroValInt, _ = strconv.Atoi(gyroValStr)
-		gyroValF = float64(gyroValInt)
-		target = gyroValF - float64(in.Degrees)
+	gyro, err := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
+	if err != nil {
+		return nil, err
+	}
+	gyroValStr, err := gyro.Value(0)
+	var gyroVal, _ = strconv.ParseFloat(gyroValStr, 64)
+	for math.Abs(gyroVal) <= math.Abs(float64(in.Degrees)) {
+		gyroValStr, err = gyro.Value(0)
+		gyroVal, _ = strconv.ParseFloat(gyroValStr, 64)
+	}
 
-		// Error derivative try to predict the next error, from the previous error
-		var derivative = target - lastError
-
-		lastError = target
-
-		// "P term", how much we want to change the motors' power in proportion with the error
-		// "D term", correcting for the next error
-		var turn = (kp * target) + (kd * derivative)
-
-		for _, request := range in.GetMotors().GetMotor() {
-			motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
-			if err != nil {
-				return nil, err
-			}
-
-			var power = rotateSpeed + int(turn)
-
-			switch request.GetMotorPort() {
-			case pBuff.OutPort_A:
-				motor.SetSpeedSetpoint(power)
-			case pBuff.OutPort_D:
-				motor.SetSpeedSetpoint(-power)
-			default:
-				return &pBuff.StatusReply{ReplyMessage: false}, errors.New("not a valid motor")
-			}
-
-			motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
-		}
-
-		// Start the motors
-		for _, motorRequest := range motorRequests {
-			motorRequest.motor.Command(run)
-		}
-
-		status, err := stopMotorsIfNotAllAreRunning(motorRequests)
-		if err != nil {
-			return status, err
-		}
+	// Return if there was a gyro reading error
+	if err != nil {
+		return &pBuff.StatusReply{ReplyMessage: false}, err
 	}
 
 	stopAllMotors(motorRequests)
-
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
@@ -322,6 +253,23 @@ func (s *motorServer) CollectRelease(_ context.Context, in *pBuff.MultipleMotors
 	return stopMotorsIfNotAllAreRunning(motorRequests)
 }
 
+func (s *motorServer) RecalibrateGyro(_ context.Context, _ *pBuff.EmptyRequest) (*pBuff.StatusReply, error) {
+	gyro, err := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
+	if err != nil {
+		return nil, err
+	}
+	// Sleep before calibration to settle possible vibrations
+	time.Sleep(500 * time.Millisecond)
+
+	// Trigger the recalibration using a mode switch
+	gyro.SetMode("GYRO-CAL")
+	gyro.SetMode("GYRO-ANG")
+
+	// Sleep to ensure recalibration has finished before any other commands are run
+	time.Sleep(500 * time.Millisecond)
+	return &pBuff.StatusReply{ReplyMessage: true}, nil
+}
+
 func stopMotorsIfNotAllAreRunning(motorRequests []motorRequest) (*pBuff.StatusReply, error) {
 	for _, motorRequest := range motorRequests {
 		// Block until running
@@ -340,11 +288,5 @@ func stopAllMotors(motorRequests []motorRequest) {
 	// Can't use ev3dev.Wait() to make sure motors stop. This is the alternative used...
 	for _, motorRequest := range motorRequests {
 		motorRequest.motor.Command(stop)
-
-		for {
-			if !util.IsRunning(motorRequest.motor) {
-				break
-			}
-		}
 	}
 }

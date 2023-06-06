@@ -20,7 +20,7 @@ public class Main {
         if (closestBall == null) return;
 
         double angle = findRobotsAngleToBall(course.getRobot(), closestBall);
-        /*double distance = findRobotsDistanceToBall(course.getRobot(), closestBall);
+        double distance = findRobotsDistanceToBall(course.getRobot(), closestBall);
         System.out.println("Driving distance: " + distance + "with angle: " + angle);
 
 
@@ -29,14 +29,8 @@ public class Main {
         scan.nextLine();
 
         Thread.sleep(5000); // Find better way.
-        controller.driveStraight(distance);*/
+        controller.driveWGyro(distance);
 
-        //controller.drivePID(50, 90);
-
-        controller.driveWGyro(50, 90);
-
-        //controller.rotateWGyro(10);
-
-        //controller.stopController();
+        controller.stopController();
     }
 }
