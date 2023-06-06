@@ -56,6 +56,17 @@ func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
 	ki := 0.25
 	kd := 0.1
 
+	// Change the values to the user input if provided
+	switch {
+	case in.Kp != nil:
+		kp = float64(*in.Kp)
+	case in.Ki != nil:
+		ki = float64(*in.Ki)
+	case in.Kd != nil:
+		kd = float64(*in.Kd)
+
+	}
+
 	// the running sum of errors
 	integral := 0.0
 
@@ -170,55 +181,74 @@ func (s *motorServer) StopMotors(_ context.Context, in *pBuff.MultipleMotors) (*
 func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*pBuff.StatusReply, error) {
 	// Change the rotation direction
 	var rotateSpeed = int(in.Speed)
+
+	// Set constants to adjust direction values
+	direction := 1.0
 	if in.Degrees > 0 {
 		rotateSpeed *= -1
+		direction = -1.0
 	}
 
-	// Prepare the motors for running
+	kp := 0.125
+	kd := 0.5
+
+	lastError := 0.0
+	target := float64(in.Degrees)
+
 	var motorRequests []motorRequest
-	for _, request := range in.GetMotors().GetMotor() {
-		motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
-		if err != nil {
-			return nil, err
+	gyro, _ := util.GetSensor(pBuff.InPort_in1.String(), "GYRO")
+	gyroVal, _ := gyro.Value(0)
+	gyroValF, _ := strconv.ParseFloat(gyroVal, 64)
+	for math.Abs(gyroValF) != math.Abs(float64(in.Degrees)) {
+		gyroVal, _ = gyro.Value(0)
+		gyroValF, _ = strconv.ParseFloat(gyroVal, 64)
+		target = gyroValF - float64(in.Degrees)
+
+		derivative := target - lastError
+		lastError = target
+
+		turn := (kp * target) + (kd * derivative) //+ (ki * integral) +
+
+		// Prepare the motors for running
+		for _, request := range in.GetMotors().GetMotor() {
+			motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
+			if err != nil {
+				return nil, err
+			}
+
+			power := rotateSpeed + int(turn)
+
+			if (target * direction) < 0 {
+				power *= -1
+			}
+
+			if math.Abs(target) > 5 {
+				power *= 4
+			}
+
+			switch {
+			case power > 50:
+				power = 50
+			case power < -50:
+				power = -50
+			}
+
+			switch request.GetMotorPort() {
+			case pBuff.OutPort_A:
+				motor.SetSpeedSetpoint(power)
+			case pBuff.OutPort_D:
+				motor.SetSpeedSetpoint(-power)
+			default:
+				return &pBuff.StatusReply{ReplyMessage: false}, errors.New("not a valid motor")
+			}
+
+			motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
 		}
 
-		switch request.GetMotorPort() {
-		case pBuff.OutPort_A:
-			motor.SetSpeedSetpoint(rotateSpeed)
-		case pBuff.OutPort_D:
-			motor.SetSpeedSetpoint(-rotateSpeed)
-		default:
-			return &pBuff.StatusReply{ReplyMessage: false}, errors.New("not a valid motor")
+		// Start the motors
+		for _, motorRequest := range motorRequests {
+			motorRequest.motor.Command(run)
 		}
-
-		motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
-	}
-
-	// Start the motors
-	for _, motorRequest := range motorRequests {
-		motorRequest.motor.Command(run)
-	}
-
-	status, err := stopMotorsIfNotAllAreRunning(motorRequests)
-	if err != nil {
-		return status, err
-	}
-
-	// Busy wait until the robot has completed the rotation or have superseded the given degrees
-	gyro, err := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
-	if err != nil {
-		return nil, err
-	}
-	gyroValStr, err := gyro.Value(0)
-	var gyroVal, _ = strconv.ParseFloat(gyroValStr, 64)
-	for math.Abs(gyroVal) <= math.Abs(float64(in.Degrees)) {
-		gyroValStr, err = gyro.Value(0)
-		gyroVal, _ = strconv.ParseFloat(gyroValStr, 64)
-	}
-
-	// Return if there was a gyro reading error
-	if err != nil {
-		return &pBuff.StatusReply{ReplyMessage: false}, err
 	}
 
 	stopAllMotors(motorRequests)

@@ -113,7 +113,7 @@ public class RobotController {
      * @throws RuntimeException if the robot was not reached
      */
     public void rotateWGyro(double degrees) throws RuntimeException {
-        int speed = 75;
+        int speed = 5;
         MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
                 new MotorPair(OutPort.D, speed));
 
@@ -167,7 +167,7 @@ public class RobotController {
              * thereby deviate from expected course
              */
             int speedSideMotors = 300;
-            motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, speedSideMotors), new MotorPair(OutPort.C, speedFrontMotor));
+            motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.A, speedSideMotors), new MotorPair(OutPort.C, speedFrontMotor));
         }
 
         CLIENT.collectRelease(motorRequests);
@@ -178,7 +178,7 @@ public class RobotController {
      */
     public void stopCollectRelease() {
         int motorSpeed = 0;
-        MultipleMotors motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, motorSpeed), new MotorPair(OutPort.C, motorSpeed));
+        MultipleMotors motorRequests = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, motorSpeed), new MotorPair(OutPort.D, motorSpeed));
         CLIENT.stopMotors(motorRequests);
     }
 

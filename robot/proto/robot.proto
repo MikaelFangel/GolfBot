@@ -77,9 +77,9 @@ message DrivePIDRequest {
   float distance = 2;
   int32 degrees = 3;
   int32 speed = 4;
-  float kp = 5;
-  float ki = 6;
-  float kd = 7;
+  optional float kp = 5;
+  optional float ki = 6;
+  optional float kd = 7;
 }
 
 message EmptyRequest {}
