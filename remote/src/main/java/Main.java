@@ -11,6 +11,7 @@ public class Main {
         RobotController controller = new RobotController(args[0]); // Args[0] being and IP address
 
         int cameraIndex = 2;
-        DetectionController detectionController = new DetectionController(new Course(), cameraIndex, true);
+        Course course = new Course();
+        DetectionController detectionController = new DetectionController(course, cameraIndex, true);
     }
 }

@@ -7,21 +7,10 @@ import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 import vision.helperClasses.MaskSet;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class BallDetector implements SubDetector {
-
-    // Orange balls threshold (BGR)
-    private final Scalar lOrangeBall = new Scalar(0, 100, 220);
-    private final Scalar uOrangeBall = new Scalar(170, 255, 255);
-
-
-    // White balls grey scale threshold (0-255)
-    private final int lWhiteBall = 205;
-    private final int uWhiteBall = 255;
-
     // HoughCircles parameters. These configurations works okay with the current course setup (Most likely pixel values)
     private final int dp = 1; // Don't question or change
     private final int minDist = 5; // Minimum distance between balls
@@ -42,7 +31,7 @@ public class BallDetector implements SubDetector {
         balls = new ArrayList<>();
 
         findWhiteBalls(frame, balls);
-        //findOrangeBalls(frame, balls);
+        //findOrangeBalls(frame, balls); TODO! Fix me
 
         return !balls.isEmpty();
     }
@@ -57,7 +46,11 @@ public class BallDetector implements SubDetector {
         Mat frameGray = new Mat();
         Imgproc.cvtColor(frame, frameGray, Imgproc.COLOR_BGR2GRAY);
 
-        // Apply a binary threshold mask to seperate out all colors than white.
+        // White balls grey scale threshold (0-255)
+        final int lWhiteBall = 205;
+        final int uWhiteBall = 255;
+
+        // Apply a binary threshold mask to separate out all colors than white.
         Mat binaryFrame = new Mat();
         Imgproc.threshold(frameGray, binaryFrame, lWhiteBall, uWhiteBall, Imgproc.THRESH_BINARY);
 
@@ -70,18 +63,17 @@ public class BallDetector implements SubDetector {
 
         // Get white balls from frame
         Mat whiteBalls = new Mat();
-        Imgproc.HoughCircles(frameBlur, whiteBalls, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, minBallRadius, maxBallRadius);
+        Imgproc.HoughCircles(frameBlur, whiteBalls, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, minBallRadius,
+                maxBallRadius); // Approximate circles on the frame. Middle coordinates is stored in first row
 
-        // Balls to array
+        // Add balls to array
         if (!whiteBalls.empty()) {
             for (int i = 0; i < whiteBalls.width(); i++) {
-                // Store ball in array
                 double[] center = whiteBalls.get(0, i);
                 balls.add(new Ball(new Point(center[0], center[1]), BallColor.WHITE));
             }
         }
     }
-
 
     /**
      * Updates the balls argument with the white balls found on the frame.
@@ -93,7 +85,11 @@ public class BallDetector implements SubDetector {
         Mat frameHsv = new Mat();
         Imgproc.cvtColor(frame, frameHsv, Imgproc.COLOR_BGR2HSV);
 
-        // Create a mask to seperate the orange ball
+        // Orange balls threshold (BGR)
+        final Scalar lOrangeBall = new Scalar(0, 100, 220);
+        final Scalar uOrangeBall = new Scalar(170, 255, 255);
+
+        // Create a mask to separate the orange ball
         Mat mask = new Mat();
         Core.inRange(frameHsv, lOrangeBall, uOrangeBall, mask);
 

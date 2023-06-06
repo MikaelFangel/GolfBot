@@ -118,6 +118,8 @@ public class DetectionController {
                 System.out.println("Found least a ball");
             }
 
+            updateCourse();
+
             // Exit when all objects are found
             System.out.println("Exiting Setup");
             break;
@@ -322,9 +324,5 @@ public class DetectionController {
                 HighGui.imshow(maskSet.getMaskName(), maskSet.getMask());
             }
         }
-    }
-
-    public Course getCourse() {
-        return this.course;
     }
 }

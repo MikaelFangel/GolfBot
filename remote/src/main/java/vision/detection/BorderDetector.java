@@ -1,7 +1,6 @@
 package vision.detection;
 
 import org.opencv.core.*;
-import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
 import vision.helperClasses.BorderSet;
 import vision.helperClasses.MaskSet;
@@ -45,19 +44,19 @@ public class BorderDetector implements SubDetector {
         Core.bitwise_and(frame, frame, frameBorder, mask); // Overlay mask on frame and get the red border
 
         // Add mask for debugging
-        maskSets.add(new MaskSet("border", mask));
+        this.maskSets.add(new MaskSet("border", mask));
 
-        // Greyscale and blur
+        // Greyscale to allow finding contours and blur
         Mat frameGray = new Mat();
         Imgproc.cvtColor(frameBorder, frameGray, Imgproc.COLOR_BGR2GRAY);
 
+        // Blur frame to smooth out color inconsistencies
         Mat frameBlur = new Mat();
         Imgproc.GaussianBlur(frameGray, frameBlur, new Size(9, 9), 0);
 
         // Find contours (color patches of the border)
         List<MatOfPoint> contours = new ArrayList<>();
-        Mat dummyHierarchy = new Mat();
-        Imgproc.findContours(frameBlur, contours, dummyHierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(frameBlur, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
 
         // Estimate lines for the border using the contours
         MatOfPoint2f lines = new MatOfPoint2f();
@@ -91,13 +90,11 @@ public class BorderDetector implements SubDetector {
         Point[] corners = new Point[linePoints.length];
         for (int i = 0; i < corners.length; i++) {
             Point point = linePoints[i];
-
             corners[i] = new Point(point.x, point.y);
         }
 
         // Sort corners in order: {TopLeft, TopRight, BottomLeft, BottomRight}
         List<Point> sortedCorners = new ArrayList<>(Arrays.stream(corners).sorted((p1, p2) -> (int) ((p1.x + p1.y) - (p2.x + p2.y))).toList());
-
         if (sortedCorners.get(1).x < sortedCorners.get(2).x) {
             Point temp = sortedCorners.get(1);
             sortedCorners.set(1, sortedCorners.get(2));
@@ -112,11 +109,11 @@ public class BorderDetector implements SubDetector {
     }
 
     public BorderSet getBorderSet() {
-        return borderSet;
+        return this.borderSet;
     }
 
     @Override
     public List<MaskSet> getMaskSets() {
-        return maskSets;
+        return this.maskSets;
     }
 }
