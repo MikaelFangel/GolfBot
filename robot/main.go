@@ -57,15 +57,14 @@ func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
 	kd := 0.1
 
 	// Change the values to the user input if provided
-	switch {
+	/*switch {
 	case in.Kp != nil:
 		kp = float64(*in.Kp)
 	case in.Ki != nil:
 		ki = float64(*in.Ki)
 	case in.Kd != nil:
 		kd = float64(*in.Kd)
-
-	}
+	}*/
 
 	// the running sum of errors
 	integral := 0.0
