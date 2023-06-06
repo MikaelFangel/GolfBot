@@ -1,6 +1,7 @@
 package vision.detection;
 
 import courseObjects.Ball;
+import courseObjects.BallColor;
 import org.opencv.core.*;
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
@@ -78,7 +79,7 @@ public class BallDetector implements SubDetector {
             for (int i = 0; i < whiteBalls.width(); i++) {
                 // Store ball in array
                 double[] center = whiteBalls.get(0, i);
-                balls.add(new Ball(new Point(center[0], center[1]), Color.WHITE));
+                balls.add(new Ball(new Point(center[0], center[1]), BallColor.WHITE));
             }
         }
     }
@@ -120,7 +121,7 @@ public class BallDetector implements SubDetector {
             double[] center = orangeball.get(0, 0);
             Point coords = new Point(center[0], center[1]);
 
-            balls.add(new Ball(coords, Color.ORANGE));
+            balls.add(new Ball(coords, BallColor.ORANGE));
         }
     }
 

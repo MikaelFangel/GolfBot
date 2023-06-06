@@ -1,6 +1,7 @@
 package vision;
 
 import courseObjects.Ball;
+import courseObjects.BallColor;
 import courseObjects.Course;
 import courseObjects.Robot;
 import nu.pattern.OpenCV;
@@ -223,7 +224,7 @@ public class Detection {
                 double[] center = whiteballs.get(0, i);
                 // Create the irl coordinates and create the ball object with the Color white
                 Point coordinates = new Point((center[0] - originCameraOffset.x) * conversionFactor, (center[1] - originCameraOffset.y) * conversionFactor);
-                balls.add(new Ball(coordinates, Color.WHITE));
+                balls.add(new Ball(coordinates, BallColor.WHITE));
             }
         }
 
@@ -272,7 +273,7 @@ public class Detection {
             double[] center = orangeball.get(0, 0);
             // Create the irl coordinates and create the ball object with the Color white
             Point coordinates = new Point((center[0] - originCameraOffset.x) * conversionFactor, (center[1] - originCameraOffset.y) * conversionFactor);
-            return Optional.of(new Ball(coordinates, Color.ORANGE));
+            return Optional.of(new Ball(coordinates, BallColor.ORANGE));
         }
         return Optional.empty();
     }

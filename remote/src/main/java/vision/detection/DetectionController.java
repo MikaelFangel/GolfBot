@@ -21,18 +21,33 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DetectionController {
-    private final int frameDelay = 1;
-    protected Mat frame, overlayFrame;
-    private BallDetector ballDetector;
-    private BorderDetector borderDetector;
-    private RobotDetector robotDetector;
-    private List<SubDetector> subDetectors;
+    private final int refreshRate = 1; // Value for best FPS (ms)
+    private Mat frame; // Frame to detect objects from
 
+    // Sub Detectors
+    private final List<SubDetector> subDetectors = new ArrayList<>();
+    private final BallDetector ballDetector = new BallDetector();
+    private final BorderDetector borderDetector = new BorderDetector();
+    private final RobotDetector robotDetector = new RobotDetector();
 
-    private final boolean showMasks;
+    // For converting pixels to centimeters
+    private Point[] corners;
+    private double conversionFactorX;
+    private double conversionFactorY;
+    private Point pixelOffset;
+
+    private final boolean showMasks; // Primarily for debugging
     private final Course course;
 
-    public DetectionController(Course course, int cameraIndex, boolean showMasks){
+    /**
+     * Start a setup process that requires the different objects to be present in the camera's view.
+     * When the setup is over a background thread starts doing background detection.
+     * To utilize the found objects, read them from the passed Course object.
+     * @param course The class that contains all the objects and information about the course during runtime.
+     * @param cameraIndex The camera index of intended camera (computer specific).
+     * @param showMasks Only needed for debugging masks. If true, displays mask windows.
+     */
+    public DetectionController(Course course, int cameraIndex, boolean showMasks) {
         this.showMasks = showMasks;
         this.course = course;
 
@@ -41,7 +56,7 @@ public class DetectionController {
 
         // Start capture
         VideoCapture capture = new VideoCapture();
-        capture.open(cameraIndex); // Open camera at index
+        capture.open(cameraIndex);
 
         // Set capture resolution
         capture.set(Videoio.CAP_PROP_FRAME_WIDTH, 1024);
@@ -49,55 +64,51 @@ public class DetectionController {
 
         if (!capture.isOpened()) throw new RuntimeException("Camera Capture was not opened");
 
-        // Create Detectors and add to SubDetector List
-        ballDetector = new BallDetector();
-        robotDetector = new RobotDetector();
-        borderDetector = new BorderDetector();
-
-        subDetectors = new ArrayList<>();
-        subDetectors.add(ballDetector);
-        subDetectors.add(robotDetector);
-        subDetectors.add(borderDetector);
+        // Add detectors to list
+        this.subDetectors.add(ballDetector);
+        this.subDetectors.add(robotDetector);
+        this.subDetectors.add(borderDetector);
 
         // Run setup to get initial objects
-        runDetectionSetup(capture); // Blocks until the course has all objects
+        runDetectionSetup(capture);
 
-        // Start background detection
         startBackgroundDetection(capture);
     }
 
+    /**
+     * Blocks the thread until all objects are found in the camera's view.
+     * @param capture the video capture from which the frame should be read.
+     */
     private void runDetectionSetup(VideoCapture capture) {
         boolean borderFound = false, robotFound = false, ballFound = false;
 
         System.out.println("Starting Setup");
 
         while (true) {
-            // Grab frame
             frame = new Mat();
-            capture.read(frame);
+            capture.read(this.frame);
 
-            // Debug Overlay
+            // Display frame in popup window
             showOverlay();
-            HighGui.waitKey(frameDelay);
+            HighGui.waitKey(this.refreshRate);
 
-            // Run sub detectors. To get objects in neccessary order
+            // Run sub detectors. To get objects in necessary order
             if (!borderFound) {
-                borderFound = borderDetector.detectBorder(frame);
+                borderFound = this.borderDetector.detectBorder(this.frame);
                 if (!borderFound) continue;
 
                 System.out.println("Found Corners");
             }
 
-
             if (!robotFound) {
-                robotFound = robotDetector.detectRobot(frame);
+                robotFound = this.robotDetector.detectRobot(this.frame);
                 if (!robotFound) continue;
 
                 System.out.println("Found Robot");
             }
 
             if (!ballFound) {
-                ballFound = ballDetector.detectBalls(frame);
+                ballFound = this.ballDetector.detectBalls(this.frame);
                 if (!ballFound) continue;
 
                 System.out.println("Found least a ball");
@@ -109,141 +120,171 @@ public class DetectionController {
         }
     }
 
+    /**
+     * Spawns a thread that will run in the background. This thread runs detections and updates the course when objects
+     * are found. (E.g. when the robot moves)
+     * @param capture the video capture from which the frame should be read.
+     */
     private void startBackgroundDetection(VideoCapture capture) {
         System.out.println("Start Background Detection");
 
-        Thread backgroundThread = new Thread(() -> {
+        new Thread(() -> {
             while (true)
                 detectCourse(capture);
-        });
-        backgroundThread.start();
+        }).start();
     }
 
+    /**
+     * Runs all the sub detectors to detect objects on the course.
+     * The objects gets corrected using different algorithms (E.g. height correction).
+     * Then the objects gets converted to real world units (cm) and updates the Course object.
+     * The frames will get displayed.
+     * @param capture the video capture from which the frame should be read.
+     */
     private void detectCourse(VideoCapture capture) {
         // Grab frame
         frame = new Mat();
-        capture.read(frame);
+        capture.read(this.frame);
 
         // Run sub detectors. They store the objects
-        borderDetector.detectBorder(frame);
-        robotDetector.detectRobot(frame);
-        ballDetector.detectBalls(frame);
+        this.borderDetector.detectBorder(this.frame);
+        this.robotDetector.detectRobot(this.frame);
+        this.ballDetector.detectBalls(this.frame);
 
-        // Correct Objects
         correctObjects();
-
-        // Push to course
         updateCourse();
-
-        // Debug Overlay
         showOverlay();
 
-        // Show Masks
-        if (showMasks)
+        // Display masks for debugging
+        if (this.showMasks)
             showMasks();
 
-        // Set frame rate
-        HighGui.waitKey(frameDelay);
+        // Open all window pop-ups
+        HighGui.waitKey(this.refreshRate);
     }
 
     private void correctObjects() {
         // TODO nothing yet to do.
     }
 
-
-    private Point[] corners;
-    private double conversionFactorX = 0; // Dummy value
-    private double conversionFactorY = 0; // Dummy value
-    private Point pixelOffset;
+    /**
+     * Updates the Course object with the objects detected from the sub detectors.
+     * This converts the pixel values to centimetres, so that the course only has real world units.
+     */
     private void updateCourse() {
-        if (borderDetector.getBorderSet() != null) {
+        BorderSet borderSet = this.borderDetector.getBorderSet();
+
+        // Find the corners at least once to allow updating of other course objects
+        if (borderSet != null) { // True when a border is found
+
             // Find conversion factor to translate units from pixel to CM
-            corners = borderDetector.getBorderSet().getCoords().clone();
+            this.corners = borderSet.getCoords().clone();
             Point topLeft = corners[0];
             Point topRight = corners[1];
             Point bottomLeft = corners[2];
 
-            // Calcualte conversion factors and get offset
-            conversionFactorX = course.length / distanceBetweenTwoPoints(topLeft.x, topLeft.y, topRight.x, topRight.y);
-            conversionFactorY = course.width / distanceBetweenTwoPoints(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y);
-            pixelOffset = borderDetector.getBorderSet().getOrigin();
+            // Calculate conversion factors and get offset
+            this.conversionFactorX = this.course.length / distanceBetweenTwoPoints(topLeft.x, topLeft.y, topRight.x, topRight.y);
+            this.conversionFactorY = this.course.width / distanceBetweenTwoPoints(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y);
+            this.pixelOffset = borderSet.getOrigin();
         }
 
-        if (corners == null) return; // Cant calculate if these are null
+        if (this.corners == null) return; // Cant calculate if these are null
 
         updateCourseCorners();
         updateCourseRobot();
         updateCourseBalls();
     }
 
+    /**
+     * Updates the corner positions of Course object, in centimetres.
+     */
     private void updateCourseCorners() {
-        // Set Course corners in CM
-        Point[] convertedCorners = corners.clone();
-        for (int i = 0; i < corners.length; i++) {
-            Point corner = convertedCorners[i];
-            convertedCorners[i] = convertPixelPointToCmPoint(corner, pixelOffset);
-        }
+        Point[] convertedCorners = this.corners.clone();
 
-        course.setTopLeft(convertedCorners[0]);
-        course.setTopRight(convertedCorners[1]);
-        course.setBottomLeft(convertedCorners[2]);
-        course.setBottomRight(convertedCorners[3]);
+        // Convert from pixel to cm.
+        for (int i = 0; i < convertedCorners.length; i++)
+            convertedCorners[i] = convertPixelPointToCmPoint(convertedCorners[i], this.pixelOffset);
+
+        // Update Course
+        this.course.setTopLeft(convertedCorners[0]);
+        this.course.setTopRight(convertedCorners[1]);
+        this.course.setBottomLeft(convertedCorners[2]);
+        this.course.setBottomRight(convertedCorners[3]);
     }
 
+    /**
+     * Updates the Course robot's position, in centimetres.
+     */
     private void updateCourseRobot() {
-        Robot robot = robotDetector.getRobot();
+        Robot robot = this.robotDetector.getRobot();
 
-        Point correctedCenter = convertPixelPointToCmPoint(robot.getCenter(), pixelOffset);
-        Point correctedFront = convertPixelPointToCmPoint(robot.getFront(), pixelOffset);
+        // Convert from pixel to centimetres
+        Point correctedCenter = convertPixelPointToCmPoint(robot.getCenter(), this.pixelOffset);
+        Point correctedFront = convertPixelPointToCmPoint(robot.getFront(), this.pixelOffset);
         double correctedAngle = angleBetweenTwoPoints(correctedCenter.x, correctedCenter.y, correctedFront.x, correctedFront.y);
 
         Robot correctedRobot = new Robot(correctedCenter, correctedFront, correctedAngle);
-        course.setRobot(correctedRobot);
+        this.course.setRobot(correctedRobot);
     }
 
+    /**
+     * Updates the Course's balls positions
+     */
     private void updateCourseBalls() {
-        List<Ball> balls = ballDetector.getBalls();
-
+        List<Ball> balls = this.ballDetector.getBalls();
         List<Ball> correctedBalls = new ArrayList<>();
-        for (Ball ball : balls) {
-            System.out.println("Ball before: " + ball.getCenter());
 
-            Point correctedCenter = convertPixelPointToCmPoint(ball.getCenter(), pixelOffset);
+        // Convert position from pixel to cm
+        for (Ball ball : balls) {
+            Point correctedCenter = convertPixelPointToCmPoint(ball.getCenter(), this.pixelOffset);
 
             Ball correctedBall = new Ball(correctedCenter, ball.getColor());
             correctedBalls.add(correctedBall);
-
-            course.setBalls(correctedBalls);
         }
+
+        this.course.setBalls(correctedBalls);
     }
 
+    /**
+     * Converts Point from pixel units to centimetres and subtracts a pixel offset.
+     * @param point Point to be converted.
+     * @param pixelOffset The offset to be subtracted before the multiplication of the factor.
+     * @return The new converted point in centimetres.
+     */
     private Point convertPixelPointToCmPoint(Point point, Point pixelOffset) {
-        return new Point((point.x - pixelOffset.x) * conversionFactorX, (point.y - pixelOffset.y) * conversionFactorY);
+        return new Point((point.x - pixelOffset.x) * this.conversionFactorX, (point.y - pixelOffset.y) * this.conversionFactorY);
     }
 
-
+    /**
+     * Displays the frames with an overlay
+     */
     private void showOverlay() {
-        // Mark objects on Overlay
-        createOverlay();
+        Mat overlayFrame = createOverlay();
 
         // Display overlay
-        HighGui.imshow("overlay", frame);
+        HighGui.imshow("overlay", overlayFrame);
     }
 
-    private void createOverlay() {
-        Scalar cornerColor = new Scalar(0, 255, 0);
-        Scalar robotMarkerColor = new Scalar(255, 0, 255);
-        Scalar ballColor = new Scalar(255, 255, 0);
+    /**
+     * Puts an overlay frame to the display pile.
+     */
+    private Mat createOverlay() {
+        // Define colors for different objects
+        Scalar cornerColor = new Scalar(0, 255, 0); // Green
+        Scalar robotMarkerColor = new Scalar(255, 0, 255); // Magenta
+        Scalar ballColor = new Scalar(255, 255, 0); // Cyan
 
-        Point[] corners = null;
-        BorderSet borderSet = borderDetector.getBorderSet();
-        if (borderSet != null)
-            corners = borderSet.getCoords();
+        // Get corners of the course
+        BorderSet borderSet = this.borderDetector.getBorderSet();
+        Point[] corners = borderSet != null ? borderSet.getCoords() : null;
 
-        Robot robot = robotDetector.getRobot();
-        List<Ball> balls = ballDetector.getBalls();
+        // Get other objects
+        Robot robot = this.robotDetector.getRobot();
+        List<Ball> balls = this.ballDetector.getBalls();
 
-        overlayFrame = frame; // Create overlay frame
+        // Begin drawing on frame
+        Mat overlayFrame = this.frame.clone(); // Create overlay frame
 
         // Draw Corners
         if (corners != null)
@@ -268,10 +309,12 @@ public class DetectionController {
                 Imgproc.line(overlayFrame, robot.getCenter(), ball.getCenter(), ballColor, 1);
             }
         }
+
+        return overlayFrame;
     }
 
     private void showMasks() {
-        for (SubDetector subDetector : subDetectors) {
+        for (SubDetector subDetector : this.subDetectors) {
             for (MaskSet maskSet : subDetector.getMaskSets()) {
                 HighGui.imshow(maskSet.getMaskName(), maskSet.getMask());
             }
