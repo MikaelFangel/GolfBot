@@ -85,10 +85,6 @@ public class BorderDetector implements SubDetector {
         // Get as array
         Point[] linePoints = lines.toArray();
 
-        // Get offset
-        double offsetX = linePoints[0].x;
-        double offsetY = linePoints[0].y;
-
         // Calculate corners
         Point[] corners = new Point[linePoints.length];
         for (int i = 0; i < corners.length; i++) {
@@ -105,6 +101,10 @@ public class BorderDetector implements SubDetector {
             sortedCorners.set(1, sortedCorners.get(2));
             sortedCorners.set(2, temp);
         }
+
+        // Get offset
+        double offsetX = sortedCorners.get(0).x;
+        double offsetY = sortedCorners.get(0).y;
 
         return new BorderSet(sortedCorners.toArray(Point[]::new), new Point(offsetX, offsetY));
     }

@@ -157,7 +157,7 @@ public class DetectionController {
     private void updateCourse() {
         if (borderDetector.getBorderSet() != null) {
             // Find conversion factor to translate units from pixel to CM
-            corners = borderDetector.getBorderSet().getCoords();
+            corners = borderDetector.getBorderSet().getCoords().clone();
             Point topLeft = corners[0];
             Point topRight = corners[1];
 
@@ -174,9 +174,9 @@ public class DetectionController {
 
     private void updateCourseCorners() {
         // Set Course corners in CM
-        Point[] convertedCorners = corners;
+        Point[] convertedCorners = corners.clone();
         for (int i = 0; i < corners.length; i++) {
-            Point corner = corners[i];
+            Point corner = convertedCorners[i];
             convertedCorners[i] = convertPixelPointToCmPoint(corner, pixelOffset);
         }
 
@@ -202,10 +202,16 @@ public class DetectionController {
 
         List<Ball> correctedBalls = new ArrayList<>();
         for (Ball ball : balls) {
+            System.out.println("Ball before: " + ball.getCenter());
+
             Point correctedCenter = convertPixelPointToCmPoint(ball.getCenter(), pixelOffset);
 
             Ball correctedBall = new Ball(correctedCenter, ball.getColor());
             correctedBalls.add(correctedBall);
+
+            course.setBalls(correctedBalls);
+            // TODO DELETE
+            System.out.println("Ball: "  + correctedBall.getCenter());
         }
     }
 
