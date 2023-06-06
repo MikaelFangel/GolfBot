@@ -152,7 +152,8 @@ public class DetectionController {
 
 
     private Point[] corners;
-    private double conversionFactor = 0; // Dummy value
+    private double conversionFactorX = 0; // Dummy value
+    private double conversionFactorY = 0; // Dummy value
     private Point pixelOffset;
     private void updateCourse() {
         if (borderDetector.getBorderSet() != null) {
@@ -160,8 +161,11 @@ public class DetectionController {
             corners = borderDetector.getBorderSet().getCoords().clone();
             Point topLeft = corners[0];
             Point topRight = corners[1];
+            Point bottomLeft = corners[2];
 
-            conversionFactor = course.length / distanceBetweenTwoPoints(topLeft.x, topLeft.y, topRight.x, topRight.y);
+            // Calcualte conversion factors and get offset
+            conversionFactorX = course.length / distanceBetweenTwoPoints(topLeft.x, topLeft.y, topRight.x, topRight.y);
+            conversionFactorY = course.width / distanceBetweenTwoPoints(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y);
             pixelOffset = borderDetector.getBorderSet().getOrigin();
         }
 
@@ -210,13 +214,11 @@ public class DetectionController {
             correctedBalls.add(correctedBall);
 
             course.setBalls(correctedBalls);
-            // TODO DELETE
-            System.out.println("Ball: "  + correctedBall.getCenter());
         }
     }
 
     private Point convertPixelPointToCmPoint(Point point, Point pixelOffset) {
-        return new Point((point.x - pixelOffset.x) * conversionFactor, (point.y - pixelOffset.y) * conversionFactor);
+        return new Point((point.x - pixelOffset.x) * conversionFactorX, (point.y - pixelOffset.y) * conversionFactorY);
     }
 
 
