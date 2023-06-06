@@ -4,6 +4,7 @@ import courseObjects.Border;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import vision.helperClasses.BorderSet;
+import vision.helperClasses.MaskSet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,10 +15,10 @@ public class BorderDetector implements SubDetector {
     Scalar lower = new Scalar(0, 150, 150);
     Scalar upper = new Scalar(10, 255, 255);
 
-    Mat mask;
 
+    List<MaskSet> maskSets;
     public BorderDetector() {
-        mask = new Mat();
+        maskSets = new ArrayList<>();
     }
 
     public BorderSet detectBorder(Mat frame) {
@@ -43,6 +44,9 @@ public class BorderDetector implements SubDetector {
         // Remove everything from frame except border (which is red)
         Core.inRange(frameHSV, lower, upper, maskRed);
         Core.bitwise_and(frame, frame, frameCourse, maskRed);
+
+        // Add mask for debugging
+        maskSets.add(new MaskSet("border", maskRed));
 
         // Greyscale and blur
         Imgproc.cvtColor(frameCourse, frameGray, Imgproc.COLOR_BGR2GRAY);
@@ -97,7 +101,7 @@ public class BorderDetector implements SubDetector {
     }
 
     @Override
-    public Mat getMask() {
-        return null;
+    public List<MaskSet> getMaskSets() {
+        return maskSets;
     }
 }

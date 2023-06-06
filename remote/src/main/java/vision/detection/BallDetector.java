@@ -4,6 +4,8 @@ import courseObjects.Ball;
 import org.opencv.core.*;
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
+import vision.helperClasses.MaskSet;
+
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,9 +22,10 @@ public class BallDetector implements SubDetector {
     private final int uWhiteBall = 255;
 
 
-    Mat mask;
-    public BallDetector() {
-        mask = new Mat();
+    List<MaskSet> maskSets;
+
+    public BallDetector(){
+        maskSets = new ArrayList<>();
     }
 
     public List<Ball> detectBalls(Mat frame) {
@@ -58,8 +61,8 @@ public class BallDetector implements SubDetector {
         Mat binaryFrame = new Mat();
         Imgproc.threshold(frameGray, binaryFrame, lWhiteBall, uWhiteBall, Imgproc.THRESH_BINARY);
 
-        // TODO Change
-        mask = binaryFrame;
+        // Create mask set for debugging
+        maskSets.add(new MaskSet("whiteBalls Mask", binaryFrame));
 
         // Apply blur for better noise reduction
         Mat frameBlur = new Mat();
@@ -94,8 +97,8 @@ public class BallDetector implements SubDetector {
         Mat mask = new Mat();
         Core.inRange(frameHsv, lOrangeBall, uOrangeBall, mask);
 
-        // Show Mask
-        //HighGui.imshow("orangeMask", mask); // Debug Only
+        // Create MaskSet for debugging
+        maskSets.add(new MaskSet("orangeBallsMask", mask));
 
         // Apply blur for noise reduction
         Mat frameBlur = new Mat();
@@ -121,7 +124,7 @@ public class BallDetector implements SubDetector {
     }
 
     @Override
-    public Mat getMask() {
-        return mask;
+    public List<MaskSet> getMaskSets() {
+        return maskSets;
     }
 }

@@ -1,7 +1,10 @@
 package vision.detection;
 
 import org.opencv.core.Mat;
+import vision.helperClasses.MaskSet;
+
+import java.util.List;
 
 public interface SubDetector {
-    public Mat getMask();
+    public List<MaskSet> getMaskSets();
 }

@@ -4,6 +4,7 @@ import courseObjects.Robot;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import vision.helperClasses.ContourSet;
+import vision.helperClasses.MaskSet;
 
 import javax.swing.*;
 import java.util.ArrayList;
@@ -23,10 +24,11 @@ public class RobotDetector implements SubDetector {
     final int areaUpperThreshold = 1000;
 
 
-    Mat mask;
+    List<MaskSet> maskSets;
     public RobotDetector() {
-        mask = new Mat();
+        maskSets = new ArrayList<>();
     }
+
     public Robot detectRobot(Mat frame) {
         Point[] markers = getRobotMarkers(frame);
         Point center = markers[0];
@@ -47,8 +49,8 @@ public class RobotDetector implements SubDetector {
         Mat mask = new Mat();
         Core.inRange(frameBlur, lRobot, uRobot, mask);
 
-        // TODO CHange
-        this.mask = mask;
+        // Add mask for debugging
+        maskSets.add(new MaskSet("robotMask", mask));
 
         // Get Contours
         List<MatOfPoint> contours = new ArrayList<>();
@@ -102,7 +104,7 @@ public class RobotDetector implements SubDetector {
     }
 
     @Override
-    public Mat getMask() {
-        return mask;
+    public List<MaskSet> getMaskSets() {
+        return maskSets;
     }
 }
