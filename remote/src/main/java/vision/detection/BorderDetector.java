@@ -13,8 +13,8 @@ import java.util.stream.Stream;
 public class BorderDetector implements SubDetector {
 
     // Red color thresholds
-    Scalar lower = new Scalar(0, 150, 150);
-    Scalar upper = new Scalar(10, 255, 255);
+    Scalar lower = new Scalar(0, 0, 180);
+    Scalar upper = new Scalar(100, 100, 255);
 
     private BorderSet borderSet;
     List<MaskSet> maskSets;
@@ -35,17 +35,14 @@ public class BorderDetector implements SubDetector {
      * @return null if there are not found exactly 4 lines, else the 4 coordinates of the border intersections.
      */
     private  BorderSet getBorderFromFrame(Mat frame) {
-        Mat frameHSV = new Mat();
         Mat maskRed = new Mat();
         Mat frameCourse = new Mat();
         Mat frameGray = new Mat();
         Mat frameBlur = new Mat();
 
-        // Convert to HSV color format
-        Imgproc.cvtColor(frame, frameHSV, Imgproc.COLOR_BGR2HSV);
 
         // Remove everything from frame except border (which is red)
-        Core.inRange(frameHSV, lower, upper, maskRed);
+        Core.inRange(frame, lower, upper, maskRed);
         Core.bitwise_and(frame, frame, frameCourse, maskRed);
 
         // Add mask for debugging
