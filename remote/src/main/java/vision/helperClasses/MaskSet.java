@@ -10,4 +10,12 @@ public class MaskSet {
         this.maskName = maskName;
         this.mask = mask;
     }
+
+    public Mat getMask() {
+        return mask;
+    }
+
+    public String getMaskName() {
+        return maskName;
+    }
 }

@@ -9,6 +9,7 @@ import org.opencv.highgui.HighGui;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 import vision.helperClasses.BorderSet;
+import vision.helperClasses.MaskSet;
 
 import java.util.List;
 
@@ -18,6 +19,7 @@ public class CourseDetector {
     private BallDetector ballDetector;
     private BorderDetector borderDetector;
     private RobotDetector robotDetector;
+    private List<SubDetector> subDetectors;
 
     // All values in these are stored as pixel values
     private BorderSet borderSet;
@@ -39,10 +41,13 @@ public class CourseDetector {
 
         if (!capture.isOpened()) throw new RuntimeException("Camera Capture was not opened");
 
-        // Create Detectors
+        // Create Detectors and add to SubDetector List
         ballDetector = new BallDetector();
         robotDetector = new RobotDetector();
         borderDetector = new BorderDetector();
+        subDetectors.add(ballDetector);
+        subDetectors.add(robotDetector);
+        subDetectors.add(borderDetector);
 
         // Run setup to get initial objects
         runDetectionSetup(capture);
@@ -108,9 +113,18 @@ public class CourseDetector {
     private void showOverlay() {
         // Mark objects on Overlay
 
-
         // Display overlay
         HighGui.imshow("overlay", frame);
+
+
+        // Display all Masks
+        for (SubDetector subDetector : subDetectors) {
+            for (MaskSet maskSet : subDetector.getMaskSets()) {
+                HighGui.imshow(maskSet.getMaskName(), maskSet.getMask());
+            }
+        }
+
+        // Set frame rate
         HighGui.waitKey(frameDelay);
     }
 }
