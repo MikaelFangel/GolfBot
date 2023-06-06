@@ -94,7 +94,7 @@ public class BorderDetector implements SubDetector {
         for (int i = 0; i < corners.length; i++) {
             Point point = linePoints[i];
 
-            corners[i] = new Point(point.x - offsetX, point.y - offsetY);
+            corners[i] = new Point(point.x, point.y);
         }
 
         return new BorderSet(corners, new Point(offsetX, offsetY));
