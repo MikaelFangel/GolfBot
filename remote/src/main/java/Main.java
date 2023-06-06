@@ -1,11 +1,6 @@
 import exceptions.MissingArgumentException;
 import courseObjects.*;
-import vision.*;
-import vision.detection.CourseDetector;
-
-import java.util.Scanner;
-
-import static vision.Algorithms.*;
+import vision.detection.DetectionController;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException, MissingArgumentException {
@@ -17,6 +12,6 @@ public class Main {
 
         int cameraIndex = 2;
         Course course = new Course();
-        CourseDetector courseDetector = new CourseDetector(course, cameraIndex, true);
+        DetectionController detectionController = new DetectionController(course, cameraIndex, true);
     }
 }

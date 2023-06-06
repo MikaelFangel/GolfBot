@@ -31,7 +31,7 @@ public class RobotDetector implements SubDetector {
         maskSets = new ArrayList<>();
     }
 
-    public void detectRobot(Mat frame) {
+    public boolean detectRobot(Mat frame) {
         Point[] markers = getRobotMarkers(frame);
 
         if (markers != null) {
@@ -43,6 +43,8 @@ public class RobotDetector implements SubDetector {
 
             robot = new Robot(markers[0], markers[1], robotAngle);
         }
+
+        return robot != null;
     }
 
     public Point[] getRobotMarkers(Mat frame) {
