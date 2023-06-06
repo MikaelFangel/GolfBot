@@ -1,9 +1,12 @@
+import courseObjects.Ball;
+import courseObjects.Robot;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import proto.*;
+import vision.Algorithms;
 
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -36,11 +39,11 @@ public class RobotController {
 
     /**
      * Makes the robot drive straight either forward or backwards by using the gyro
-     * @param distance Positive values in cm for forward and negative for backwards
+     * //@param distance Positive values in cm for forward and negative for backwards
      * @throws RuntimeException if the robot was not reached
      */
-    public void driveWGyro(double distance) throws RuntimeException {
-        int speed = -200;
+    public void driveWGyro(Robot robot, Ball ball) throws RuntimeException {
+        int speed = 200;
         MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
                 new MotorPair(OutPort.D, speed));
 
@@ -66,18 +69,22 @@ public class RobotController {
         };
 
         StreamObserver<DriveRequest> requestObserver = ASYNCCLIENT.driveWGyro(responseObserver);
+
+        double distance = Algorithms.findRobotsDistanceToBall(robot, ball);
         try {
             // Countdown distance, simulates distance to target.
-            for (int i = 10; i >= 0; --i) {
+            while (distance > 0){
+
+                distance = Algorithms.findRobotsDistanceToBall(robot, ball);
 
                 DriveRequest drivePIDRequest = DriveRequest.newBuilder()
                         .setMotors(motorsRequest)
-                        .setDistance((float) i) // Note: Currently not used on the robot
+                        .setDistance((float) distance) // Note: Currently not used on the robot
                         .setSpeed(speed) // This speed worked well, other speeds could be researched
                         .build();
 
                 requestObserver.onNext(drivePIDRequest);
-                System.out.println("Send distance value " + i);
+                System.out.println("Send distance value " + distance);
                 // Sleep for a bit before sending the next one.
                 Thread.sleep(700);
                 if (finishLatch.getCount() == 0) {
