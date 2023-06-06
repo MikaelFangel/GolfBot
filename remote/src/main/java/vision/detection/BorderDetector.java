@@ -1,6 +1,7 @@
 package vision.detection;
 
 import org.opencv.core.*;
+import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
 import vision.helperClasses.BorderSet;
 import vision.helperClasses.MaskSet;
@@ -10,10 +11,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class BorderDetector implements SubDetector {
-    // Red color thresholds
-    private final Scalar lower = new Scalar(0, 0, 180);
-    private final Scalar upper = new Scalar(100, 100, 255);
-
     private BorderSet borderSet;
     private final List<MaskSet> maskSets = new ArrayList<>();;
 
@@ -30,27 +27,34 @@ public class BorderDetector implements SubDetector {
 
     /**
      * Finds the border and calculates the corners from an approximation of line intersections.
+     * Note: The mask is displayed in black and white. White equals true
      * @param frame to be evaluated
      * @return A BorderSet with the border corners and the offset from the camera.
      */
     private  BorderSet getBorderFromFrame(Mat frame) {
-        Mat maskRed = new Mat();
-        Mat frameCourse = new Mat();
-        Mat frameGray = new Mat();
-        Mat frameBlur = new Mat();
-
         // Remove everything from frame except border (which is red)
-        Core.inRange(frame, lower, upper, maskRed);
-        Core.bitwise_and(frame, frame, frameCourse, maskRed);
+        Scalar lower = new Scalar(0, 0, 180); // Little red
+        Scalar upper = new Scalar(100, 100, 255); // More red
+
+        // Create a mask to filter in next step
+        Mat mask = new Mat();
+        Core.inRange(frame, lower, upper, mask); // Filter all red colors from frame to mask
+
+        // Filter out to only have the red border
+        Mat frameBorder = new Mat();
+        Core.bitwise_and(frame, frame, frameBorder, mask); // Overlay mask on frame and get the red border
 
         // Add mask for debugging
-        maskSets.add(new MaskSet("border", maskRed));
+        maskSets.add(new MaskSet("border", mask));
 
         // Greyscale and blur
-        Imgproc.cvtColor(frameCourse, frameGray, Imgproc.COLOR_BGR2GRAY);
+        Mat frameGray = new Mat();
+        Imgproc.cvtColor(frameBorder, frameGray, Imgproc.COLOR_BGR2GRAY);
+
+        Mat frameBlur = new Mat();
         Imgproc.GaussianBlur(frameGray, frameBlur, new Size(9, 9), 0);
 
-        // Find contours (color patches of the border
+        // Find contours (color patches of the border)
         List<MatOfPoint> contours = new ArrayList<>();
         Mat dummyHierarchy = new Mat();
         Imgproc.findContours(frameBlur, contours, dummyHierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
@@ -70,7 +74,7 @@ public class BorderDetector implements SubDetector {
 
             );
 
-            // Exit if the four lines are found. Becuase we only need to have 4.
+            // Exit if the four lines are found. Because we only need to have 4.
             if (approx.toArray().length == 4) {
                 lines = approx;
                 break;

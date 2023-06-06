@@ -323,4 +323,8 @@ public class DetectionController {
             }
         }
     }
+
+    public Course getCourse() {
+        return this.course;
+    }
 }
