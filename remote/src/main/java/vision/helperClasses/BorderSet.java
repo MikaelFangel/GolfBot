@@ -15,6 +15,9 @@ public class BorderSet {
         this.correctCoords = correctCoords;
     }
 
+    /**
+     * @return list of length 4 in order {TopLeft, TopRight, BottomLeft, BottomRight}
+     */
     public Point[] getCorrectCoords() {
         return correctCoords;
     }

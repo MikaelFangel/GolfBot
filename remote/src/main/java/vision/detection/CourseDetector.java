@@ -14,6 +14,8 @@ import org.opencv.videoio.Videoio;
 import vision.helperClasses.BorderSet;
 import vision.helperClasses.MaskSet;
 
+import static vision.math.Geometry.distanceBetweenTwoPoints;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -117,11 +119,13 @@ public class CourseDetector {
     }
 
     private void correctObjects() {
-
+        // TODO nothing yet to do.
     }
 
     private void updateCourse() {
-        // Make coordinates to CM
+        // Find conversion factor to translate units
+
+
     }
 
     private void showOverlay() {

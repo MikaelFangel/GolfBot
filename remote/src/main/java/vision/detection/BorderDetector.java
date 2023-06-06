@@ -1,13 +1,14 @@
 package vision.detection;
 
-import courseObjects.Border;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import vision.helperClasses.BorderSet;
 import vision.helperClasses.MaskSet;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class BorderDetector implements SubDetector {
 
@@ -97,7 +98,20 @@ public class BorderDetector implements SubDetector {
             corners[i] = new Point(point.x, point.y);
         }
 
-        return new BorderSet(corners, new Point(offsetX, offsetY));
+        // Sort corners in order: {TopLeft, TopRight, BottomLeft, BottomRight}
+        List<Point> sortedCorners = new ArrayList<>(Arrays.stream(corners).sorted((p1, p2) -> (int) ((p1.x + p1.y) - (p2.x + p2.y))).toList());
+
+        if (sortedCorners.get(1).x < sortedCorners.get(2).x) {
+            Point temp = sortedCorners.get(1);
+            sortedCorners.set(1, sortedCorners.get(2));
+            sortedCorners.set(2, temp);
+        }
+
+        for (Point corner : sortedCorners){
+            System.out.println(sortedCorners);
+        }
+
+        return new BorderSet(sortedCorners.toArray(Point[]::new), new Point(offsetX, offsetY));
     }
 
     public BorderSet getBorderSet() {
