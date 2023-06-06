@@ -172,6 +172,7 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 		direction = -1.0
 	}
 
+	// Set PID values
 	kp := 0.125
 	kd := 0.5
 
@@ -190,7 +191,8 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 		derivative := target - lastError
 		lastError = target
 
-		turn := (kp * target) + (kd * derivative) //+ (ki * integral) +
+		// Account for errors
+		turn := (kp * target) + (kd * derivative)
 
 		// Prepare the motors for running
 		for _, request := range in.GetMotors().GetMotor() {
@@ -200,21 +202,7 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 			}
 
 			power := rotateSpeed + int(turn)
-
-			if (target * direction) < 0 {
-				power *= -1
-			}
-
-			if math.Abs(target) > 5 {
-				power *= 4
-			}
-
-			switch {
-			case power > 50:
-				power = 50
-			case power < -50:
-				power = -50
-			}
+			power = setPowerInRotate(target, power, direction)
 
 			switch request.GetMotorPort() {
 			case pBuff.OutPort_A:
@@ -236,6 +224,26 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 
 	stopAllMotors(motorRequests)
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
+}
+
+// setPowerInRotate increase power when far from the target and also sets a powercap to avoid drifting from high speeds
+func setPowerInRotate(target float64, power int, direction float64) int {
+	if (target * direction) < 0 {
+		power *= -1
+	}
+
+	if math.Abs(target) > 5 {
+		power *= 4
+	}
+
+	switch {
+	case power > 50:
+		power = 50
+	case power < -50:
+		power = -50
+	}
+
+	return power
 }
 
 // CollectRelease Either collects or releases balls. Whether it is collecting or releasing is handled client side.
