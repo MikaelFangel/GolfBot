@@ -20,7 +20,8 @@ func GetDistanceInCm() float64 {
 
 	distanceString, _ := ultraSonicSensor.Value(0)
 	distance, _ := strconv.ParseFloat(distanceString, 64)
-	return distance / 10
+	mmToCmConversionFactor := 10.
+	return distance / mmToCmConversionFactor
 }
 
 // GetGyroValue Return the current gyro value as a float64

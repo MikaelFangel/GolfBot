@@ -100,6 +100,7 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DrivePIDRequest) (
 		// "D term", trying to predict next error
 		turn := (kp * gyroErr) + (ki * integral) + (kd * derivative)
 
+		// Prepare the motors for running
 		for _, request := range in.GetMotors().GetMotor() {
 			motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
 			if err != nil {
@@ -178,8 +179,10 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 	target := 0.0
 
 	var motorRequests []motorRequest
-	gyro, _ := util.GetSensor(pBuff.InPort_in1.String(), "GYRO")
+	gyro, _ := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
 	gyroVal, _ := util.GetGyroValue(gyro)
+
+	// Run until the input degrees match the gyro value.
 	for math.Abs(gyroVal) != math.Abs(float64(in.Degrees)) {
 		gyroVal, _ = util.GetGyroValue(gyro)
 		target = gyroVal - float64(in.Degrees)
@@ -232,11 +235,12 @@ func setPowerInRotate(target float64, power int, direction float64) int {
 		power *= 4
 	}
 
+	powerCap := 50
 	switch {
-	case power > 50:
-		power = 50
-	case power < -50:
-		power = -50
+	case power > powerCap:
+		power = powerCap
+	case power < -powerCap:
+		power = -powerCap
 	}
 
 	return power

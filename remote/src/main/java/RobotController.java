@@ -88,7 +88,7 @@ public class RobotController {
     }
 
     /**
-     * Recalibrates the
+     * Recalibrates the gyro
      * @throws RuntimeException if the robot was not reached
      */
     public void recalibrateGyro() throws RuntimeException {
