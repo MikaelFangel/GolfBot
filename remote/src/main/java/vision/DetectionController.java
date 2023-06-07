@@ -198,43 +198,19 @@ public class DetectionController {
         double camHeight = course.getCameraHeight();
         Point courseCenter = new Point(course.getWidth() / 2, course.getHeight() / 2);
 
-        // Corners
-        /*
-        Border border = course.getBorder();
-        Point[] corners = border.getCornersAsArray();
-
-        Point[] correctedCorners = new Point[corners.length];
-        for (int i = 0; i < correctedCorners.length; i++) {
-            Point corner = corners[i];
-
-            // TODO take both X and Y factors
-            corner = Algorithms.correctedCoordinatesOfObject(corner, border.height, course, conversionFactorX, courseCenter);
-            correctedCorners[i] = corner;
-        }
-
-        Border correctedBorder = new Border(correctedCorners[0], correctedCorners[1],
-            correctedCorners[2], correctedCorners[3]);
-        course.setBorder(correctedBorder);
-         */
-
         // Balls
         List<Ball> balls = course.getBalls();
         List<Ball> correctedBalls = new ArrayList<>();
 
         for (Ball ball : balls) {
-            //System.out.println("Before Ball Coordinates: " + ball.getCenter()); // TODO delete
-
             Point correctedCenter = Algorithms.correctedCoordinatesOfObject(
                     ball.getCenter(),
                     courseCenter,
                     ball.getRadius(),
                     camHeight);
 
-            //System.out.println("Correct Ball Coordinates: " + correctedCenter); // TODO delete
-
             correctedBalls.add(new Ball(correctedCenter, ball.getColor()));
         }
-
         course.setBalls(correctedBalls);
 
         // Robot
@@ -245,8 +221,6 @@ public class DetectionController {
                 robot.height, camHeight);
         double correctedAngle = angleBetweenTwoPoints(correctedCenter.x, correctedCenter.y,
                 correctedFront.x, correctedFront.y);
-
-        // System.out.println("Correct Robot Coordinates: " + correctedCenter); // TODO delete
 
         course.setRobot(new Robot(correctedCenter, correctedFront, correctedAngle));
     }
@@ -296,8 +270,6 @@ public class DetectionController {
 
             Ball correctedBall = new Ball(correctedCenter, ball.getColor());
             correctedBalls.add(correctedBall);
-
-            System.out.println(correctedBall.getCenter());
         }
 
         this.course.setBalls(correctedBalls);
