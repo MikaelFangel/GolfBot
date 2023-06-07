@@ -17,9 +17,20 @@ public class AlgorithmsTest {
     public void correctedCoordinatesOfObjectTest1(){
         Point  newPoint = Algorithms.correctedCoordinatesOfObject(
                 new Point(20,20),
+                new Point(150, 150),
                 40,
-                course,
-                2
+                165
+        );
+        System.out.println(newPoint.toString());
+    }
+
+    @Test
+    public void correctedCoordinatesOfObjectTest2(){
+        Point  newPoint = Algorithms.correctedCoordinatesOfObject(
+                new Point(200,200),
+                new Point(150, 150),
+                40,
+                165
         );
         System.out.println(newPoint.toString());
     }

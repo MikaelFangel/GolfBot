@@ -55,29 +55,35 @@ public class Algorithms {
         return distanceBetweenTwoPoints(robot.getCenter().x, robot.getCenter().y, ball.getCenter().x, ball.getCenter().y) - robot.length;
     }
 
-    public static Point correctedCoordinatesOfObject(Point originalCoords, double objectHeight , Course course, double conversionFactor, Point camera){
+    public static Point correctedCoordinatesOfObject(Point originalCoords, Point camera, double objectHeight , double cameraHeight){
+        //changing point, so that camera is origo
+        Point myCamera = new Point(0,0);
+        Point myObject = new Point(originalCoords.x - camera.x, originalCoords.y - camera.y);
+
         //finds the angel between the camera and the point
-        double angelToPoint = Geometry.angleBetweenTwoPoints(camera.x, camera.y,originalCoords.x,originalCoords.y);
+        double angelToPointInDegree = Geometry.angleBetweenTwoPoints(myCamera.x, myCamera.y, myObject.x, myObject.y);
 
         //distanec between objects
-        double distance = Geometry.distanceBetweenTwoPoints(camera.x, camera.y, originalCoords.x, originalCoords.y);
+        double distance = Geometry.distanceBetweenTwoPoints(myCamera.x, myCamera.y, myObject.x, myObject.y);
 
         double newDistance = Geometry.objectActualPosition(
-                course.getCameraHeight(),
+                cameraHeight,
                 objectHeight,
-                conversionFactor * distance
-        ) / conversionFactor;
+                distance
+        );
 
         Point newPoint = new Point();
 
-        newPoint.x = Math.pow(Math.cos(angelToPoint),2)*newDistance;
-        newPoint.y = Math.pow(Math.sin(angelToPoint),2)*newDistance;
+        newPoint.x = (Math.cos(Math.toRadians(angelToPointInDegree))*newDistance)+camera.x;
+        newPoint.y = (Math.sin(Math.toRadians(angelToPointInDegree))*newDistance)+camera.y;
 
+        /*
         if (camera.x >= originalCoords.x) newPoint.x = camera.x - newPoint.x;
         else newPoint.x = camera.x + newPoint.x;
 
         if (camera.y >= originalCoords.y) newPoint.y = camera.y - newPoint.y;
         else newPoint.y = camera.y + newPoint.y;
+        */
 
         return newPoint;
     }

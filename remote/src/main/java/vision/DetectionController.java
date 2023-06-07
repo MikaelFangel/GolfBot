@@ -200,8 +200,11 @@ public class DetectionController {
         List<Ball> correctedBalls = new ArrayList<>();
 
         for (Ball ball : balls) {
-            Point correctedCenter = Algorithms.correctedCoordinatesOfObject(ball.getCenter(),
-                    ball.getRadius(), course, conversionFactorX, courseCenter);
+            Point correctedCenter = Algorithms.correctedCoordinatesOfObject(
+                    ball.getCenter(),
+                    courseCenter,
+                    ball.getRadius(),
+                    camHeight);
 
             System.out.println("Correct Ball Coordinates: " + correctedCenter); // TODO delete
 
