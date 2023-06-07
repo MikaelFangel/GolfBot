@@ -190,8 +190,8 @@ public class DetectionController {
             Point bottomLeft = corners[2];
 
             // Calculate conversion factors and get offset
-            this.conversionFactorX = this.course.length / distanceBetweenTwoPoints(topLeft.x, topLeft.y, topRight.x, topRight.y);
-            this.conversionFactorY = this.course.width / distanceBetweenTwoPoints(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y);
+            this.conversionFactorX = this.course.getLength() / distanceBetweenTwoPoints(topLeft.x, topLeft.y, topRight.x, topRight.y);
+            this.conversionFactorY = this.course.getWidth() / distanceBetweenTwoPoints(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y);
             this.pixelOffset = borderSet.getOrigin();
         }
 

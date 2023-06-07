@@ -5,12 +5,20 @@ import org.opencv.core.Point;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * The course consists of (1) the dimensions of the course, (2) coordinates of the corners in centimeters,
+ * (3) a list containing the balls located on the course to be picked up by the robot, and (4) the robot object
+ */
 public class Course {
-    public final double length = 167.0, width = 122.0; // Measured from the innermost sides
-
+    private final double length, width; // Measured from the innermost sides
     private Point topLeft, topRight, bottomLeft, bottomRight; // The corners of the border.
     private List<Ball> balls;
     private Robot robot;
+
+    public Course() {
+        this.length = 167.0;
+        this.width = 122.0;
+    }
 
 
     // Getters and setters
@@ -60,5 +68,13 @@ public class Course {
 
     public synchronized void setRobot(Robot robot) {
         this.robot = robot;
+    }
+
+    public double getLength() {
+        return length;
+    }
+
+    public double getWidth() {
+        return width;
     }
 }
