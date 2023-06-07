@@ -63,12 +63,8 @@ message RotateRequest {
   MultipleMotors motors = 1;
   int32 degrees = 2;
   int32 speed = 3;
-}
-
-message DriveRequest {
-  MultipleMotors motors = 1;
-  float distance = 2;
-  int32 speed = 3;
+  optional float kp = 4;
+  optional float kd = 5;
 }
 
 // TODO: Potential use in future for combining driving and rotation with PID

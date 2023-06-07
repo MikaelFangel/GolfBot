@@ -195,9 +195,17 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 		direction = -1.0
 	}
 
-	// Set PID values
+	// Set the default PID values
 	kp := 0.125
 	kd := 0.5
+
+	// Change the values to the user input if provided
+	switch {
+	case in.Kp != nil:
+		kp = float64(*in.Kp)
+	case in.Kd != nil:
+		kd = float64(*in.Kd)
+	}
 
 	lastError := 0.0
 	target := float64(in.Degrees)
