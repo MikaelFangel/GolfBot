@@ -177,7 +177,7 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 	kd := 0.5
 
 	lastError := 0.0
-	target := float64(in.Degrees)
+	target := 0.0
 
 	var motorRequests []motorRequest
 	gyro, _ := util.GetSensor(pBuff.InPort_in1.String(), "GYRO")
