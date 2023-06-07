@@ -68,10 +68,9 @@ public class DetectionController {
 
         if (!capture.isOpened()) throw new RuntimeException("Camera Capture was not opened");
 
-        // Add detectors to list
-        this.subDetectors.add(ballDetector);
-        this.subDetectors.add(robotDetector);
-        this.subDetectors.add(borderDetector);
+        this.subDetectors.add(this.ballDetector);
+        this.subDetectors.add(this.robotDetector);
+        this.subDetectors.add(this.borderDetector);
 
         // Run setup to get initial objects
         runDetectionSetup(capture);
@@ -185,9 +184,9 @@ public class DetectionController {
 
             // Find conversion factor to translate units from pixel to CM
             this.corners = borderSet.getCoords().clone();
-            Point topLeft = corners[0];
-            Point topRight = corners[1];
-            Point bottomLeft = corners[2];
+            Point topLeft = this.corners[0];
+            Point topRight = this.corners[1];
+            Point bottomLeft = this.corners[2];
 
             // Calculate conversion factors and get offset
             this.conversionFactorX = this.course.getLength() / distanceBetweenTwoPoints(topLeft.x, topLeft.y, topRight.x, topRight.y);
