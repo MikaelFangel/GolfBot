@@ -28,7 +28,7 @@ public class Main {
                 if (closestBall == null)
                     break;
             } else {
-                // No balls left on the course
+                // No balls left on the course. TODO: Should drive to drop off point
                 break;
             }
 

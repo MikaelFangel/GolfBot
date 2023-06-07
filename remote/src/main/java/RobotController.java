@@ -16,8 +16,7 @@ public class RobotController {
     private final ManagedChannel CHANNEL;
     private final MotorsGrpc.MotorsBlockingStub CLIENT;
     private final MotorsGrpc.MotorsStub ASYNCCLIENT;
-
-    private final int DEFAULT_SPEED = 100;
+    private final int MAX_ITERATIONS = 20;
 
     /**
      * Initializes channel and client to connect with the robot.
@@ -38,17 +37,20 @@ public class RobotController {
     }
 
     /**
-     * Makes the robot drive straight either forward or backwards by using the gyro
-     * //@param distance Positive values in cm for forward and negative for backwards
+     * Makes the robot drive straight either forward or backwards by using the gyro and streaming distance to the robot
+     * @param course For getting ball and robot coordinates
      * @throws RuntimeException if the robot was not reached
+     * @see <a href="https://github.com/grpc/grpc-java/blob/master/examples/src/main/java/io/grpc/examples/routeguide/RouteGuideClient.java">Example streaming client</a>
      */
     public void driveWGyro(Course course) throws RuntimeException {
         int speed = 200;
         MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
                 new MotorPair(OutPort.D, speed));
 
+        // TODO: Should research if this latch is necessary
         final CountDownLatch finishLatch = new CountDownLatch(1);
 
+        // Use gRPCs StreamObserver interface and observe the response.
         StreamObserver<StatusReply> responseObserver = new StreamObserver<>() {
             @Override
             public void onNext(StatusReply statusReply) {
@@ -68,16 +70,21 @@ public class RobotController {
             }
         };
 
+        // Observe the requests to send
         StreamObserver<DrivePIDRequest> requestObserver = ASYNCCLIENT.driveWGyro(responseObserver);
 
+        // Calculate distances
         Ball closestBall = Algorithms.findClosestBall(course.getBalls(), course.getRobot());
         assert closestBall != null;
         double distance = Algorithms.findRobotsDistanceToBall(course.getRobot(), closestBall);
 
-        int failsave = 0;
+        // Iterator used as a failsafe
+        int i = 0;
+
         try {
-            // Countdown distance, simulates distance to target.
-            while (distance > 0 && failsave < 15){
+            // Continue to stream messages until reaching target
+            while (distance > 0 && i < MAX_ITERATIONS){
+                // Update distance
                 distance = Algorithms.findRobotsDistanceToBall(course.getRobot(), closestBall);
 
                 DrivePIDRequest drivePIDRequest = DrivePIDRequest.newBuilder()
@@ -86,16 +93,18 @@ public class RobotController {
                         .setSpeed(speed) // This speed worked well, other speeds could be researched
                         .build();
 
+                // Send request
                 requestObserver.onNext(drivePIDRequest);
-                System.out.println("Send distance value " + distance);
-                // Sleep for a bit before sending the next one.
+
+                // Sleep for a bit before sending the next one. TODO: Research timing of the delay with the robot
                 Thread.sleep(700);
+
                 if (finishLatch.getCount() == 0) {
                     // RPC completed or errored before we finished sending.
                     // Sending further requests won't error, but they will just be thrown away.
                     return;
                 }
-                failsave++;
+                i++;
             }
         } catch (RuntimeException e) {
             // Cancel RPC
@@ -104,17 +113,9 @@ public class RobotController {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+
         // Mark the end of requests
         requestObserver.onCompleted();
-
-        try {
-            // Receiving happens asynchronously
-            if (!finishLatch.await(1, TimeUnit.MINUTES)) {
-                System.out.println("recordRoute can not finish within 1 minutes");
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public void stopMotors() {
