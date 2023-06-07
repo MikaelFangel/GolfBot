@@ -67,7 +67,7 @@ public class RobotController {
             }
         };
 
-        StreamObserver<DriveRequest> requestObserver = ASYNCCLIENT.driveWGyro(responseObserver);
+        StreamObserver<DrivePIDRequest> requestObserver = ASYNCCLIENT.driveWGyro(responseObserver);
 
         double distance = Algorithms.findRobotsDistanceToBall(course.getRobot(), course.getBalls().get(0));
         int failsave = 0;
@@ -77,7 +77,7 @@ public class RobotController {
 
                 distance = Algorithms.findRobotsDistanceToBall(course.getRobot(), course.getBalls().get(0));
 
-                DriveRequest drivePIDRequest = DriveRequest.newBuilder()
+                DrivePIDRequest drivePIDRequest = DrivePIDRequest.newBuilder()
                         .setMotors(motorsRequest)
                         .setDistance((float) distance) // Note: Currently not used on the robot
                         .setSpeed(speed) // This speed worked well, other speeds could be researched

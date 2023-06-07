@@ -56,15 +56,21 @@ func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
 	ki := 0.25
 	kd := 0.1
 
+	// Begin stream from client
+	driveRequest, err := in.Recv()
+	if err != nil {
+		return err
+	}
+
 	// Change the values to the user input if provided
-	/*switch {
-	case in.Kp != nil:
-		kp = float64(*in.Kp)
-	case in.Ki != nil:
-		ki = float64(*in.Ki)
-	case in.Kd != nil:
-		kd = float64(*in.Kd)
-	}*/
+	switch {
+	case driveRequest.Kp != nil:
+		kp = float64(*driveRequest.Kp)
+	case driveRequest.Ki != nil:
+		ki = float64(*driveRequest.Ki)
+	case driveRequest.Kd != nil:
+		kd = float64(*driveRequest.Kd)
+	}
 
 	// the running sum of errors
 	integral := 0.0
@@ -73,11 +79,6 @@ func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
 	lastError := 0.0
 
 	// Prepare the motors for running
-	var motorRequests []motorRequest
-
-	// Begin stream from client
-	driveRequest, _ := in.Recv()
-
 	distance := int(driveRequest.Distance)
 
 	// Change speed value if distance is negative
@@ -92,6 +93,7 @@ func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
 	}
 
 	// TODO: For testing purposes run until i < 20, but should be until length to target <= 0. Research RPC client streaming
+	var motorRequests []motorRequest
 	for distance > 0 {
 		// Read gyro values, eg. the current error
 		gyroValStr, _ := gyro.Value(0)
@@ -107,6 +109,8 @@ func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
 		// "D term", trying to predict next error
 		turn := (kp * gyroErr) + (ki * integral) + (kd * derivative)
 
+		// Slice the array to reuse positions
+		motorRequests = motorRequests[0:0]
 		for _, request := range driveRequest.GetMotors().GetMotor() {
 			motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
 			if err != nil {
@@ -212,6 +216,9 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 
 		// Account for errors
 		turn := (kp * target) + (kd * derivative)
+
+		// Slice the array to reuse positions
+		motorRequests = motorRequests[0:0]
 
 		// Prepare the motors for running
 		for _, request := range in.GetMotors().GetMotor() {
