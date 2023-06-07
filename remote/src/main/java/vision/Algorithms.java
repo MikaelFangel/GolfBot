@@ -57,9 +57,9 @@ public class Algorithms {
 
         // Check if there is a shorter angle
         if (clockWiseAngleToBall > 180)
-            shortestAngleToBall = clockWiseAngleToBall - 180;
+            shortestAngleToBall = clockWiseAngleToBall - 360;
         if (clockWiseAngleToBall < -180)
-            shortestAngleToBall = clockWiseAngleToBall + 180;
+            shortestAngleToBall = clockWiseAngleToBall + 360;
 
         return robot.getAngle() - shortestAngleToBall;
     }
