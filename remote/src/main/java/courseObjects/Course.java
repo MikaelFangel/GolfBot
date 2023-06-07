@@ -6,9 +6,9 @@ import java.util.Collections;
 import java.util.List;
 
 public class Course {
-    public final double length = 167.0, width = 122.0;
+    public final double length = 167.0, width = 122.0; // Measured from the innermost sides
 
-    private Point topLeft, topRight, bottomLeft, bottomRight;
+    private Point topLeft, topRight, bottomLeft, bottomRight; // The corners of the border.
     private List<Ball> balls;
     private Robot robot;
 
