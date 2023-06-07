@@ -8,14 +8,6 @@ option go_package = "main/proto";
 option java_multiple_files = true;
 option java_outer_classname = "EV3Client";
 
-// Functions that can be called through the interface
-service Motors {
-  rpc RunMotors(MultipleMotors) returns (StatusReply) {} // Takes an array. Usable for all amounts of motors at a time
-  rpc StopMotors(MultipleMotors) returns (StatusReply) {}
-  rpc Drive(DriveRequest) returns (StatusReply) {}
-  rpc Rotate(RotateRequest) returns (StatusReply) {}
-}
-
 // Motortypes
 enum Type {
   l = 0;
@@ -44,6 +36,16 @@ enum OutPort {
   D = 3;
 }
 
+// Functions that can be called through the interface
+service Motors {
+  rpc RunMotors(MultipleMotors) returns (StatusReply) {} // Takes an array. Usable for all amounts of motors at a time
+  rpc StopMotors(MultipleMotors) returns (StatusReply) {}
+  rpc Drive(DriveRequest) returns (StatusReply) {}
+  rpc Rotate(RotateRequest) returns (StatusReply) {}
+  rpc Grab(MultipleMotors) returns (StatusReply) {}
+  rpc CollectRelease(MultipleMotors) returns (StatusReply) {}
+}
+
 // MultipleMotors reuses the message MotorRequest
 // The 'repeated' keyword makes it an array of motors, which can be handled with standard array syntax
 // Note that '1' is a tag, as the default value of repeated fields is empty
@@ -53,23 +55,23 @@ message MotorRequest {
   OutPort motorPort = 3; // E.g. "A"
 }
 
+// Might need to out-phased at some point
+message MultipleMotors {
+  repeated MotorRequest motor = 1;
+}
+
 message RotateRequest {
-  repeated MotorRequest motors = 1;
+  MultipleMotors motors = 1;
   int32 degrees = 2;
   int32 speed = 3;
 }
 
 message DriveRequest {
-  repeated MotorRequest motors = 1;
+  MultipleMotors motors = 1;
   float distance = 2;
   int32 speed = 3;
 }
 
 message StatusReply {
   bool replyMessage = 1; // Success
-}
-
-// Might need to out-phased at some point
-message MultipleMotors {
-  repeated MotorRequest motor = 1;
 }

@@ -6,18 +6,19 @@ import java.awt.Color;
 
 public class Ball {
     private Point center;
-    private Color color;
+    private BallColor color;
+    private final double radius = 4;
 
-    public Ball(Point center, Color color) {
+    public Ball(Point center, BallColor color) {
         this.center = center;
         this.color = color;
     }
 
-    public Color getColor() {
+    public BallColor getColor() {
         return color;
     }
 
-    public void setColor(Color color) {
+    public void setColor(BallColor color) {
         this.color = color;
     }
 
