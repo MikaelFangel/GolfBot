@@ -222,7 +222,7 @@ public class DetectionController {
         List<Ball> correctedBalls = new ArrayList<>();
 
         for (Ball ball : balls) {
-            System.out.println("Before Ball Coordinates: " + ball.getCenter()); // TODO delete
+            //System.out.println("Before Ball Coordinates: " + ball.getCenter()); // TODO delete
 
             Point correctedCenter = Algorithms.correctedCoordinatesOfObject(
                     ball.getCenter(),
@@ -230,7 +230,7 @@ public class DetectionController {
                     ball.getRadius(),
                     camHeight);
 
-            System.out.println("Correct Ball Coordinates: " + correctedCenter); // TODO delete
+            //System.out.println("Correct Ball Coordinates: " + correctedCenter); // TODO delete
 
             correctedBalls.add(new Ball(correctedCenter, ball.getColor()));
         }
@@ -246,7 +246,7 @@ public class DetectionController {
         double correctedAngle = angleBetweenTwoPoints(correctedCenter.x, correctedCenter.y,
                 correctedFront.x, correctedFront.y);
 
-        System.out.println("Correct Robot Coordinates: " + correctedCenter); // TODO delete
+        // System.out.println("Correct Robot Coordinates: " + correctedCenter); // TODO delete
 
         course.setRobot(new Robot(correctedCenter, correctedFront, correctedAngle));
     }
@@ -296,6 +296,8 @@ public class DetectionController {
 
             Ball correctedBall = new Ball(correctedCenter, ball.getColor());
             correctedBalls.add(correctedBall);
+
+            System.out.println(correctedBall.getCenter());
         }
 
         this.course.setBalls(correctedBalls);

@@ -107,7 +107,7 @@ public class BorderDetector implements SubDetector {
         double offsetY = sortedCorners.get(0).y;
         cameraOffset = new Point(offsetX, offsetY);
 
-        return new Border(corners[0], corners[1], corners[2], corners[3]);
+        return new Border(sortedCorners.get(0), sortedCorners.get(1), sortedCorners.get(2), sortedCorners.get(3));
     }
 
     public Border getBorder() {
