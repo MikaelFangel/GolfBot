@@ -47,9 +47,6 @@ public class RobotController {
         MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
                 new MotorPair(OutPort.D, speed));
 
-        // TODO: Should research if this latch is necessary
-        final CountDownLatch finishLatch = new CountDownLatch(1);
-
         // Use gRPCs StreamObserver interface and observe the response.
         StreamObserver<StatusReply> responseObserver = new StreamObserver<>() {
             @Override
@@ -60,13 +57,11 @@ public class RobotController {
             @Override
             public void onError(Throwable t) {
                 System.out.println("Something failed...!" + Status.fromThrowable(t));
-                finishLatch.countDown();
             }
 
             @Override
             public void onCompleted() {
                 System.out.println("Finished");
-                finishLatch.countDown();
             }
         };
 
@@ -99,11 +94,6 @@ public class RobotController {
                 // Sleep for a bit before sending the next one. TODO: Research timing of the delay with the robot
                 Thread.sleep(700);
 
-                if (finishLatch.getCount() == 0) {
-                    // RPC completed or errored before we finished sending.
-                    // Sending further requests won't error, but they will just be thrown away.
-                    return;
-                }
                 i++;
             }
         } catch (RuntimeException e) {
