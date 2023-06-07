@@ -34,7 +34,6 @@ public class DetectionController {
     private final RobotDetector robotDetector = new RobotDetector();
 
     // For converting pixels to centimeters
-    private Point[] corners;
     private double conversionFactorX;
     private double conversionFactorY;
     private Point pixelOffset;
@@ -231,20 +230,18 @@ public class DetectionController {
             this.conversionFactorY = this.course.getHeight() / distanceBetweenTwoPoints(border.getTopLeft().x, border.getTopLeft().y,
                     border.getBottomLeft().x, border.getBottomLeft().y);
             this.pixelOffset = this.borderDetector.getCameraOffset();
+
+            updateCourseCorners();
+            updateCourseRobot();
+            updateCourseBalls();
         }
-
-        if (this.corners == null) return; // Cant calculate if these are null
-
-        updateCourseCorners();
-        updateCourseRobot();
-        updateCourseBalls();
     }
 
     /**
      * Updates the corner positions of Course object, in centimetres.
      */
     private void updateCourseCorners() {
-        Point[] convertedCorners = this.corners.clone();
+        Point[] convertedCorners = this.borderDetector.getBorder().getCornersAsArray();
 
         // Convert from pixel to cm.
         for (int i = 0; i < convertedCorners.length; i++)
@@ -254,7 +251,7 @@ public class DetectionController {
         Border border = new Border(convertedCorners[0], convertedCorners[1],
                 convertedCorners[2], convertedCorners[3]);
 
-        course.setBorder(border);
+        this.course.setBorder(border);
     }
 
     /**
