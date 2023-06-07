@@ -67,7 +67,6 @@ message RotateRequest {
   optional float kd = 5;
 }
 
-// TODO: Potential use in future for combining driving and rotation with PID
 message DrivePIDRequest {
   MultipleMotors motors = 1;
   float distance = 2;

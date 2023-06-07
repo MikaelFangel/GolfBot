@@ -1,3 +1,4 @@
+import courseObjects.Ball;
 import courseObjects.Course;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
@@ -69,12 +70,15 @@ public class RobotController {
 
         StreamObserver<DrivePIDRequest> requestObserver = ASYNCCLIENT.driveWGyro(responseObserver);
 
-        double distance = Algorithms.findRobotsDistanceToBall(course.getRobot(), course.getBalls().get(0));
+        Ball closestBall = Algorithms.findClosestBall(course.getBalls(), course.getRobot());
+        assert closestBall != null;
+        double distance = Algorithms.findRobotsDistanceToBall(course.getRobot(), closestBall);
+
         int failsave = 0;
         try {
             // Countdown distance, simulates distance to target.
             while (distance > 0 && failsave < 15){
-                distance = Algorithms.findRobotsDistanceToBall(course.getRobot(), course.getBalls().get(0));
+                distance = Algorithms.findRobotsDistanceToBall(course.getRobot(), closestBall);
 
                 DrivePIDRequest drivePIDRequest = DrivePIDRequest.newBuilder()
                         .setMotors(motorsRequest)

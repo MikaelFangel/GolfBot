@@ -16,19 +16,35 @@ public class Main {
 
         Course course = detectionController.getCourse();
 
-        Ball closestBall = Algorithms.findClosestBall(course.getBalls(), course.getRobot());
-        if (closestBall == null) return;
+        while (true) {
 
-        double angle = Algorithms.findRobotsAngleToBall(course.getRobot(), closestBall);
-        double distance = Algorithms.findRobotsDistanceToBall(course.getRobot(), closestBall);
-        System.out.println("Driving distance: " + distance + "with angle: " + angle);
+            Ball closestBall;
 
-        // Integration test, rotate to the ball and collect it
-        controller.recalibrateGyro();
-        controller.rotateWGyro(-angle);
-        controller.collectRelease(true);
-        controller.recalibrateGyro();
-        controller.driveWGyro(course);
-        controller.stopCollectRelease();
+            // Check if there is balls left
+            if(course.getBalls() != null) {
+                closestBall = Algorithms.findClosestBall(course.getBalls(), course.getRobot());
+
+                // Do we need both checks? This check also make sure program won't crash after collecting last ball
+                if (closestBall == null)
+                    break;
+            } else {
+                // No balls left on the course
+                break;
+            }
+
+            double angle = Algorithms.findRobotsAngleToBall(course.getRobot(), closestBall);
+            double distance = Algorithms.findRobotsDistanceToBall(course.getRobot(), closestBall);
+            System.out.println("Driving distance: " + distance + " with angle: " + angle);
+
+            // Quick integration test, rotate to the ball and collect it
+            controller.recalibrateGyro();
+            controller.rotateWGyro(-angle);
+            controller.collectRelease(true);
+            controller.recalibrateGyro();
+            controller.driveWGyro(course);
+            controller.stopCollectRelease();
+        }
+
+        System.out.println("Done");
     }
 }
