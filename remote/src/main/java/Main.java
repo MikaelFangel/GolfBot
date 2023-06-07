@@ -3,8 +3,6 @@ import courseObjects.*;
 import vision.Algorithms;
 import vision.DetectionController;
 
-import java.util.Scanner;
-
 public class Main {
     public static void main(String[] args) throws InterruptedException, MissingArgumentException {
         if (args.length < 1) {
@@ -25,7 +23,12 @@ public class Main {
         double distance = Algorithms.findRobotsDistanceToBall(course.getRobot(), closestBall);
         System.out.println("Driving distance: " + distance + "with angle: " + angle);
 
+        // Integration test, rotate to the ball and collect it
         controller.recalibrateGyro();
-        controller.driveWGyro(course.getRobot(), closestBall);
+        controller.rotateWGyro(-angle);
+        controller.collectRelease(true);
+        controller.recalibrateGyro();
+        controller.driveWGyro(course);
+        controller.stopCollectRelease();
     }
 }

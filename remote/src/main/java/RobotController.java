@@ -74,7 +74,6 @@ public class RobotController {
         try {
             // Countdown distance, simulates distance to target.
             while (distance > 0 && failsave < 15){
-
                 distance = Algorithms.findRobotsDistanceToBall(course.getRobot(), course.getBalls().get(0));
 
                 DriveRequest drivePIDRequest = DriveRequest.newBuilder()
