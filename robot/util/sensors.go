@@ -22,3 +22,9 @@ func GetDistanceInCm() float64 {
 	distance, _ := strconv.ParseFloat(distanceString, 64)
 	return distance / 10
 }
+
+// GetGyroValue Return the current gyro value as a float64
+func GetGyroValue(gyro *ev3dev.Sensor) (float64, error) {
+	gyroValStr, _ := gyro.Value(0)
+	return strconv.ParseFloat(gyroValStr, 64)
+}

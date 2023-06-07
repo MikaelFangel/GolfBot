@@ -7,7 +7,6 @@ import (
 	"log"
 	"math"
 	"net"
-	"strconv"
 	"time"
 
 	"github.com/ev3go/ev3dev"
@@ -90,8 +89,7 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DrivePIDRequest) (
 	for i := 0; i < int(in.Distance); i++ {
 
 		// Read gyro values, eg. the current error
-		gyroValStr, _ := gyro.Value(0)
-		gyroErr, _ := strconv.ParseFloat(gyroValStr, 64)
+		gyroErr, _ := util.GetGyroValue(gyro)
 		integral += gyroErr
 
 		derivative := gyroErr - lastError
@@ -181,12 +179,10 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 
 	var motorRequests []motorRequest
 	gyro, _ := util.GetSensor(pBuff.InPort_in1.String(), "GYRO")
-	gyroVal, _ := gyro.Value(0)
-	gyroValF, _ := strconv.ParseFloat(gyroVal, 64)
-	for math.Abs(gyroValF) != math.Abs(float64(in.Degrees)) {
-		gyroVal, _ = gyro.Value(0)
-		gyroValF, _ = strconv.ParseFloat(gyroVal, 64)
-		target = gyroValF - float64(in.Degrees)
+	gyroVal, _ := util.GetGyroValue(gyro)
+	for math.Abs(gyroVal) != math.Abs(float64(in.Degrees)) {
+		gyroVal, _ = util.GetGyroValue(gyro)
+		target = gyroVal - float64(in.Degrees)
 
 		derivative := target - lastError
 		lastError = target
