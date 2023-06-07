@@ -1,5 +1,6 @@
 package vision.detection;
 
+import courseObjects.Cross;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import vision.helperClasses.BorderSet;
@@ -11,7 +12,8 @@ import java.util.List;
 
 public class BorderDetector implements SubDetector {
     private BorderSet borderSet;
-    private final List<MaskSet> maskSets = new ArrayList<>();;
+    private final List<MaskSet> maskSets = new ArrayList<>();
+    private Cross cross = new Cross();
 
     /**
      * Detects the border from the frame and stores the objects in its own objects.
@@ -52,39 +54,74 @@ public class BorderDetector implements SubDetector {
 
         // Blur frame to smooth out color inconsistencies
         Mat frameBlur = new Mat();
-        Imgproc.GaussianBlur(frameGray, frameBlur, new Size(9, 9), 0);
+        Imgproc.GaussianBlur(
+                frameGray,
+                frameBlur,
+                /* Both width and height should be uneven numbers.
+                 *  - Should be at least (3, 3) to detect borders.
+                 *  - Points of the cross becomes shaky if larger than (3, 3) */
+                new Size(3, 3),
+                0
+        );
 
         // Find contours (color patches of the border)
         List<MatOfPoint> contours = new ArrayList<>();
-        Imgproc.findContours(frameBlur, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+        int method = Imgproc.CHAIN_APPROX_SIMPLE; // Only leaves the end points of the components, e.g. a rectangular contour would be encoded with 4 points.
+        Imgproc.findContours(frameBlur, contours, new Mat(), Imgproc.RETR_LIST, method);
 
-        // Estimate lines for the border using the contours
-        MatOfPoint2f lines = new MatOfPoint2f();
-        for (MatOfPoint contour : contours) {
-            MatOfPoint2f contourConverted = new MatOfPoint2f(contour.toArray());
+        // Estimate for inner lines of the border using the contours
+        System.out.println("Contours: " + contours.toString()); // TODO: delete
+
+        /* Each contour is a boundary of one of the components (e.g. to boundary of the cross)
+         *  - The outer boundary of the border has 28 straight lines in the physical world (not used)
+         *  - The inner boundary of the border has 4 straight lines in the physical world
+         *  - The boundary of the cross has 12 straight lines in the physical worlds
+         *
+         * NB! The lines from the physical world might differ a bit from what is found in contours */
+        MatOfPoint2f innerBorderEndPoints = new MatOfPoint2f();
+        List<MatOfPoint2f> crossEndPoints = new ArrayList<>();
+        int innerBorderIndex = contours.size() - 2;
+        for (int i = innerBorderIndex; i >= 0; i--) { // The last element would be the outer boundary of the border
+            MatOfPoint2f contourConverted = new MatOfPoint2f(contours.get(i).toArray());
 
             // Approximate polygon of contour
             MatOfPoint2f approx = new MatOfPoint2f();
             Imgproc.approxPolyDP(
                     contourConverted,
                     approx,
-                    0.01 * Imgproc.arcLength(contourConverted, true),
+                    0.02 * Imgproc.arcLength(contourConverted, true),
                     true
-
             );
 
-            // Exit if the four lines are found. Because we only need to have 4.
-            if (approx.toArray().length == 4) {
-                lines = approx;
-                break;
+//            approx.toList().forEach(System.out::println); // TODO: delete
+
+            int numOfEndPoints = approx.toArray().length;
+            System.out.println("Length: " + numOfEndPoints);
+
+            if (i == innerBorderIndex) { // The boundary of inner border
+                // List<Point> sortedApprox = approx.toList().stream()
+                //         .sorted((p1,p2) -> (int) (p2.x - p1.x))
+                //         .toList();
+                // sortedApprox.forEach(System.out::println);
+
+                innerBorderEndPoints = approx;
+            } else { // Obstacles with same color as border
+                if (numOfEndPoints == 12) // Objects with 12 end points, e.g. a cross
+                    crossEndPoints.add(approx);
             }
         }
+        if (innerBorderEndPoints.empty()) return null;
 
-        // End if lines are not found
-        if (lines.empty()) return null;
+        // Add end points of cross to Cross object
+        ArrayList<Point> crossPoints = new ArrayList<>();
+        for (MatOfPoint2f crossEndPoint : crossEndPoints) {
+            crossPoints.addAll(crossEndPoint.toList());
+            cross.setEndPoints(crossPoints);
+            System.out.println(cross.toString());
+        }
 
-        // Get as array
-        Point[] linePoints = lines.toArray();
+        // Add inner boundary end points of border to BorderSet object
+        Point[] linePoints = innerBorderEndPoints.toArray();
 
         // Calculate corners
         Point[] corners = new Point[linePoints.length];
@@ -115,5 +152,9 @@ public class BorderDetector implements SubDetector {
     @Override
     public List<MaskSet> getMaskSets() {
         return this.maskSets;
+    }
+
+    public Cross getCross() {
+        return cross;
     }
 }
