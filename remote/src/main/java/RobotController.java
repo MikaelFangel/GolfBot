@@ -54,6 +54,9 @@ public class RobotController {
         CLIENT.driveWGyro(driveRequest);
     }
 
+    /**
+     * Stops the Motor A and D and thus the driving
+     */
     public void stopMotors() {
         int motorSpeed = 0;
         MultipleMotors motorRequests = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, motorSpeed), new MotorPair(OutPort.D, motorSpeed));
