@@ -168,6 +168,29 @@ public class DetectionController {
     }
 
     /**
+     * Updates the Course object with the objects detected from the sub detectors.
+     * This converts the pixel values to centimetres, so that the course only has real world units.
+     */
+    private void updateCourse() {
+        Border border = this.borderDetector.getBorder();
+
+        // Find the corners at least once to allow updating of other course objects
+        if (border != null) { // True when a border is found
+
+            // Calculate conversion factors and get offset
+            this.conversionFactorX = this.course.getWidth() / distanceBetweenTwoPoints(border.getTopLeft().x, border.getTopLeft().y,
+                    border.getTopRight().x, border.getTopRight().y);
+            this.conversionFactorY = this.course.getHeight() / distanceBetweenTwoPoints(border.getTopLeft().x, border.getTopLeft().y,
+                    border.getBottomLeft().x, border.getBottomLeft().y);
+            this.pixelOffset = this.borderDetector.getCameraOffset();
+
+            updateCourseCorners();
+            updateCourseRobot();
+            updateCourseBalls();
+        }
+    }
+
+    /**
      * Perform correction on the course objects.
      */
     private void correctCourseObjects() {
@@ -199,6 +222,8 @@ public class DetectionController {
         List<Ball> correctedBalls = new ArrayList<>();
 
         for (Ball ball : balls) {
+            System.out.println("Before Ball Coordinates: " + ball.getCenter()); // TODO delete
+
             Point correctedCenter = Algorithms.correctedCoordinatesOfObject(
                     ball.getCenter(),
                     courseCenter,
@@ -212,29 +237,18 @@ public class DetectionController {
 
         course.setBalls(correctedBalls);
 
-    }
+        // Robot
+        Robot robot = course.getRobot();
+        Point correctedFront = Algorithms.correctedCoordinatesOfObject(robot.getFront(),courseCenter,
+                robot.height, camHeight);
+        Point correctedCenter = Algorithms.correctedCoordinatesOfObject(robot.getCenter(),courseCenter,
+                robot.height, camHeight);
+        double correctedAngle = angleBetweenTwoPoints(correctedCenter.x, correctedCenter.y,
+                correctedFront.x, correctedFront.y);
 
-    /**
-     * Updates the Course object with the objects detected from the sub detectors.
-     * This converts the pixel values to centimetres, so that the course only has real world units.
-     */
-    private void updateCourse() {
-        Border border = this.borderDetector.getBorder();
+        System.out.println("Correct Robot Coordinates: " + correctedCenter); // TODO delete
 
-        // Find the corners at least once to allow updating of other course objects
-        if (border != null) { // True when a border is found
-
-            // Calculate conversion factors and get offset
-            this.conversionFactorX = this.course.getWidth() / distanceBetweenTwoPoints(border.getTopLeft().x, border.getTopLeft().y,
-                    border.getTopRight().x, border.getTopRight().y);
-            this.conversionFactorY = this.course.getHeight() / distanceBetweenTwoPoints(border.getTopLeft().x, border.getTopLeft().y,
-                    border.getBottomLeft().x, border.getBottomLeft().y);
-            this.pixelOffset = this.borderDetector.getCameraOffset();
-
-            updateCourseCorners();
-            updateCourseRobot();
-            updateCourseBalls();
-        }
+        course.setRobot(new Robot(correctedCenter, correctedFront, correctedAngle));
     }
 
     /**
