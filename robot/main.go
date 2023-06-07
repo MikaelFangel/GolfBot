@@ -201,7 +201,7 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 			}
 
 			power := rotateSpeed + int(turn)
-			power = setPowerInRotate(target, power, direction)
+			power = setPowerInRotate(target, power, direction, 4)
 
 			switch request.GetMotorPort() {
 			case pBuff.OutPort_A:
@@ -226,13 +226,14 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 }
 
 // setPowerInRotate increase power when far from the target and also sets a powercap to avoid drifting from high speeds
-func setPowerInRotate(target float64, power int, direction float64) int {
+// powerFactor is used to increase the speed when we are more than  5 degrees from the target
+func setPowerInRotate(target float64, power int, direction float64, powerFactor int) int {
 	if (target * direction) < 0 {
 		power *= -1
 	}
 
 	if math.Abs(target) > 5 {
-		power *= 4
+		power *= powerFactor
 	}
 
 	powerCap := 50
