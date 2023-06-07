@@ -30,4 +30,7 @@ public class Ball {
         this.center = center;
     }
 
+    public double getRadius() {
+        return radius;
+    }
 }

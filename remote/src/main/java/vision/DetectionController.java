@@ -177,6 +177,7 @@ public class DetectionController {
         Point courseCenter = new Point(course.getWidth() / 2, course.getHeight() / 2);
 
         // Corners
+        /*
         Border border = course.getBorder();
         Point[] corners = border.getCornersAsArray();
 
@@ -192,6 +193,23 @@ public class DetectionController {
         Border correctedBorder = new Border(correctedCorners[0], correctedCorners[1],
             correctedCorners[2], correctedCorners[3]);
         course.setBorder(correctedBorder);
+         */
+
+        // Balls
+        List<Ball> balls = course.getBalls();
+        List<Ball> correctedBalls = new ArrayList<>();
+
+        for (Ball ball : balls) {
+            Point correctedCenter = Algorithms.correctedCoordinatesOfObject(ball.getCenter(),
+                    ball.getRadius(), course, conversionFactorX, courseCenter);
+
+            System.out.println("Correct Ball Coordinates: " + correctedCenter); // TODO delete
+
+            correctedBalls.add(new Ball(correctedCenter, ball.getColor()));
+        }
+
+        course.setBalls(correctedBalls);
+
     }
 
     /**
