@@ -82,7 +82,7 @@ func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
 
 	// Change speed value if distance is negative
 	speed := -int(driveRequest.Speed)
-	if speed < 0 {
+	if speed > 0 {
 		speed *= -1
 	}
 

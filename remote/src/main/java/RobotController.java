@@ -1,5 +1,4 @@
-import courseObjects.Ball;
-import courseObjects.Robot;
+import courseObjects.Course;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
@@ -42,7 +41,7 @@ public class RobotController {
      * //@param distance Positive values in cm for forward and negative for backwards
      * @throws RuntimeException if the robot was not reached
      */
-    public void driveWGyro(Robot robot, Ball ball) throws RuntimeException {
+    public void driveWGyro(Course course) throws RuntimeException {
         int speed = 200;
         MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
                 new MotorPair(OutPort.D, speed));
@@ -70,12 +69,13 @@ public class RobotController {
 
         StreamObserver<DriveRequest> requestObserver = ASYNCCLIENT.driveWGyro(responseObserver);
 
-        double distance = Algorithms.findRobotsDistanceToBall(robot, ball);
+        double distance = Algorithms.findRobotsDistanceToBall(course.getRobot(), course.getBalls().get(0));
+        int failsave = 0;
         try {
             // Countdown distance, simulates distance to target.
-            while (distance > 0){
+            while (distance > 0 && failsave < 15){
 
-                distance = Algorithms.findRobotsDistanceToBall(robot, ball);
+                distance = Algorithms.findRobotsDistanceToBall(course.getRobot(), course.getBalls().get(0));
 
                 DriveRequest drivePIDRequest = DriveRequest.newBuilder()
                         .setMotors(motorsRequest)
@@ -92,6 +92,7 @@ public class RobotController {
                     // Sending further requests won't error, but they will just be thrown away.
                     return;
                 }
+                failsave++;
             }
         } catch (RuntimeException e) {
             // Cancel RPC
@@ -111,7 +112,6 @@ public class RobotController {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     public void stopMotors() {
