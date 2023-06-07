@@ -93,10 +93,6 @@ func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
 
 	// TODO: For testing purposes run until i < 20, but should be until length to target <= 0. Research RPC client streaming
 	for distance > 0 {
-		println("Distance ", distance)
-		var message, _ = in.Recv()
-		distance = int(message.Distance)
-
 		// Read gyro values, eg. the current error
 		gyroValStr, _ := gyro.Value(0)
 		gyroErr, _ := strconv.ParseFloat(gyroValStr, 64)
@@ -143,6 +139,13 @@ func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
 		if err != nil {
 			return err
 		}
+
+		println("Distance ", distance, " speed ", speed)
+		message, err := in.Recv()
+		if err != nil {
+			break
+		}
+		distance = int(message.Distance)
 	}
 
 	stopAllMotors(motorRequests)
