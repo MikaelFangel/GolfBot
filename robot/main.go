@@ -7,7 +7,6 @@ import (
 	"log"
 	"math"
 	"net"
-	"strconv"
 	"time"
 
 	"github.com/ev3go/ev3dev"
