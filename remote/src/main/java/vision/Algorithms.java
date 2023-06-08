@@ -3,9 +3,15 @@ package vision;
 import courseObjects.Ball;
 import courseObjects.Course;
 import courseObjects.Robot;
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.imgproc.Imgproc;
+import vision.helperClasses.ClassScope;
 import vision.math.Geometry;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static vision.math.Geometry.angleBetweenTwoPoints;
@@ -77,14 +83,46 @@ public class Algorithms {
         newPoint.x = (Math.cos(Math.toRadians(angelToPointInDegree))*newDistance)+camera.x;
         newPoint.y = (Math.sin(Math.toRadians(angelToPointInDegree))*newDistance)+camera.y;
 
-        /*
-        if (camera.x >= originalCoords.x) newPoint.x = camera.x - newPoint.x;
-        else newPoint.x = camera.x + newPoint.x;
-
-        if (camera.y >= originalCoords.y) newPoint.y = camera.y - newPoint.y;
-        else newPoint.y = camera.y + newPoint.y;
-        */
-
         return newPoint;
+    }
+
+    /**
+     * Must have importet core.NATIVE_LIBRARY_NAME
+     *
+     * @param course
+     * @return
+     */
+    public static Mat transformToRectangle(Mat src, Course course){
+        /*ClassLoader appLoader = ClassLoader.getSystemClassLoader();
+        ClassLoader currentLoader = this.getClass().getClassLoader();
+
+        ClassLoader[] loaders = new ClassLoader[]{appLoader, currentLoader};
+
+        final String[] libaries = ClassScope.getLoadedLibraries(loaders);
+
+        if (Arrays.stream(libaries).anyMatch("Core.NATIVE_LIBRARY_NAME") == null)
+
+
+         */
+
+        //control of input
+
+        Point[] srcTri = new Point[3];
+        srcTri[0] = course.getBorder().getTopLeft().clone();
+        srcTri[1] = course.getBorder().getBottomLeft().clone();
+        srcTri[2] = course.getBorder().getTopRight().clone();
+
+        Point[] dstTri = new Point[3];
+        dstTri[0] = new Point( 0, 0 );
+        dstTri[1] = new Point( 0, src.rows()-1 );
+        dstTri[2] = new Point( src.cols()-1, 0 );
+
+        Mat warpMat = Imgproc.getAffineTransform( new MatOfPoint2f(srcTri), new MatOfPoint2f(dstTri));
+
+        Mat warpDst = Mat.zeros(src.rows(), src.cols(), src.type());
+
+        Imgproc.warpAffine(src, warpDst, warpMat, warpDst.size());
+
+        return warpDst;
     }
 }
