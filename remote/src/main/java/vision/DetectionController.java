@@ -94,6 +94,8 @@ public class DetectionController {
 
             // Display frame in popup window
             showOverlay();
+            if (showMasks)
+                showMasks();
             HighGui.waitKey(this.refreshRate);
 
             // Run sub detectors. To get objects in necessary order

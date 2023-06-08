@@ -12,7 +12,7 @@ public class Main {
 
         RobotController controller = new RobotController(args[0]); // Args[0] being and IP address
 
-        int cameraIndex = 0;
+        int cameraIndex = 2;
         Course course = new Course();
         DetectionController detectionController = new DetectionController(course, cameraIndex, false);
 
