@@ -290,10 +290,10 @@ public class DetectionController {
             for (Point corner : corners)
                 Imgproc.circle(overlayFrame, corner, 2, cornerColor, 3);
 
-        for (Point crossPoint: this.borderDetector.getCross().getEndPoints()) {
-            System.out.println(crossPoint);
-            Imgproc.circle(overlayFrame, crossPoint, 2, cornerColor, 3);
-        }
+//        for (Point crossPoint: this.borderDetector.getCross().getEndPoints()) {
+//            System.out.println(crossPoint);
+//            Imgproc.circle(overlayFrame, crossPoint, 2, cornerColor, 3);
+//        }
 
         // Draw Robot Markers
         Robot robot = this.robotDetector.getRobot();

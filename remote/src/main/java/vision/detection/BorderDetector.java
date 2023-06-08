@@ -13,7 +13,7 @@ import java.util.List;
 public class BorderDetector implements SubDetector {
     private BorderSet borderSet;
     private final List<MaskSet> maskSets = new ArrayList<>();
-    private Cross cross = new Cross();
+    private final List<Cross> crosses = new ArrayList<>();
 
     /**
      * Detects the border from the frame and stores the objects in its own objects.
@@ -79,7 +79,8 @@ public class BorderDetector implements SubDetector {
          *
          * NB! The lines from the physical world might differ a bit from what is found in contours */
         MatOfPoint2f innerBorderEndPoints = new MatOfPoint2f();
-        List<MatOfPoint2f> crossEndPoints = new ArrayList<>();
+        List<List<Point>> crossesEndPointList = new ArrayList<>();
+
         int innerBorderIndex = contours.size() - 2;
         for (int i = innerBorderIndex; i >= 0; i--) { // The last element would be the outer boundary of the border
             MatOfPoint2f contourConverted = new MatOfPoint2f(contours.get(i).toArray());
@@ -93,30 +94,24 @@ public class BorderDetector implements SubDetector {
                     true
             );
 
-//            approx.toList().forEach(System.out::println); // TODO: delete
-
             int numOfEndPoints = approx.toArray().length;
             System.out.println("Length: " + numOfEndPoints);
 
             if (i == innerBorderIndex) { // The boundary of inner border
-                // List<Point> sortedApprox = approx.toList().stream()
-                //         .sorted((p1,p2) -> (int) (p2.x - p1.x))
-                //         .toList();
-                // sortedApprox.forEach(System.out::println);
-
                 innerBorderEndPoints = approx;
             } else { // Obstacles with same color as border
-                if (numOfEndPoints == 12) // Objects with 12 end points, e.g. a cross
-                    crossEndPoints.add(approx);
+                if (numOfEndPoints == 12) { // Objects with 12 end points, e.g. a cross
+                    crossesEndPointList.add(approx.toList());
+                }
             }
         }
         if (innerBorderEndPoints.empty()) return null;
 
         // Add end points of cross to Cross object
-        ArrayList<Point> crossPoints = new ArrayList<>();
-        for (MatOfPoint2f crossEndPoint : crossEndPoints) {
-            crossPoints.addAll(crossEndPoint.toList());
-            cross.setEndPoints(crossPoints);
+        for (List<Point> pointList : crossesEndPointList) {
+            Cross cross = new Cross();
+            cross.setEndPoints(pointList);
+            crosses.add(cross);
             System.out.println(cross.toString());
         }
 
@@ -154,7 +149,7 @@ public class BorderDetector implements SubDetector {
         return this.maskSets;
     }
 
-    public Cross getCross() {
-        return cross;
+    public List<Cross> getCross() {
+        return crosses;
     }
 }
