@@ -7,6 +7,7 @@ import (
 	"log"
 	"math"
 	"net"
+	"strconv"
 	"time"
 
 	"github.com/ev3go/ev3dev"
@@ -298,7 +299,7 @@ func (s *motorServer) CollectRelease(_ context.Context, in *pBuff.MultipleMotors
 		case pBuff.OutPort_B:
 			motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
 		case pBuff.OutPort_C:
-			motor.SetSpeedSetpoint(int(-request.GetMotorSpeed()))
+			motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
 		default:
 			return &pBuff.StatusReply{ReplyMessage: false}, errors.New("warning! Motor with wrong output port detected. Expected output ports are port B and C")
 		}
@@ -350,4 +351,53 @@ func stopAllMotors(motorRequests []motorRequest) {
 	for _, motorRequest := range motorRequests {
 		motorRequest.motor.Command(stop)
 	}
+}
+
+func (s *motorServer) ReleaseOneBall(_ context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
+	var motors [2]*ev3dev.TachoMotor
+	for _, request := range in.GetMotor() {
+		var motorOutPort = request.GetMotorPort()
+		motor, err := util.GetMotorHandle(motorOutPort.String(), request.GetMotorType().String())
+		if err != nil {
+			return &pBuff.StatusReply{ReplyMessage: false}, err
+		}
+
+		motor.Command(reset)
+		switch motorOutPort {
+		case pBuff.OutPort_B:
+			motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
+			motor.SetPositionSetpoint(90)
+
+			// Add motor in the sequence they are started
+			motors[1] = motor
+		case pBuff.OutPort_C:
+			motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
+			motor.SetPositionSetpoint(360)
+
+			// Add motor in the sequence they are started
+			motors[0] = motor
+		default:
+			return &pBuff.StatusReply{ReplyMessage: false}, errors.New("warning! Motor with wrong output port detected. Expected output ports are port B and C")
+		}
+	}
+
+	// Start the spinner shortly before the ball release
+	for _, motor := range motors {
+		motor.Command(absPos)
+		time.Sleep(250)
+	}
+
+	return &pBuff.StatusReply{ReplyMessage: true}, nil
+}
+
+// GetDistanceInCm Returns the distance to the closest object from the ultrasonic sensor
+func GetDistanceInCm() float64 {
+	ultraSonicSensor, err := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_us.String())
+	if err != nil {
+		return -1
+	}
+
+	distanceString, _ := ultraSonicSensor.Value(0)
+	distance, _ := strconv.ParseFloat(distanceString, 64)
+	return distance / 10
 }
