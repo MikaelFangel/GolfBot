@@ -16,7 +16,6 @@ public class Main {
         Course course = new Course();
         DetectionController detectionController = new DetectionController(course, cameraIndex, true);
 
-        /*
         while (true) {
 
             Ball closestBall;
@@ -45,7 +44,6 @@ public class Main {
             controller.driveWGyro(course);
             controller.stopCollectRelease();
         }
-        */
 
         System.out.println("Done");
     }
