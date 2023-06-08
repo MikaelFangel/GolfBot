@@ -25,8 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DetectionController {
-    private final int refreshRate = 1; // Value for best FPS (ms)
-    private Mat frame; // Frame to detect objects from
+    private final int refreshRate = 33; // Value for best FPS (ms)
+    private Mat frame, overlayFrame; // Frame to detect objects from
 
     // Sub Detectors
     private final List<SubDetector> subDetectors = new ArrayList<>();
@@ -88,8 +88,10 @@ public class DetectionController {
 
         System.out.println("Starting Setup");
 
+        frame = new Mat();
+        overlayFrame = new Mat();
+
         while (true) {
-            frame = new Mat();
             capture.read(this.frame);
 
             // Display frame in popup window
@@ -151,7 +153,6 @@ public class DetectionController {
      */
     private void detectCourse(VideoCapture capture) {
         // Grab frame
-        this.frame = new Mat();
         capture.read(this.frame);
 
         // Run sub detectors. They store the objects
@@ -161,7 +162,7 @@ public class DetectionController {
 
         correctObjects();
         updateCourse();
-        showOverlay();
+        //showOverlay();
 
         // Display masks for debugging
         if (this.showMasks)
@@ -268,22 +269,21 @@ public class DetectionController {
      * Displays the frames with an overlay
      */
     private void showOverlay() {
-        Mat overlayFrame = createOverlay();
-
         // Display overlay
+        createOverlay();
         HighGui.imshow("overlay", overlayFrame);
     }
 
     /**
      * Draws an overlay on the frame and puts it in the display pile.
      */
-    private Mat createOverlay() {
+    private void createOverlay() {
         // Define colors for different objects
         Scalar cornerColor = new Scalar(0, 255, 0); // Green
         Scalar robotMarkerColor = new Scalar(255, 0, 255); // Magenta
         Scalar ballColor = new Scalar(255, 255, 0); // Cyan
 
-        Mat overlayFrame = this.frame.clone();
+        overlayFrame = frame;
 
         // Draw Corners
         BorderSet borderSet = this.borderDetector.getBorderSet();
@@ -312,8 +312,6 @@ public class DetectionController {
             if (robot != null)
                 Imgproc.line(overlayFrame, robot.getCenter(), ball.getCenter(), ballColor, 1);
         }
-
-        return overlayFrame;
     }
 
     /**

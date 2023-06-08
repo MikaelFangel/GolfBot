@@ -51,15 +51,15 @@ public class BallDetector implements SubDetector {
         final int uWhiteBall = 255;
 
         // Apply a binary threshold mask to separate out all colors than white.
-        Mat binaryFrame = new Mat();
-        Imgproc.threshold(frameGray, binaryFrame, lWhiteBall, uWhiteBall, Imgproc.THRESH_BINARY);
+        Mat mask = new Mat();
+        Imgproc.threshold(frameGray, mask, lWhiteBall, uWhiteBall, Imgproc.THRESH_BINARY);
 
         // Create mask set for debugging
-        maskSets.add(new MaskSet("whiteBalls Mask", binaryFrame));
+        maskSets.add(new MaskSet("whiteBalls Mask", mask));
 
         // Apply blur for better noise reduction
         Mat frameBlur = new Mat();
-        Imgproc.GaussianBlur(binaryFrame, frameBlur, new Size(7,7), 0);
+        Imgproc.GaussianBlur(mask, frameBlur, new Size(7,7), 0);
 
         // Get white balls from frame
         Mat whiteBalls = new Mat();
