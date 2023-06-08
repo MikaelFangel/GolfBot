@@ -81,6 +81,7 @@ public class BorderDetector implements SubDetector {
         MatOfPoint2f innerBorderEndPoints = new MatOfPoint2f();
         List<MatOfPoint2f> endPointList = new ArrayList<>();
 
+        boolean crossFound = false;
         int innerBorderIndex = contours.size() - 2;
         for (int i = innerBorderIndex; i >= 0; i--) { // The last element would be the outer boundary of the border
             MatOfPoint2f contourConverted = new MatOfPoint2f(contours.get(i).toArray());
@@ -90,7 +91,7 @@ public class BorderDetector implements SubDetector {
             Imgproc.approxPolyDP(
                     contourConverted,
                     approx,
-                    0.02 * Imgproc.arcLength(contourConverted, true),
+                    0.017 * Imgproc.arcLength(contourConverted, true),
                     true
             );
 
@@ -101,6 +102,7 @@ public class BorderDetector implements SubDetector {
                 innerBorderEndPoints = approx;
             } else { // Obstacles with same color as border
                 if (numOfEndPoints == 12) { // Objects with 12 end points, e.g. a cross
+                    crossFound = true;
                     endPointList.add(approx);
                 }
             }
@@ -113,6 +115,12 @@ public class BorderDetector implements SubDetector {
             endPoints.addAll(endPoint.toList());
             cross.setEndPoints(endPoints);
             System.out.println(cross.toString());
+        }
+
+        if (crossFound) {
+            Point firstPoint = endPoints.get(0);
+            Point middlePoint = endPoints.get(6);
+            cross.setMiddle(new Point((firstPoint.x + middlePoint.x) / 2, (firstPoint.y + middlePoint.y) / 2));
         }
 
         // Add inner boundary end points of border to BorderSet object
