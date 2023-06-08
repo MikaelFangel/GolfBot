@@ -13,7 +13,7 @@ import java.util.List;
 public class BorderDetector implements SubDetector {
     private BorderSet borderSet;
     private final List<MaskSet> maskSets = new ArrayList<>();
-    private final List<Cross> crosses = new ArrayList<>();
+    private final Cross cross = new Cross();
 
     /**
      * Detects the border from the frame and stores the objects in its own objects.
@@ -79,7 +79,7 @@ public class BorderDetector implements SubDetector {
          *
          * NB! The lines from the physical world might differ a bit from what is found in contours */
         MatOfPoint2f innerBorderEndPoints = new MatOfPoint2f();
-        List<List<Point>> crossesEndPointList = new ArrayList<>();
+        List<MatOfPoint2f> endPointList = new ArrayList<>();
 
         int innerBorderIndex = contours.size() - 2;
         for (int i = innerBorderIndex; i >= 0; i--) { // The last element would be the outer boundary of the border
@@ -101,17 +101,17 @@ public class BorderDetector implements SubDetector {
                 innerBorderEndPoints = approx;
             } else { // Obstacles with same color as border
                 if (numOfEndPoints == 12) { // Objects with 12 end points, e.g. a cross
-                    crossesEndPointList.add(approx.toList());
+                    endPointList.add(approx);
                 }
             }
         }
         if (innerBorderEndPoints.empty()) return null;
 
         // Add end points of cross to Cross object
-        for (List<Point> pointList : crossesEndPointList) {
-            Cross cross = new Cross();
-            cross.setEndPoints(pointList);
-            crosses.add(cross);
+        List<Point> endPoints = new ArrayList<>();
+        for (MatOfPoint2f endPoint : endPointList) {
+            endPoints.addAll(endPoint.toList());
+            cross.setEndPoints(endPoints);
             System.out.println(cross.toString());
         }
 
@@ -149,7 +149,7 @@ public class BorderDetector implements SubDetector {
         return this.maskSets;
     }
 
-    public List<Cross> getCross() {
-        return crosses;
+    public Cross getCross() {
+        return cross;
     }
 }
