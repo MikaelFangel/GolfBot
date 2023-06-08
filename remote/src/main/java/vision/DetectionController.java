@@ -148,7 +148,7 @@ public class DetectionController {
      */
     private void detectCourse(VideoCapture capture) {
         // Grab frame
-        frame = new Mat();
+        this.frame = new Mat();
         capture.read(this.frame);
 
         // Run sub detectors. They store the objects
