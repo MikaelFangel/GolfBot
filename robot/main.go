@@ -354,6 +354,7 @@ func stopAllMotors(motorRequests []motorRequest) {
 }
 
 func (s *motorServer) ReleaseOneBall(_ context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
+	var motors [2]*ev3dev.TachoMotor
 	for _, request := range in.GetMotor() {
 		var motorOutPort = request.GetMotorPort()
 		motor, err := util.GetMotorHandle(motorOutPort.String(), request.GetMotorType().String())
@@ -366,14 +367,24 @@ func (s *motorServer) ReleaseOneBall(_ context.Context, in *pBuff.MultipleMotors
 		case pBuff.OutPort_B:
 			motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
 			motor.SetPositionSetpoint(90)
+
+			// Add motor in the sequence they are started
+			motors[1] = motor
 		case pBuff.OutPort_C:
 			motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
 			motor.SetPositionSetpoint(360)
+
+			// Add motor in the sequence they are started
+			motors[0] = motor
 		default:
 			return &pBuff.StatusReply{ReplyMessage: false}, errors.New("warning! Motor with wrong output port detected. Expected output ports are port B and C")
 		}
+	}
 
+	// Start the spinner shortly before the ball release
+	for _, motor := range motors {
 		motor.Command(absPos)
+		time.Sleep(250)
 	}
 
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
