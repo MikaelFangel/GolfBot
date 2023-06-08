@@ -97,7 +97,7 @@ public class BorderDetector implements SubDetector {
             int numOfEndPoints = approx.toArray().length;
             System.out.println("Length: " + numOfEndPoints);
 
-            if (i == innerBorderIndex) { // The boundary of inner border
+            if (i == innerBorderIndex && numOfEndPoints == 4) { // The boundary of inner border
                 innerBorderEndPoints = approx;
             } else { // Obstacles with same color as border
                 if (numOfEndPoints == 12) { // Objects with 12 end points, e.g. a cross
