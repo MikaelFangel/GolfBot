@@ -299,7 +299,7 @@ func (s *motorServer) CollectRelease(_ context.Context, in *pBuff.MultipleMotors
 		case pBuff.OutPort_B:
 			motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
 		case pBuff.OutPort_C:
-			motor.SetSpeedSetpoint(int(-request.GetMotorSpeed()))
+			motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
 		default:
 			return &pBuff.StatusReply{ReplyMessage: false}, errors.New("warning! Motor with wrong output port detected. Expected output ports are port B and C")
 		}
@@ -367,8 +367,8 @@ func (s *motorServer) ReleaseOneBall(_ context.Context, in *pBuff.MultipleMotors
 			motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
 			motor.SetPositionSetpoint(90)
 		case pBuff.OutPort_C:
-			motor.SetSpeedSetpoint(int(-request.GetMotorSpeed()))
-			motor.SetPositionSetpoint(-360)
+			motor.SetSpeedSetpoint(int(request.GetMotorSpeed()))
+			motor.SetPositionSetpoint(360)
 		default:
 			return &pBuff.StatusReply{ReplyMessage: false}, errors.New("warning! Motor with wrong output port detected. Expected output ports are port B and C")
 		}
