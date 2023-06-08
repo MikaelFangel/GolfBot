@@ -48,22 +48,27 @@ func main() {
 	}
 }
 
-// DriveWGyro Rotates the robot given a speed using a gyro. This function has the side effect that it recalibrates the gyro.
-func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DrivePIDRequest) (*pBuff.StatusReply, error) {
-	// PID values that have been previously successful
+// DriveWGyro Rotates the robot given a speed using the gyro. This function has the side effect that it recalibrates the gyro.
+func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
+	// PID constant, how much we want to correct errors of each term
 	kp := 0.5
 	ki := 0.25
 	kd := 0.1
 
+	// Begin stream from client
+	driveRequest, err := in.Recv()
+	if err != nil {
+		return err
+	}
+
 	// Change the values to the user input if provided
 	switch {
-	case in.Kp != nil:
-		kp = float64(*in.Kp)
-	case in.Ki != nil:
-		ki = float64(*in.Ki)
-	case in.Kd != nil:
-		kd = float64(*in.Kd)
-
+	case driveRequest.Kp != nil:
+		kp = float64(*driveRequest.Kp)
+	case driveRequest.Ki != nil:
+		ki = float64(*driveRequest.Ki)
+	case driveRequest.Kd != nil:
+		kd = float64(*driveRequest.Kd)
 	}
 
 	// the running sum of errors
@@ -73,25 +78,26 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DrivePIDRequest) (
 	lastError := 0.0
 
 	// Prepare the motors for running
-	var motorRequests []motorRequest
+	distance := int(driveRequest.Distance)
 
 	// Change speed value if distance is negative
-	speed := -int(in.Speed)
-	if in.Speed < 0 {
+	speed := -int(driveRequest.Speed)
+	if speed > 0 {
 		speed *= -1
 	}
 
-	// TODO: For testing purposes run until i < 20, but should be until length to target <= 0. Research RPC client streaming
 	gyro, err := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
 	if err != nil {
-		return nil, err
+		return err
 	}
-	for i := 0; i < int(in.Distance); i++ {
 
+	var motorRequests []motorRequest
+	for distance > 0 {
 		// Read gyro values, eg. the current error
 		gyroErr, _ := util.GetGyroValue(gyro)
 		integral += gyroErr
 
+		// Error derivative try to predict the next error from the previous error
 		derivative := gyroErr - lastError
 		lastError = gyroErr
 
@@ -100,11 +106,13 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DrivePIDRequest) (
 		// "D term", trying to predict next error
 		turn := (kp * gyroErr) + (ki * integral) + (kd * derivative)
 
+		// Slice the array to reuse positions
+		motorRequests = motorRequests[0:0]
 		// Prepare the motors for running
-		for _, request := range in.GetMotors().GetMotor() {
+		for _, request := range driveRequest.GetMotors().GetMotor() {
 			motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
 			if err != nil {
-				return &pBuff.StatusReply{ReplyMessage: false}, err
+				return err
 			}
 
 			// TODO: Should ramp be set for all iterations or only first and last? I found that the these values worked well
@@ -116,7 +124,7 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DrivePIDRequest) (
 			case pBuff.OutPort_D:
 				motor.SetSpeedSetpoint(speed - int(turn))
 			default:
-				return &pBuff.StatusReply{ReplyMessage: false}, errors.New("not a valid motor")
+				return err
 			}
 
 			motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
@@ -129,14 +137,27 @@ func (s *motorServer) DriveWGyro(_ context.Context, in *pBuff.DrivePIDRequest) (
 		}
 
 		// Handle error if both motors does not run
-		status, err := stopMotorsIfNotAllAreRunning(motorRequests)
+		_, err := stopMotorsIfNotAllAreRunning(motorRequests)
 		if err != nil {
-			return status, err
+			return err
 		}
+
+		message, err := in.Recv()
+		if err != nil {
+			break
+		}
+		distance = int(message.Distance)
 	}
 
 	stopAllMotors(motorRequests)
-	return &pBuff.StatusReply{ReplyMessage: true}, nil
+
+	// Stop streaming connection
+	err = in.SendAndClose(&pBuff.StatusReply{ReplyMessage: true})
+	if err != nil {
+		return err
+	}
+
+	return err
 }
 
 // StopMotors Stops the motors given, e.g. cleaning their MotorState and setting speed to zero
@@ -171,9 +192,17 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 		direction = -1.0
 	}
 
-	// Set PID values
+	// Set the default PID values
 	kp := 0.125
 	kd := 0.5
+
+	// Change the values to the user input if provided
+	switch {
+	case in.Kp != nil:
+		kp = float64(*in.Kp)
+	case in.Kd != nil:
+		kd = float64(*in.Kd)
+	}
 
 	lastError := 0.0
 	target := 0.0
@@ -192,6 +221,9 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 
 		// Account for errors
 		turn := (kp * target) + (kd * derivative)
+
+		// Slice the array to reuse positions
+		motorRequests = motorRequests[0:0]
 
 		// Prepare the motors for running
 		for _, request := range in.GetMotors().GetMotor() {

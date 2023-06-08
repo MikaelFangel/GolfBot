@@ -21,13 +21,14 @@ public class RobotDetector implements SubDetector {
     private final int numberOfMarkers = 2;
 
     /**
-     * Detects the robot from the frame and stores it in its object.
+     * Detects the robot from the frame and stores it in the objects
      * @param frame The frame to be evaluated.
      * @return a boolean symbolizing if the robot was found or not.
      */
     public boolean detectRobot(Mat frame) {
         Point[] markers = getRobotMarkers(frame);
 
+        // Store robot if robot markers were found
         if (markers != null) {
             Point center = markers[0]; // Big marker
             Point front = markers[1]; // Small marker
@@ -91,6 +92,8 @@ public class RobotDetector implements SubDetector {
 
         for (int i = 0; i < numberOfMarkers; i++) { // Loop through 2 biggest contours
             MatOfPoint contour = contourSets.get(i).getContour();
+
+            // Get bounding rectangle
             Rect rect = Imgproc.boundingRect(contour);
 
             // Get center of markers
