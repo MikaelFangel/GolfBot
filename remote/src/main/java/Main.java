@@ -10,7 +10,7 @@ public class Main {
 
         String ipaddr = args[0];
         int cameraIndex = Integer.parseInt(args[1]);
-        double cameraHeight = 160;  // in cm TODO make into arg at some point
+        double cameraHeight = 168.2;  // in cm TODO make into arg at some point
 
         RobotController controller = new RobotController(args[0]); // Args[0] being and IP address
 

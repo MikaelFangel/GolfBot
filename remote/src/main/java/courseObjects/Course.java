@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class Course {
-    private final double width = 167.0, height = 122.0; // Measured from the innermost sides
+    private final double width = 169.0, height = 123.7; // Measured from the innermost sides
     private Point cameraPosition;
 
     private final int resolutionWidth = 1024;

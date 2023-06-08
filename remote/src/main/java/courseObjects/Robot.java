@@ -5,7 +5,7 @@ import org.opencv.core.Point;
 public class Robot {
     private Point center, front;
     private double angle;
-    public final double length = 16.0, width = 17.0, height = 18.0;
+    public final double length = 16.0, width = 17.0, height = 20.0;
 
     public Robot(Point center, Point front, double angle){
         this.center = center;
