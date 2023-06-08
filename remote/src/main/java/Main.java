@@ -1,5 +1,6 @@
 import exceptions.MissingArgumentException;
 import courseObjects.*;
+
 import vision.Algorithms;
 import vision.DetectionController;
 
@@ -12,9 +13,8 @@ public class Main {
         RobotController controller = new RobotController(args[0]); // Args[0] being and IP address
 
         int cameraIndex = 0;
-        DetectionController detectionController = new DetectionController(cameraIndex, false);
-
-        Course course = detectionController.getCourse();
+        Course course = new Course();
+        DetectionController detectionController = new DetectionController(course, cameraIndex, false);
 
         while (true) {
 

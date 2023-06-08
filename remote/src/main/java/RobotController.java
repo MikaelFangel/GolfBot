@@ -108,6 +108,9 @@ public class RobotController {
         requestObserver.onCompleted();
     }
 
+    /**
+     * Stops the Motor A and D and thus the driving
+     */
     public void stopMotors() {
         int motorSpeed = 0;
         MultipleMotors motorRequests = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, motorSpeed), new MotorPair(OutPort.D, motorSpeed));
@@ -139,7 +142,7 @@ public class RobotController {
     }
 
     /**
-     * Recalibrates the
+     * Recalibrates the gyro
      * @throws RuntimeException if the robot was not reached
      */
     public void recalibrateGyro() throws RuntimeException {

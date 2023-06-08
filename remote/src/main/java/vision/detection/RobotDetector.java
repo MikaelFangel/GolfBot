@@ -15,16 +15,10 @@ import java.util.List;
 import static vision.math.Geometry.angleBetweenTwoPoints;
 
 public class RobotDetector implements SubDetector {
-    // Blue markers threshold (BGR)
-    private final Scalar lRobot = new Scalar(100, 100, 0);
-    private final Scalar uRobot = new Scalar(255, 255, 20);
-
-    // Size of contours (number of pixels in cohesive area)
-    final int areaLowerThreshold = 100;
-    final int areaUpperThreshold = 1000;
-
     private Robot robot;
     List<MaskSet> maskSets = new ArrayList<>();
+
+    private final int numberOfMarkers = 2;
 
     /**
      * Detects the robot from the frame and stores it in the objects
@@ -36,16 +30,16 @@ public class RobotDetector implements SubDetector {
 
         // Store robot if robot markers were found
         if (markers != null) {
-            Point center = markers[0];
-            Point front = markers[1];
+            Point center = markers[0]; // Big marker
+            Point front = markers[1]; // Small marker
 
             // Calculate angle of the robot
             double robotAngle = angleBetweenTwoPoints(center.x, center.y, front.x, front.y);
 
-            robot = new Robot(markers[0], markers[1], robotAngle);
+            this.robot = new Robot(markers[0], markers[1], robotAngle);
         }
 
-        return robot != null;
+        return this.robot != null;
     }
 
     /**
@@ -58,6 +52,10 @@ public class RobotDetector implements SubDetector {
         Mat frameBlur = new Mat();
         Imgproc.GaussianBlur(frame, frameBlur, new Size(7,7), 7, 0);
 
+        // Blue markers threshold (BGR)
+        final Scalar lRobot = new Scalar(100, 100, 0);
+        final Scalar uRobot = new Scalar(255, 255, 20);
+
         // Create a mask to filter out unnecessary contours
         Mat mask = new Mat();
         Core.inRange(frameBlur, lRobot, uRobot, mask);
@@ -67,8 +65,11 @@ public class RobotDetector implements SubDetector {
 
         // Get Contours
         List<MatOfPoint> contours = new ArrayList<>();
-        Mat dummyHierarchy = new Mat();
-        Imgproc.findContours(mask, contours, dummyHierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(mask, contours, new Mat(), Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        // Size of contours (number of pixels in cohesive area)
+        final int areaLowerThreshold = 100;
+        final int areaUpperThreshold = 1000;
 
         // Get useful contour areas
         ArrayList<ContourSet> contourSets = new ArrayList<>();
@@ -79,17 +80,17 @@ public class RobotDetector implements SubDetector {
             }
         }
 
-        // Exit if there are not two coordinates
-        if (contourSets.size() < 2) return null;
+        // Exit if there are less than two coordinates
+        if (contourSets.size() < numberOfMarkers) return null;
 
         // ! Find coords of markers !
-        double[] centerCoords = {-1, -1}, directionCoords = {-1, -1};
+        double[] bigMarkerCoords = new double[2], smallMarkerCoords = new double[2];
 
-        // Sort list to descending order.
+        // Sort list in descending order.
         contourSets.sort(Comparator.comparingDouble(ContourSet::getArea));
         Collections.reverse(contourSets);
 
-        for (int i = 0; i < 2; i++) { // Loop through 2 biggest contours
+        for (int i = 0; i < numberOfMarkers; i++) { // Loop through 2 biggest contours
             MatOfPoint contour = contourSets.get(i).getContour();
 
             // Get bounding rectangle
@@ -97,21 +98,21 @@ public class RobotDetector implements SubDetector {
 
             // Get center of markers
             switch (i) {
-                case 0 -> {
-                    centerCoords[0] = rect.x + rect.width / 2.;
-                    centerCoords[1] = rect.y + rect.height / 2.;
+                case 0 -> { // Big marker
+                    bigMarkerCoords[0] = rect.x + rect.width / 2.;
+                    bigMarkerCoords[1] = rect.y + rect.height / 2.;
                 }
-                case 1 -> {
-                    directionCoords[0] = rect.x + rect.width / 2.;
-                    directionCoords[1] = rect.y + rect.height / 2.;
+                case 1 -> { // Small marker
+                    smallMarkerCoords[0] = rect.x + rect.width / 2.;
+                    smallMarkerCoords[1] = rect.y + rect.height / 2.;
                 }
             }
         }
 
         // Convert to Point[]
-        Point[] coords = new Point[2];
-        coords[0] = new Point(centerCoords);
-        coords[1] = new Point(directionCoords);
+        Point[] coords = new Point[numberOfMarkers];
+        coords[0] = new Point(bigMarkerCoords);
+        coords[1] = new Point(smallMarkerCoords);
 
         return coords;
     }

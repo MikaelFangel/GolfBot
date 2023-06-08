@@ -95,8 +95,7 @@ func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
 	var motorRequests []motorRequest
 	for distance > 0 {
 		// Read gyro values, eg. the current error
-		gyroValStr, _ := gyro.Value(0)
-		gyroErr, _ := strconv.ParseFloat(gyroValStr, 64)
+		gyroErr, _ := util.GetGyroValue(gyro)
 		integral += gyroErr
 
 		// Error derivative try to predict the next error from the previous error
@@ -110,6 +109,7 @@ func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
 
 		// Slice the array to reuse positions
 		motorRequests = motorRequests[0:0]
+		// Prepare the motors for running
 		for _, request := range driveRequest.GetMotors().GetMotor() {
 			motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
 			if err != nil {
@@ -206,16 +206,16 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 	}
 
 	lastError := 0.0
-	target := float64(in.Degrees)
+	target := 0.0
 
 	var motorRequests []motorRequest
-	gyro, _ := util.GetSensor(pBuff.InPort_in1.String(), "GYRO")
-	gyroVal, _ := gyro.Value(0)
-	gyroValF, _ := strconv.ParseFloat(gyroVal, 64)
-	for math.Abs(gyroValF) != math.Abs(float64(in.Degrees)) {
-		gyroVal, _ = gyro.Value(0)
-		gyroValF, _ = strconv.ParseFloat(gyroVal, 64)
-		target = gyroValF - float64(in.Degrees)
+	gyro, _ := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
+	gyroVal, _ := util.GetGyroValue(gyro)
+
+	// Run until the input degrees match the gyro value.
+	for math.Abs(gyroVal) != math.Abs(float64(in.Degrees)) {
+		gyroVal, _ = util.GetGyroValue(gyro)
+		target = gyroVal - float64(in.Degrees)
 
 		derivative := target - lastError
 		lastError = target
@@ -234,7 +234,7 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 			}
 
 			power := rotateSpeed + int(turn)
-			power = setPowerInRotate(target, power, direction)
+			power = setPowerInRotate(target, power, direction, 4)
 
 			switch request.GetMotorPort() {
 			case pBuff.OutPort_A:
@@ -259,20 +259,22 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 }
 
 // setPowerInRotate increase power when far from the target and also sets a powercap to avoid drifting from high speeds
-func setPowerInRotate(target float64, power int, direction float64) int {
+// powerFactor is used to increase the speed when we are more than  5 degrees from the target
+func setPowerInRotate(target float64, power int, direction float64, powerFactor int) int {
 	if (target * direction) < 0 {
 		power *= -1
 	}
 
 	if math.Abs(target) > 5 {
-		power *= 4
+		power *= powerFactor
 	}
 
+	powerCap := 50
 	switch {
-	case power > 50:
-		power = 50
-	case power < -50:
-		power = -50
+	case power > powerCap:
+		power = powerCap
+	case power < -powerCap:
+		power = -powerCap
 	}
 
 	return power
