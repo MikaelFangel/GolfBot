@@ -14,7 +14,7 @@ public class Main {
 
         int cameraIndex = 2;
         Course course = new Course();
-        DetectionController detectionController = new DetectionController(course, cameraIndex, false);
+        DetectionController detectionController = new DetectionController(course, cameraIndex, true);
 
         while (true) {
 

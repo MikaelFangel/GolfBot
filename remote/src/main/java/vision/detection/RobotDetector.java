@@ -20,12 +20,25 @@ public class RobotDetector implements SubDetector {
 
     private final int numberOfMarkers = 2;
 
+    // Initialize all OpenCV objects once to not have memory leaks
+    Mat frameBlur, mask, frameDummy;
+    private boolean initial = true;
+
     /**
      * Detects the robot from the frame and stores it in the objects
      * @param frame The frame to be evaluated.
      * @return a boolean symbolizing if the robot was found or not.
      */
     public boolean detectRobot(Mat frame) {
+        // Initialize all OpenCV objects once to not have memory leaks
+        if (initial) {
+            frameBlur = new Mat();
+            mask = new Mat();
+            frameDummy = new Mat();
+
+            initial = false;
+        }
+
         Point[] markers = getRobotMarkers(frame);
 
         // Store robot if robot markers were found
@@ -49,7 +62,6 @@ public class RobotDetector implements SubDetector {
      */
     public Point[] getRobotMarkers(Mat frame) {
         // Blur frame to smooth out color inconsistencies
-        Mat frameBlur = new Mat();
         Imgproc.GaussianBlur(frame, frameBlur, new Size(7,7), 7, 0);
 
         // Blue markers threshold (BGR)
@@ -57,7 +69,6 @@ public class RobotDetector implements SubDetector {
         final Scalar uRobot = new Scalar(255, 255, 20);
 
         // Create a mask to filter out unnecessary contours
-        Mat mask = new Mat();
         Core.inRange(frameBlur, lRobot, uRobot, mask);
 
         // Add mask for debugging
@@ -65,7 +76,7 @@ public class RobotDetector implements SubDetector {
 
         // Get Contours
         List<MatOfPoint> contours = new ArrayList<>();
-        Imgproc.findContours(mask, contours, new Mat(), Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(mask, contours, frameDummy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
 
         // Size of contours (number of pixels in cohesive area)
         final int areaLowerThreshold = 100;
