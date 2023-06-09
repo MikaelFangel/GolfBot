@@ -157,7 +157,7 @@ public class BorderDetector implements SubDetector {
      * @param crossFound True if the cross is found
      */
     private void updateCross(List<MatOfPoint2f> endPointList, boolean crossFound) {
-        // Add end points of cross to Cross object
+        // Add end points of cross to Cross object. Used for debugging
         List<Point> endPoints = new ArrayList<>();
         for (MatOfPoint2f endPoint : endPointList) {
             endPoints.addAll(endPoint.toList());
@@ -165,6 +165,7 @@ public class BorderDetector implements SubDetector {
             System.out.println(cross.toString());
         }
 
+        // Add middle coordinate to Cross object
         if (crossFound) {
             Point firstPoint = endPoints.get(0);
             Point middlePoint = endPoints.get(6);
