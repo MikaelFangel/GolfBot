@@ -1,5 +1,6 @@
 package vision.detection;
 
+import courseObjects.Cross;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import vision.helperClasses.BorderSet;
@@ -11,15 +12,18 @@ import java.util.List;
 
 public class BorderDetector implements SubDetector {
     private BorderSet borderSet;
-    private final List<MaskSet> maskSets = new ArrayList<>();;
+    private final List<MaskSet> maskSets = new ArrayList<>();
+    private final Cross cross = new Cross();
 
-    // Initialize all OpenCV objects once to not have memory leaks
-    Mat mask, frameBorder, frameGray, frameBlur, frameDummy;
-    MatOfPoint2f lines, approx;
+    // Initialize all OpenCV objects once to not have memory leaks (so they don't get reinitialized every time the function gets called)
+    Mat mask, frameBlur, frameDummy;
+    MatOfPoint2f innerBorderEndPoints;
+    MatOfPoint2f approx;
     private boolean initial = true;
 
     /**
      * Detects the border from the frame and stores the objects in its own objects.
+     *
      * @param frame The frame to be detected.
      * @return a boolean symbolizing if objects were found or not.
      */
@@ -27,12 +31,8 @@ public class BorderDetector implements SubDetector {
         // Initialize all OpenCV objects once to not have memory leaks
         if (initial) {
             mask = new Mat();
-            frameBorder = new Mat();
-            frameGray = new Mat();
             frameBlur = new Mat();
             frameDummy = new Mat();
-            lines = new MatOfPoint2f();
-            approx = new MatOfPoint2f();
 
             initial = false;
         }
@@ -45,58 +45,54 @@ public class BorderDetector implements SubDetector {
     /**
      * Finds the border and calculates the corners from an approximation of line intersections.
      * Note: The mask is displayed in black and white. White equals true
+     *
      * @param frame to be evaluated
      * @return A BorderSet with the border corners and the offset from the camera.
      */
-    private  BorderSet getBorderFromFrame(Mat frame) {
-        // Remove everything from frame except border (which is red)
-        Scalar lower = new Scalar(0, 0, 180); // Little red
-        Scalar upper = new Scalar(100, 100, 255); // More red
+    private BorderSet getBorderFromFrame(Mat frame) {
+        List<MatOfPoint> contours = getRedContours(frame);
+        /* Each contour is a boundary of one of the components (e.g. to boundary of the cross)
+         *  - The outer boundary of the border has 28 straight lines in the physical world (not used)
+         *  - The inner boundary of the border has 4 straight lines in the physical world
+         *  - The boundary of the cross has 12 straight lines in the physical worlds
+         *
+         * NB! The lines from the physical world might differ a bit from what is found in contours */
+        List<MatOfPoint2f> endPointList = new ArrayList<>();
+        boolean crossFound = false;
 
-        // Create a mask to filter in next step
-        Core.inRange(frame, lower, upper, mask); // Filter all red colors from frame to mask
-
-        // Filter out to only have the red border
-        Core.bitwise_and(frame, frame, frameBorder, mask); // Overlay mask on frame and get the red border
-
-        // Add mask for debugging
-        this.maskSets.add(new MaskSet("border", mask));
-
-        // Greyscale to allow finding contours and blur
-        Imgproc.cvtColor(frameBorder, frameGray, Imgproc.COLOR_BGR2GRAY);
-
-        // Blur frame to smooth out color inconsistencies
-        Imgproc.GaussianBlur(frameGray, frameBlur, new Size(9, 9), 0);
-
-        // Find contours (color patches of the border)
-        List<MatOfPoint> contours = new ArrayList<>();
-        Imgproc.findContours(frameBlur, contours, frameDummy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
-
-        // Estimate lines for the border using the contours
-        for (MatOfPoint contour : contours) {
-            MatOfPoint2f contourConverted = new MatOfPoint2f(contour.toArray());
+        int innerBorderIndex = contours.size() - 2;
+        for (int i = innerBorderIndex; i >= 0; i--) { // The last element would be the outer boundary of the border
+            MatOfPoint2f contourConverted = new MatOfPoint2f(contours.get(i).toArray());
+            approx = new MatOfPoint2f();
 
             // Approximate polygon of contour
             Imgproc.approxPolyDP(
                     contourConverted,
                     approx,
-                    0.01 * Imgproc.arcLength(contourConverted, true),
+                    // The value 0.014 has been tweaked to get the cross coordinates as reliably as possible
+                    0.014 * Imgproc.arcLength(contourConverted, true),
                     true
-
             );
 
-            // Exit if the four lines are found. Because we only need to have 4.
-            if (approx.toArray().length == 4) {
-                lines = approx;
-                break;
+            int numOfEndPoints = approx.toArray().length;
+
+            if (i == innerBorderIndex && numOfEndPoints == 4) { // The boundary of inner border
+                innerBorderEndPoints = approx;
+            } else { // Obstacles with same color as border
+                if (numOfEndPoints == 12) { // Objects with 12 end points, e.g. a cross
+                    crossFound = true;
+                    endPointList.add(approx);
+                }
             }
         }
+        if (innerBorderEndPoints == null || innerBorderEndPoints.empty()) return null;
 
-        // End if lines are not found
-        if (lines.empty()) return null;
+        if (crossFound)
+            updateCross(endPointList);
 
-        // Get as array
-        Point[] linePoints = lines.toArray();
+        // Add inner boundary end points of border to BorderSet object
+        Point[] linePoints = innerBorderEndPoints.toArray().clone();
+        approx.release(); // Prevent memory leak. Used in the endPointList
 
         // Calculate corners
         Point[] corners = new Point[linePoints.length];
@@ -120,6 +116,75 @@ public class BorderDetector implements SubDetector {
         return new BorderSet(sortedCorners.toArray(Point[]::new), new Point(offsetX, offsetY));
     }
 
+    /**
+     * The red color filtered from the frame using a mask with a color threshold. The frame is then scaled grey to blur
+     * it and find contours. The frame is blurred to smooth out color inconsistencies, and
+     *
+     * @param frame Frame to get contours from
+     * @return The red contours of the frame, one for each red 'object'.
+     */
+    private List<MatOfPoint> getRedContours(Mat frame) {
+        // Remove everything from frame except border (which is red)
+        Scalar lower = new Scalar(0, 0, 180); // Little red
+        Scalar upper = new Scalar(100, 100, 255); // More red
+
+        // Blur frame to smooth out color inconsistencies
+        Imgproc.GaussianBlur(
+                frame,
+                this.frameBlur,
+                /* Both width and height should be uneven numbers.
+                 *  - Should be at least (3, 3) to detect borders.
+                 *  - Points of the cross becomes shaky if larger than (3, 3) */
+                new Size(3, 3),
+                0
+        );
+
+        // Create a mask to filter in next step
+        Core.inRange(this.frameBlur, lower, upper, this.mask); // Filter all red colors from frame to mask
+
+        // Add mask for debugging
+        this.maskSets.add(new MaskSet("border", this.mask));
+
+        // Find contours (color patches of the border)
+        List<MatOfPoint> contours = new ArrayList<>();
+        int method = Imgproc.CHAIN_APPROX_SIMPLE; // Only leaves the end points of the components, e.g. a rectangular contour would be encoded with 4 points.
+        Imgproc.findContours(this.mask, contours, frameDummy, Imgproc.RETR_LIST, method);
+
+        return contours;
+    }
+
+    /**
+     * Update the variables in the Cross object with the newly detected endpoints
+     *
+     * @param endPointList List of 12 endpoints on the cross
+     */
+    private void updateCross(List<MatOfPoint2f> endPointList) {
+        // Add end points of cross to Cross object. Used for debugging
+        List<Point> endPoints = new ArrayList<>();
+        for (MatOfPoint2f endPoint : endPointList) {
+            endPoints.addAll(endPoint.toList());
+            cross.setEndPoints(endPoints);
+        }
+
+        Point firstPoint = endPoints.get(0);
+        Point rightFromFirst = endPoints.get(endPoints.size() - 1);
+        Point leftFromFirst = endPoints.get(1);
+
+        // Calculate distance from first point to next point on both sides
+        double lengthRight = Math.sqrt(Math.pow((rightFromFirst.x - firstPoint.x), 2) + Math.pow((rightFromFirst.y - firstPoint.y), 2));
+        double lengthLeft = Math.sqrt(Math.pow((leftFromFirst.x - firstPoint.x), 2) + Math.pow((leftFromFirst.y - firstPoint.y), 2));
+
+        if (lengthRight > lengthLeft) {
+            cross.setMeasurePoint(new Point((firstPoint.x + leftFromFirst.x) / 2, (firstPoint.y + leftFromFirst.y) / 2));
+        } else {
+            cross.setMeasurePoint(new Point((firstPoint.x + rightFromFirst.x) / 2, (firstPoint.y + rightFromFirst.y) / 2));
+        }
+
+        // Add middle coordinate to Cross object
+        Point middlePoint = endPoints.get(6);
+        cross.setMiddle(new Point((firstPoint.x + middlePoint.x) / 2, (firstPoint.y + middlePoint.y) / 2));
+    }
+
     public BorderSet getBorderSet() {
         return this.borderSet;
     }
@@ -127,5 +192,9 @@ public class BorderDetector implements SubDetector {
     @Override
     public List<MaskSet> getMaskSets() {
         return this.maskSets;
+    }
+
+    public Cross getCross() {
+        return cross;
     }
 }

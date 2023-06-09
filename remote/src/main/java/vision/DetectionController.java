@@ -2,6 +2,7 @@ package vision;
 
 import courseObjects.Ball;
 import courseObjects.Course;
+import courseObjects.Cross;
 import courseObjects.Robot;
 import nu.pattern.OpenCV;
 import org.opencv.core.Mat;
@@ -47,9 +48,10 @@ public class DetectionController {
      * Start a setup process that requires the different objects to be present in the camera's view.
      * When the setup is over a background thread starts doing background detection.
      * To utilize the found objects, read them from the passed Course object.
-     * @param course The class that contains all the objects and information about the course during runtime.
+     *
+     * @param course      The class that contains all the objects and information about the course during runtime.
      * @param cameraIndex The camera index of intended camera (computer specific).
-     * @param showMasks Only needed for debugging masks. If true, displays mask windows.
+     * @param showMasks   Only needed for debugging masks. If true, displays mask windows.
      */
     public DetectionController(Course course, int cameraIndex, boolean showMasks) {
         this.showMasks = showMasks;
@@ -68,10 +70,9 @@ public class DetectionController {
 
         if (!capture.isOpened()) throw new RuntimeException("Camera Capture was not opened");
 
-        // Add detectors to list
-        this.subDetectors.add(ballDetector);
-        this.subDetectors.add(robotDetector);
-        this.subDetectors.add(borderDetector);
+        this.subDetectors.add(this.ballDetector);
+        this.subDetectors.add(this.robotDetector);
+        this.subDetectors.add(this.borderDetector);
 
         // Run setup to get initial objects
         runDetectionSetup(capture);
@@ -81,6 +82,7 @@ public class DetectionController {
 
     /**
      * Blocks the thread until all objects are found in the camera's view.
+     *
      * @param capture the video capture from which the frame should be read.
      */
     private void runDetectionSetup(VideoCapture capture) {
@@ -133,6 +135,7 @@ public class DetectionController {
     /**
      * Spawns a thread that will run in the background. This thread runs detections and updates the course when objects
      * are found. (E.g. when the robot moves)
+     *
      * @param capture the video capture from which the frame should be read.
      */
     private void startBackgroundDetection(VideoCapture capture) {
@@ -149,6 +152,7 @@ public class DetectionController {
      * The objects gets corrected using different algorithms (E.g. height correction).
      * Then the objects gets converted to real world units (cm) and updates the Course object.
      * The frames will get displayed.
+     *
      * @param capture the video capture from which the frame should be read.
      */
     private void detectCourse(VideoCapture capture) {
@@ -188,13 +192,13 @@ public class DetectionController {
 
             // Find conversion factor to translate units from pixel to CM
             this.corners = borderSet.getCoords().clone();
-            Point topLeft = corners[0];
-            Point topRight = corners[1];
-            Point bottomLeft = corners[2];
+            Point topLeft = this.corners[0];
+            Point topRight = this.corners[1];
+            Point bottomLeft = this.corners[2];
 
             // Calculate conversion factors and get offset
-            this.conversionFactorX = this.course.length / distanceBetweenTwoPoints(topLeft.x, topLeft.y, topRight.x, topRight.y);
-            this.conversionFactorY = this.course.width / distanceBetweenTwoPoints(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y);
+            this.conversionFactorX = this.course.getLength() / distanceBetweenTwoPoints(topLeft.x, topLeft.y, topRight.x, topRight.y);
+            this.conversionFactorY = this.course.getWidth() / distanceBetweenTwoPoints(topLeft.x, topLeft.y, bottomLeft.x, bottomLeft.y);
             this.pixelOffset = borderSet.getOrigin();
         }
 
@@ -256,7 +260,8 @@ public class DetectionController {
 
     /**
      * Converts Point from pixel units to centimetres and subtracts a pixel offset.
-     * @param point Point to be converted.
+     *
+     * @param point       Point to be converted.
      * @param pixelOffset The offset to be subtracted before the multiplication of the factor.
      * @return The new converted point in centimetres.
      */
@@ -281,6 +286,7 @@ public class DetectionController {
         Scalar cornerColor = new Scalar(0, 255, 0); // Green
         Scalar robotMarkerColor = new Scalar(255, 0, 255); // Magenta
         Scalar ballColor = new Scalar(255, 255, 0); // Cyan
+        Scalar crossColor = new Scalar(0, 255, 255); // Yellow
 
         this.overlayFrame = this.frame;
 
@@ -292,6 +298,16 @@ public class DetectionController {
             for (Point corner : corners)
                 Imgproc.circle(this.overlayFrame, corner, 2, cornerColor, 3);
 
+        // Draw the middle of the cross
+        Cross cross = borderDetector.getCross();
+        if (cross != null) {
+            Point middle = cross.getMiddle();
+            if (middle != null)
+                Imgproc.circle(overlayFrame, middle, 2, crossColor, 3);
+            Point measurePoint = cross.getMeasurePoint();
+            if (measurePoint != null)
+                Imgproc.circle(overlayFrame, measurePoint, 2, crossColor, 3);
+        }
         // Draw Robot Markers
         Robot robot = this.robotDetector.getRobot();
 
