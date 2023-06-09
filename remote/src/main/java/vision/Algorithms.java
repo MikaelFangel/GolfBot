@@ -51,12 +51,16 @@ public class Algorithms {
      */
     public static double findRobotShortestAngleToBall(Robot robot, Ball ball) {
         double clockWiseAngleToBall = angleBetweenTwoPoints(robot.getCenter().x, robot.getCenter().y, ball.getCenter().x, ball.getCenter().y);
+        clockWiseAngleToBall -= robot.getAngle();
 
         double shortestAngleToBall = clockWiseAngleToBall;
 
         // Check if there is a shorter angle
         if (clockWiseAngleToBall > 180)
             shortestAngleToBall = clockWiseAngleToBall - 360;
+        else if (clockWiseAngleToBall < -180) {
+            shortestAngleToBall = clockWiseAngleToBall + 360;
+        }
 
         return shortestAngleToBall;
     }
