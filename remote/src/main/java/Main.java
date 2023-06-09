@@ -1,22 +1,22 @@
 import exceptions.MissingArgumentException;
 import courseObjects.*;
-
 import vision.Algorithms;
 import vision.DetectionController;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException, MissingArgumentException {
-        if (args.length < 1) {
-            throw new MissingArgumentException("Please provide an IP and port number (e.g 192.168.1.12:50051)");
+        if (args.length < 2) {
+            throw new MissingArgumentException("Please provide an IP and port number (e.g 192.168.1.12:50051) and camera index");
         }
 
-        RobotController controller = new RobotController(args[0]); // Args[0] being and IP
+        String ipaddr = args[0];
+        int cameraIndex = Integer.parseInt(args[1]);
+        double cameraHeight = 168.2;  // in cm TODO make into arg at some point
 
-        controller.stopCollectRelease();
+        RobotController controller = new RobotController(args[0]); // Args[0] being and IP address
 
-        int cameraIndex = 0;
-        Course course = new Course();
-        new DetectionController(course, cameraIndex, true);
+        Course course = new Course(cameraHeight);
+        DetectionController detectionController = new DetectionController(course, cameraIndex, true);
 
         while (true) {
 
