@@ -2,6 +2,7 @@ package vision;
 
 import courseObjects.Ball;
 import courseObjects.Course;
+import courseObjects.Cross;
 import courseObjects.Robot;
 import nu.pattern.OpenCV;
 import org.opencv.core.Mat;
@@ -290,11 +291,13 @@ public class DetectionController {
             for (Point corner : corners)
                 Imgproc.circle(overlayFrame, corner, 2, cornerColor, 3);
 
-//        for (Point crossPoint: this.borderDetector.getCross().getEndPoints()) {
-//            System.out.println(crossPoint);
-//            Imgproc.circle(overlayFrame, crossPoint, 2, cornerColor, 3);
-//        }
-
+        // Draw the middle of the cross
+        Cross cross = borderDetector.getCross();
+        if (cross != null) {
+            Point middle = cross.getMiddle();
+            if (middle != null)
+                Imgproc.circle(overlayFrame, middle, 2, cornerColor, 3);
+        }
         // Draw Robot Markers
         Robot robot = this.robotDetector.getRobot();
 
