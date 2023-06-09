@@ -25,7 +25,7 @@ sudo systemctl stop robot
 
 4. Transfer the file to the robot using scp
 ```
-scp <main file> <ip-addr>:<port>:.
+scp <main file> robot@<ip-addr>:.
 ```
 
 6. ssh into robot and start robot server
