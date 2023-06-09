@@ -160,6 +160,12 @@ public class DetectionController {
         this.robotDetector.detectRobot(this.frame);
         this.ballDetector.detectBalls(this.frame);
 
+        // TODO mark balls with category.
+        categorizeBallsPickupStrategy(
+                this.ballDetector.getBalls(),
+                this.borderDetector.getBorderSet().getCoords()
+        );
+
         correctObjects();
         updateCourse();
         showOverlay();
@@ -170,6 +176,50 @@ public class DetectionController {
 
         // Open all window pop-ups
         HighGui.waitKey(this.refreshRate);
+    }
+
+
+    private void categorizeBallsPickupStrategy(List<Ball> balls, Point[] corners) {
+        final double pixelMarginX = conversionFactorX * 5;
+        final double pixelMarginY = conversionFactorY * 5;
+
+        Point TL = corners[0], TR = corners[1], BL = corners[2];
+
+        for (Ball ball : balls) {
+            Point position = ball.getCenter();
+
+            // Top Border
+            if (position.y <= TL.y + pixelMarginY) {
+                ball.setStrategy(BallPickupStrategy.BORDER);
+            }
+
+            // Bottom Border
+            if (position.y >= BL.y - pixelMarginY) {
+                // If already in another border, up the strategy to corner.
+                if (ball.getStrategy() == BallPickupStrategy.BORDER)
+                    ball.setStrategy(BallPickupStrategy.CORNER);
+                else
+                    ball.setStrategy(BallPickupStrategy.BORDER);
+            }
+
+            // Right Border
+            if (position.x >= TR.x - pixelMarginX) {
+                // If already in another border, up the strategy to corner.
+                if (ball.getStrategy() == BallPickupStrategy.BORDER)
+                    ball.setStrategy(BallPickupStrategy.CORNER);
+                else
+                    ball.setStrategy(BallPickupStrategy.BORDER);
+            }
+
+            // Left Border
+            if (position.x <= TL.x + pixelMarginX) {
+                // If already in another border, up the strategy to corner.
+                if (ball.getStrategy() == BallPickupStrategy.BORDER)
+                    ball.setStrategy(BallPickupStrategy.CORNER);
+                else
+                    ball.setStrategy(BallPickupStrategy.BORDER);
+            }
+        }
     }
 
     private void correctObjects() {
@@ -248,7 +298,7 @@ public class DetectionController {
         for (Ball ball : balls) {
             Point correctedCenter = convertPixelPointToCmPoint(ball.getCenter(), this.pixelOffset);
 
-            Ball correctedBall = new Ball(correctedCenter, ball.getColor());
+            Ball correctedBall = new Ball(correctedCenter, ball.getColor(), ball.getStrategy());
             correctedBalls.add(correctedBall);
         }
 
