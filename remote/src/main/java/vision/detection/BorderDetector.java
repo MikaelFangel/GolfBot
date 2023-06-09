@@ -86,7 +86,7 @@ public class BorderDetector implements SubDetector {
                 }
             }
         }
-        if (innerBorderEndPoints.empty()) return null;
+        if (innerBorderEndPoints == null || innerBorderEndPoints.empty()) return null;
 
         if (crossFound)
             updateCross(endPointList);
