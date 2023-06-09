@@ -77,4 +77,13 @@ public class Course {
     public double getWidth() {
         return width;
     }
+
+    public String printCorners() {
+        return "Border{" +
+                "topLeft=" + topLeft +
+                ", topRight=" + topRight +
+                ", bottomLeft=" + bottomLeft +
+                ", bottomRight=" + bottomRight +
+                '}';
+    }
 }
