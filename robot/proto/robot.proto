@@ -42,6 +42,7 @@ service Motors {
   rpc StopMotors(MultipleMotors) returns (StatusReply) {}
   rpc RotateWGyro(RotateRequest) returns (StatusReply) {}
   rpc CollectRelease(MultipleMotors) returns (StatusReply) {}
+  rpc ReleaseOneBall(MultipleMotors) returns (StatusReply) {}
   rpc RecalibrateGyro(EmptyRequest) returns (StatusReply) {}
 }
 
