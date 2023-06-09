@@ -47,10 +47,7 @@ public class RobotDetector implements SubDetector {
             Point center = markers[0]; // Big marker
             Point front = markers[1]; // Small marker
 
-            // Calculate angle of the robot
-            double robotAngle = angleBetweenTwoPoints(center.x, center.y, front.x, front.y);
-
-            this.robot = new Robot(markers[0], markers[1], robotAngle);
+            this.robot = new Robot(markers[0], markers[1]);
         }
 
         return this.robot != null;
