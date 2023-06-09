@@ -88,15 +88,15 @@ public class DetectionController {
 
         System.out.println("Starting Setup");
 
-        frame = new Mat();
-        overlayFrame = new Mat();
+        this.frame = new Mat();
+        this.overlayFrame = new Mat();
 
         while (true) {
             capture.read(this.frame);
 
             // Display frame in popup window
             showOverlay();
-            if (showMasks)
+            if (this.showMasks)
                 showMasks();
             HighGui.waitKey(this.refreshRate);
 
@@ -162,7 +162,7 @@ public class DetectionController {
 
         correctObjects();
         updateCourse();
-        //showOverlay();
+        showOverlay();
 
         // Display masks for debugging
         if (this.showMasks)
@@ -271,7 +271,7 @@ public class DetectionController {
     private void showOverlay() {
         // Display overlay
         createOverlay();
-        HighGui.imshow("overlay", overlayFrame);
+        HighGui.imshow("overlay", this.overlayFrame);
     }
 
     /**
@@ -283,7 +283,7 @@ public class DetectionController {
         Scalar robotMarkerColor = new Scalar(255, 0, 255); // Magenta
         Scalar ballColor = new Scalar(255, 255, 0); // Cyan
 
-        overlayFrame = frame;
+        this.overlayFrame = this.frame;
 
         // Draw Corners
         BorderSet borderSet = this.borderDetector.getBorderSet();
@@ -291,7 +291,7 @@ public class DetectionController {
 
         if (corners != null)
             for (Point corner : corners)
-                Imgproc.circle(overlayFrame, corner, 2, cornerColor, 3);
+                Imgproc.circle(this.overlayFrame, corner, 2, cornerColor, 3);
 
         // Draw the middle of the cross
         Cross cross = borderDetector.getCross();
@@ -304,20 +304,20 @@ public class DetectionController {
         Robot robot = this.robotDetector.getRobot();
 
         if (robot != null) {
-            Imgproc.circle(overlayFrame, robot.getCenter(), 5, robotMarkerColor, 2);
-            Imgproc.circle(overlayFrame, robot.getFront(), 4, robotMarkerColor, 2);
-            Imgproc.line(overlayFrame, robot.getCenter(), robot.getFront(), robotMarkerColor, 2);
+            Imgproc.circle(this.overlayFrame, robot.getCenter(), 5, robotMarkerColor, 2);
+            Imgproc.circle(this.overlayFrame, robot.getFront(), 4, robotMarkerColor, 2);
+            Imgproc.line(this.overlayFrame, robot.getCenter(), robot.getFront(), robotMarkerColor, 2);
         }
 
         // Draw Balls
         List<Ball> balls = this.ballDetector.getBalls();
 
         for (Ball ball : balls) {
-            Imgproc.circle(overlayFrame, ball.getCenter(), 4, ballColor, 1);
+            Imgproc.circle(this.overlayFrame, ball.getCenter(), 4, ballColor, 1);
 
             // Draw Lines between robot and balls
             if (robot != null)
-                Imgproc.line(overlayFrame, robot.getCenter(), ball.getCenter(), ballColor, 1);
+                Imgproc.line(this.overlayFrame, robot.getCenter(), ball.getCenter(), ballColor, 1);
         }
     }
 
