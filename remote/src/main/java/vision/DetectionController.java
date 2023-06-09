@@ -178,24 +178,30 @@ public class DetectionController {
         HighGui.waitKey(this.refreshRate);
     }
 
-
+    /**
+     * Changes the BallPickupStrategy for each of the balls in the list, depending on how close they are to the borders.
+     * @param balls The list of balls to be changed
+     * @param corners the corner of the box surrounding the balls.
+     */
     private void categorizeBallsPickupStrategy(List<Ball> balls, Point[] corners) {
         final double centimeterMargin = 5;
 
+        // Convert margin to pixels
         final double pixelMarginX = centimeterMargin / conversionFactorX;
         final double pixelMarginY = centimeterMargin / conversionFactorY;
 
+        // Get corners, TopLeft, TopRight, BottomLeft
         Point TL = corners[0], TR = corners[1], BL = corners[2];
 
         for (Ball ball : balls) {
             Point position = ball.getCenter();
 
-            // Top Border
+            // Close to Top Border
             if (position.y <= TL.y + pixelMarginY) {
                 ball.setStrategy(BallPickupStrategy.BORDER);
             }
 
-            // Bottom Border
+            // Close to Bottom Border
             if (position.y >= BL.y - pixelMarginY) {
                 // If already in another border, up the strategy to corner.
                 if (ball.getStrategy() == BallPickupStrategy.BORDER)
@@ -204,7 +210,7 @@ public class DetectionController {
                     ball.setStrategy(BallPickupStrategy.BORDER);
             }
 
-            // Right Border
+            // Close to Right Border
             if (position.x >= TR.x - pixelMarginX) {
                 // If already in another border, up the strategy to corner.
                 if (ball.getStrategy() == BallPickupStrategy.BORDER)
@@ -213,7 +219,7 @@ public class DetectionController {
                     ball.setStrategy(BallPickupStrategy.BORDER);
             }
 
-            // Left Border
+            // Close to Left Border
             if (position.x <= TL.x + pixelMarginX) {
                 // If already in another border, up the strategy to corner.
                 if (ball.getStrategy() == BallPickupStrategy.BORDER)
