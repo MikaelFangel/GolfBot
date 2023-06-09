@@ -31,6 +31,6 @@ public class Ball {
     }
 
     public double getRadius() {
-        return radius;
+        return this.radius;
     }
 }
