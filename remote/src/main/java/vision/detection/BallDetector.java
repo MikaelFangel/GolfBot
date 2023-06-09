@@ -16,8 +16,8 @@ public class BallDetector implements SubDetector {
     private final int minDist = 5; // Minimum distance between balls
     private final int param1 = 20;  // gradient value used in the edge detection
     private final int param2 = 12;  // lower values allow more circles to be detected (false positives)
-    private final int minBallRadius = 3;  // limits the smallest circle to this size (via radius) on camera feed
-    private final int maxBallRadius = 10;  // similarly sets the limit for the largest circles on camera feed
+    private final int minBallRadius = 6;  // limits the smallest circle to this size (via radius) on camera feed
+    private final int maxBallRadius = 9;  // similarly sets the limit for the largest circles on camera feed
 
     private List<Ball> balls = new ArrayList<>();
     List<MaskSet> maskSets = new ArrayList<>();
