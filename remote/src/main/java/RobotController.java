@@ -81,7 +81,9 @@ public class RobotController {
 
         try {
             // Continue to stream messages until reaching target
-            while (distance > 0 && i < MAX_ITERATIONS) {
+            while (distance > 5 && i < MAX_ITERATIONS) {
+                System.out.println("Distance left " + distance);
+
                 // Update distance
                 distance = Algorithms.findRobotsDistanceToBall(course.getRobot(), closestBall);
 

@@ -129,7 +129,7 @@ public class AlgorithmsTest {
         int ballCenterX = -10;
         int ballCenterY = 0;
 
-        double shortestAngleToCalculate = 180;
+        double shortestAngleToCalculate = -180;
 
         Robot robot = new Robot(new Point(robotCenterX,robotCenterY), new Point(robotFrontX, robotFrontY));
 
