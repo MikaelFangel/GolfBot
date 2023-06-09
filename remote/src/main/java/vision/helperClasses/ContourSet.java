@@ -8,6 +8,7 @@ import org.opencv.core.MatOfPoint;
 public class ContourSet {
     private Double area;
     private MatOfPoint contour;
+
     public ContourSet(Double area, MatOfPoint contour) {
         this.area = area;
         this.contour = contour;

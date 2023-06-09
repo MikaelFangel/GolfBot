@@ -10,10 +10,10 @@ import static vision.math.Geometry.angleBetweenTwoPoints;
 import static vision.math.Geometry.distanceBetweenTwoPoints;
 
 /**
- * Contains algorithms used to path find, find nearest ball etc.
+ * Contains algorithms used to path find, find the nearest ball etc.
  */
 public class Algorithms {
-    public static Ball findClosestBall(List<Ball> balls, Robot robot){
+    public static Ball findClosestBall(List<Ball> balls, Robot robot) {
         if (balls.size() == 0 || robot == null) return null;
         Point robotCenter = robot.getCenter();
 
@@ -46,11 +46,10 @@ public class Algorithms {
 
     /**
      * Finds the shortest angle between robot and ball.
-     * @param robot
-     * @param ball
+     *
      * @return angle in degrees. Clockwise with the robot returns positive angle-values, counter-clockwise with the robot returns negative angle-values.
      */
-    public static double findRobotsAngleToBall(Robot robot, Ball ball) {
+    public static double findRobotShortestAngleToBall(Robot robot, Ball ball) {
         double clockWiseAngleToBall = angleBetweenTwoPoints(robot.getCenter().x, robot.getCenter().y, ball.getCenter().x, ball.getCenter().y);
 
         double shortestAngleToBall = clockWiseAngleToBall;
@@ -58,8 +57,6 @@ public class Algorithms {
         // Check if there is a shorter angle
         if (clockWiseAngleToBall > 180)
             shortestAngleToBall = clockWiseAngleToBall - 360;
-        else
-            shortestAngleToBall = robot.getAngle() - clockWiseAngleToBall;
 
         return shortestAngleToBall;
     }

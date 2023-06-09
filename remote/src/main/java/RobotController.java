@@ -20,6 +20,7 @@ public class RobotController {
 
     /**
      * Initializes channel and client to connect with the robot.
+     *
      * @param ip_port the ip and port of the robot on the subnet. e.g. 192.168.1.12:50051
      */
     public RobotController(String ip_port) {
@@ -30,6 +31,7 @@ public class RobotController {
 
     /**
      * Use this method to stop the controller before ending the program.
+     *
      * @throws InterruptedException if shutdown was interrupted
      */
     public void stopController() throws InterruptedException {
@@ -38,6 +40,7 @@ public class RobotController {
 
     /**
      * Makes the robot drive straight either forward or backwards by using the gyro and streaming distance to the robot
+     *
      * @param course For getting ball and robot coordinates
      * @throws RuntimeException if the robot was not reached
      * @see <a href="https://github.com/grpc/grpc-java/blob/master/examples/src/main/java/io/grpc/examples/routeguide/RouteGuideClient.java">Example streaming client</a>
@@ -78,7 +81,7 @@ public class RobotController {
 
         try {
             // Continue to stream messages until reaching target
-            while (distance > 0 && i < MAX_ITERATIONS){
+            while (distance > 0 && i < MAX_ITERATIONS) {
                 // Update distance
                 distance = Algorithms.findRobotsDistanceToBall(course.getRobot(), closestBall);
 
@@ -119,6 +122,7 @@ public class RobotController {
 
     /**
      * Rotates the robot with itself as its center
+     *
      * @param degrees postive values for counter-clockwise and negative for clockwise
      * @throws RuntimeException if the robot was not reached
      */
@@ -143,6 +147,7 @@ public class RobotController {
 
     /**
      * Recalibrates the gyro
+     *
      * @throws RuntimeException if the robot was not reached
      */
     public void recalibrateGyro() throws RuntimeException {
@@ -158,6 +163,7 @@ public class RobotController {
 
     /**
      * Either collects or releases balls depending on the boolean parameter given
+     *
      * @param isCollecting collects if true and releases if false
      */
     public void collectRelease(boolean isCollecting) {
@@ -182,6 +188,7 @@ public class RobotController {
 
         CLIENT.collectRelease(motorRequests);
     }
+
     public void releaseOneBall() {
         int speed = 1200;
         MultipleMotors motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, speed), new MotorPair(OutPort.C, speed));
@@ -200,7 +207,8 @@ public class RobotController {
 
     /**
      * Creates an array of motor request.
-     * @param motorType Small, Medium or Large
+     *
+     * @param motorType  Small, Medium or Large
      * @param motorPairs One should be given for each motor you wish to create
      * @return an arraylist of motor requests
      */
@@ -220,9 +228,9 @@ public class RobotController {
                 .build();
     }
 
-        /**
-         * A record consisting of an outputPort (A, B, C, D) and a speed associated with the port
-         */
-        private record MotorPair(OutPort outPort, int motorSpeed) {
+    /**
+     * A record consisting of an outputPort (A, B, C, D) and a speed associated with the port
+     */
+    private record MotorPair(OutPort outPort, int motorSpeed) {
     }
 }

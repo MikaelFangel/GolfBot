@@ -16,7 +16,7 @@ public class BorderSet {
     }
 
     /**
-     * @return list of length 4 in order {TopLeft, TopRight, BottomLeft, BottomRight}
+     * @return Array of length 4 in order {TopLeft, TopRight, BottomLeft, BottomRight}
      */
     public Point[] getCoords() {
         return coords;
