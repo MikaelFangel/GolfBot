@@ -15,12 +15,30 @@ public class BorderDetector implements SubDetector {
     private final List<MaskSet> maskSets = new ArrayList<>();
     private final Cross cross = new Cross();
 
+    // Initialize all OpenCV objects once to not have memory leaks
+    Mat mask, frameBorder, frameGray, frameBlur, frameDummy;
+    MatOfPoint2f lines, approx;
+    private boolean initial = true;
+
     /**
      * Detects the border from the frame and stores the objects in its own objects.
      * @param frame The frame to be detected.
      * @return a boolean symbolizing if objects were found or not.
      */
     public boolean detectBorder(Mat frame) {
+        // Initialize all OpenCV objects once to not have memory leaks
+        if (initial) {
+            mask = new Mat();
+            frameBorder = new Mat();
+            frameGray = new Mat();
+            frameBlur = new Mat();
+            frameDummy = new Mat();
+            lines = new MatOfPoint2f();
+            approx = new MatOfPoint2f();
+
+            initial = false;
+        }
+
         this.borderSet = getBorderFromFrame(frame);
 
         return borderSet != null;
@@ -49,7 +67,6 @@ public class BorderDetector implements SubDetector {
             MatOfPoint2f contourConverted = new MatOfPoint2f(contours.get(i).toArray());
 
             // Approximate polygon of contour
-            MatOfPoint2f approx = new MatOfPoint2f();
             Imgproc.approxPolyDP(
                     contourConverted,
                     approx,

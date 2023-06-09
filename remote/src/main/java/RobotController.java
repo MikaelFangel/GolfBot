@@ -182,6 +182,12 @@ public class RobotController {
 
         CLIENT.collectRelease(motorRequests);
     }
+    public void releaseOneBall() {
+        int speed = 1200;
+        MultipleMotors motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, speed), new MotorPair(OutPort.C, speed));
+
+        CLIENT.releaseOneBall(motorRequests);
+    }
 
     /**
      * Stops the motors collecting/releasing the balls, which currently is port B and C

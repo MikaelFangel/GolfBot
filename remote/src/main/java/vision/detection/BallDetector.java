@@ -22,12 +22,28 @@ public class BallDetector implements SubDetector {
     private List<Ball> balls = new ArrayList<>();
     List<MaskSet> maskSets = new ArrayList<>();
 
+    // Initialize all OpenCV objects once to not have memory leaks
+    private Mat frameGray, frameBlur, mask, frameBallsW, frameBallsO, frameHSV;
+    private boolean initial = true;
+
     /**
      * Detects the balls on the frame
      * @param frame the frame to evaluated
      * @return A boolean symbolizing if balls were found or not
      */
     public boolean detectBalls(Mat frame) {
+        // Initialize all OpenCV objects once to not have memory leaks
+        if (initial) {
+            frameGray = new Mat();
+            frameBlur = new Mat();
+            mask = new Mat();
+            frameBallsW = new Mat();
+            frameBallsO = new Mat();
+            frameHSV = new Mat();
+
+            initial = false;
+        }
+
         balls = new ArrayList<>();
 
         findWhiteBalls(frame, balls);
@@ -43,7 +59,6 @@ public class BallDetector implements SubDetector {
      */
     private void findWhiteBalls(Mat frame, List<Ball> balls) {
         // Apply gray frame for detecting white balls
-        Mat frameGray = new Mat();
         Imgproc.cvtColor(frame, frameGray, Imgproc.COLOR_BGR2GRAY);
 
         // White balls grey scale threshold (0-255)
@@ -51,25 +66,22 @@ public class BallDetector implements SubDetector {
         final int uWhiteBall = 255;
 
         // Apply a binary threshold mask to separate out all colors than white.
-        Mat binaryFrame = new Mat();
-        Imgproc.threshold(frameGray, binaryFrame, lWhiteBall, uWhiteBall, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(frameGray, mask, lWhiteBall, uWhiteBall, Imgproc.THRESH_BINARY);
 
         // Create mask set for debugging
-        maskSets.add(new MaskSet("whiteBalls Mask", binaryFrame));
+        maskSets.add(new MaskSet("whiteBalls Mask", mask));
 
         // Apply blur for better noise reduction
-        Mat frameBlur = new Mat();
-        Imgproc.GaussianBlur(binaryFrame, frameBlur, new Size(7,7), 0);
+        Imgproc.GaussianBlur(mask, frameBlur, new Size(7,7), 0);
 
         // Get white balls from frame
-        Mat whiteBalls = new Mat();
-        Imgproc.HoughCircles(frameBlur, whiteBalls, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, minBallRadius,
+        Imgproc.HoughCircles(frameBlur, frameBallsW, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, minBallRadius,
                 maxBallRadius); // Approximate circles on the frame. Middle coordinates is stored in first row
 
         // Add balls to array
-        if (!whiteBalls.empty()) {
-            for (int i = 0; i < whiteBalls.width(); i++) {
-                double[] center = whiteBalls.get(0, i);
+        if (!frameBallsW.empty()) {
+            for (int i = 0; i < frameBallsW.width(); i++) {
+                double[] center = frameBallsW.get(0, i);
                 balls.add(new Ball(new Point(center[0], center[1]), BallColor.WHITE));
             }
         }
@@ -82,37 +94,32 @@ public class BallDetector implements SubDetector {
      */
     private void findOrangeBalls(Mat frame, List<Ball> balls) {
         // Apply hsv filter to distinguish orange ball
-        Mat frameHsv = new Mat();
-        Imgproc.cvtColor(frame, frameHsv, Imgproc.COLOR_BGR2HSV);
+        Imgproc.cvtColor(frame, frameHSV, Imgproc.COLOR_BGR2HSV);
 
         // Orange balls threshold (BGR)
         final Scalar lOrangeBall = new Scalar(0, 100, 220);
         final Scalar uOrangeBall = new Scalar(170, 255, 255);
 
         // Create a mask to separate the orange ball
-        Mat mask = new Mat();
-        Core.inRange(frameHsv, lOrangeBall, uOrangeBall, mask);
+        Core.inRange(frameHSV, lOrangeBall, uOrangeBall, mask);
 
         // Create MaskSet for debugging
         maskSets.add(new MaskSet("orangeBallsMask", mask));
 
         // Apply blur for noise reduction
-        Mat frameBlur = new Mat();
         Imgproc.GaussianBlur(mask, frameBlur, new Size(7, 7), 0);
 
         // Stores orange circles from the HoughCircles algorithm
-        Mat orangeball = new Mat();
-
         // Get the orange ball from the frame
-        Imgproc.HoughCircles(frameBlur, orangeball, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, minBallRadius, maxBallRadius);
+        Imgproc.HoughCircles(frameBlur, frameBallsO, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, minBallRadius, maxBallRadius);
 
         // Delete the orange ball pixels from the frame, to not disturb later detection for white balls
         // TODO: Should be explored later if this is method should be used
         Core.bitwise_not(frame, frame, mask);
 
         // Add orange ball to list
-        if (!orangeball.empty()) {
-            double[] center = orangeball.get(0, 0);
+        if (!frameBallsO.empty()) {
+            double[] center = frameBallsO.get(0, 0);
             Point coords = new Point(center[0], center[1]);
 
             balls.add(new Ball(coords, BallColor.ORANGE));
