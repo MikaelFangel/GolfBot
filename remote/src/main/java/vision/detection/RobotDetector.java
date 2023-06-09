@@ -57,8 +57,8 @@ public class RobotDetector implements SubDetector {
         Imgproc.GaussianBlur(frame, frameBlur, new Size(7, 7), 7, 0);
 
         // Blue markers threshold (BGR)
-        final Scalar lRobot = new Scalar(100, 100, 0);
-        final Scalar uRobot = new Scalar(255, 255, 20);
+        final Scalar lRobot = new Scalar(210, 120, 0);
+        final Scalar uRobot = new Scalar(255, 170, 80);
 
         // Create a mask to filter out unnecessary contours
         Core.inRange(frameBlur, lRobot, uRobot, mask);
@@ -71,8 +71,8 @@ public class RobotDetector implements SubDetector {
         Imgproc.findContours(mask, contours, frameDummy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
 
         // Size of contours (number of pixels in cohesive area)
-        final int areaLowerThreshold = 350;
-        final int areaUpperThreshold = 1300;
+        final int areaLowerThreshold = 200;
+        final int areaUpperThreshold = 1500;
 
         // Get useful contour areas
         ArrayList<ContourSet> contourSets = new ArrayList<>();
