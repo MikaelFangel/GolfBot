@@ -104,7 +104,7 @@ public class AlgorithmsTest {
 
         Imgproc.circle(src,corners[3],4, new Scalar(255,0,0));
 
-        Mat dst = Algorithms.transformToRectangle(src,course);
+        Mat dst = Algorithms.transformToRectangle(src, course.getBorder());
 
         HighGui.imshow("original",src);
         //HighGui.imshow("warp", dst);

@@ -21,6 +21,7 @@ import vision.helperClasses.MaskSet;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 import static vision.math.Geometry.*;
 
@@ -101,7 +102,9 @@ public class DetectionController {
 
             // Run sub detectors. To get objects in necessary order
             if (!borderFound) {
+                // Find corners and then warp frame
                 borderFound = this.borderDetector.detectBorder(this.frame);
+
                 if (!borderFound) continue;
 
                 System.out.println("Found Corners");
@@ -121,10 +124,18 @@ public class DetectionController {
                 System.out.println("Found least a ball");
             }
 
+            // Display frame in popup window AGAIN
+            showOverlay();
+            if (this.showMasks)
+                showMasks();
+            HighGui.waitKey(this.refreshRate);
+
             updateCourse();
 
             // Exit when all objects are found
-            System.out.println("Exiting Setup");
+            System.out.println("Exiting Setup. Press enter to proceed");
+            new Scanner(System.in).nextLine();
+
             break;
         }
     }
@@ -154,11 +165,17 @@ public class DetectionController {
         // Grab frame
         capture.read(this.frame);
 
-        // Run sub detectors. They store the objects
-        this.borderDetector.detectBorder(this.frame);
+        // Find corners and then warp frame
+        boolean cornersFound = this.borderDetector.detectBorder(this.frame);
 
-        // Warp picture
-        this.frame = Algorithms.transformToRectangle(this.frame,borderDetector.getBorder().getCornersAsArray());
+        if (cornersFound) {
+            //this.frame = Algorithms.transformToRectangle(this.frame, borderDetector.getBorder());
+
+            System.out.println("Found 4 corners");
+
+            // Then find corners from warped frame
+            //this.borderDetector.detectBorder(this.frame);
+        }
 
         this.robotDetector.detectRobot(this.frame);
         this.ballDetector.detectBalls(this.frame);

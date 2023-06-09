@@ -28,8 +28,6 @@ public class BorderDetector implements SubDetector {
         // Initialize all OpenCV objects once to not have memory leaks
         if (initial) {
             mask = new Mat();
-            frameBorder = new Mat();
-            frameGray = new Mat();
             frameBlur = new Mat();
             frameDummy = new Mat();
             lines = new MatOfPoint2f();
@@ -51,27 +49,21 @@ public class BorderDetector implements SubDetector {
      */
     private Border getBorderFromFrame(Mat frame) {
         // Remove everything from frame except border (which is red)
-        Scalar lower = new Scalar(0, 0, 180); // Little red
+        Scalar lower = new Scalar(0, 0, 160); // Little red
         Scalar upper = new Scalar(100, 100, 255); // More red
 
-        // Create a mask to filter in next step
-        Core.inRange(frame, lower, upper, mask); // Filter all red colors from frame to mask
+        // Blur frame to smooth out color inconsistencies
+        Imgproc.GaussianBlur(frame, frameBlur, new Size(5, 5), 0);
 
-        // Filter out to only have the red border
-        Core.bitwise_and(frame, frame, frameBorder, mask); // Overlay mask on frame and get the red border
+        // Create a mask to filter in next step
+        Core.inRange(frameBlur, lower, upper, mask); // Filter all red colors from frame to mask
 
         // Add mask for debugging
         this.maskSets.add(new MaskSet("border", mask));
 
-        // Greyscale to allow finding contours and blur
-        Imgproc.cvtColor(frameBorder, frameGray, Imgproc.COLOR_BGR2GRAY);
-
-        // Blur frame to smooth out color inconsistencies
-        Imgproc.GaussianBlur(frameGray, frameBlur, new Size(9, 9), 0);
-
         // Find contours (color patches of the border)
         List<MatOfPoint> contours = new ArrayList<>();
-        Imgproc.findContours(frameBlur, contours, frameDummy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(mask, contours, frameDummy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE);
 
         // Estimate lines for the border using the contours
         for (MatOfPoint contour : contours) {
