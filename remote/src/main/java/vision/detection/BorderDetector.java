@@ -75,7 +75,6 @@ public class BorderDetector implements SubDetector {
             );
 
             int numOfEndPoints = approx.toArray().length;
-            System.out.println("Length: " + numOfEndPoints);
 
             if (i == innerBorderIndex && numOfEndPoints == 4) { // The boundary of inner border
                 innerBorderEndPoints = approx;
@@ -151,8 +150,6 @@ public class BorderDetector implements SubDetector {
         int method = Imgproc.CHAIN_APPROX_SIMPLE; // Only leaves the end points of the components, e.g. a rectangular contour would be encoded with 4 points.
         Imgproc.findContours(this.mask, contours, frameDummy, Imgproc.RETR_LIST, method);
 
-        // Estimate for inner lines of the border using the contours
-        System.out.println("Contours: " + contours.toString()); // TODO: delete
         return contours;
     }
 
@@ -176,8 +173,6 @@ public class BorderDetector implements SubDetector {
         // Calculate distance from first point to next point on both sides
         double lengthRight = Math.sqrt(Math.pow((rightFromFirst.x - firstPoint.x), 2) + Math.pow((rightFromFirst.y - firstPoint.y), 2));
         double lengthLeft = Math.sqrt(Math.pow((leftFromFirst.x - firstPoint.x), 2) + Math.pow((leftFromFirst.y - firstPoint.y), 2));
-        System.out.println("RIGHT: " + lengthRight);
-        System.out.println("LEFT: " + lengthLeft);
 
         if (lengthRight > lengthLeft) {
             cross.setMeasurePoint(new Point((firstPoint.x + leftFromFirst.x) / 2, (firstPoint.y + leftFromFirst.y) / 2));
