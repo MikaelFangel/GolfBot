@@ -10,6 +10,8 @@ import java.util.List;
 public class Cross {
     private List<Point> endPoints = new ArrayList<>();
     private Point middle;
+    private Point measurePoint; //
+
     List<Scalar> colors = Arrays.asList(
             new Scalar(255, 255, 255), // White
             new Scalar(255, 0, 0), // Blue
@@ -50,6 +52,22 @@ public class Cross {
 
     public void setMiddle(Point middle) {
         this.middle = middle;
+    }
+
+    /**
+     * @return The point that is used to measure the position of the cross
+     */
+    public Point getMeasurePoint() {
+        return measurePoint;
+    }
+
+    /**
+     * Set point used to measure the position of the cross
+     *
+     * @param measurePoint Point to be measured from
+     */
+    public void setMeasurePoint(Point measurePoint) {
+        this.measurePoint = measurePoint;
     }
 
     /**

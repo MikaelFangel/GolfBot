@@ -67,7 +67,8 @@ public class BorderDetector implements SubDetector {
             Imgproc.approxPolyDP(
                     contourConverted,
                     approx,
-                    0.017 * Imgproc.arcLength(contourConverted, true),
+                    // The value 0.014 has been tweaked to get the cross coordinates as reliably as possible
+                    0.014 * Imgproc.arcLength(contourConverted, true),
                     true
             );
 
@@ -85,7 +86,8 @@ public class BorderDetector implements SubDetector {
         }
         if (innerBorderEndPoints.empty()) return null;
 
-        updateCross(endPointList, crossFound);
+        if (crossFound)
+            updateCross(endPointList);
 
         // Add inner boundary end points of border to BorderSet object
         Point[] linePoints = innerBorderEndPoints.toArray().clone();
@@ -154,9 +156,8 @@ public class BorderDetector implements SubDetector {
     /**
      * Update the variables in the Cross object with the newly detected endpoints
      * @param endPointList List of 12 endpoints on the cross
-     * @param crossFound True if the cross is found
      */
-    private void updateCross(List<MatOfPoint2f> endPointList, boolean crossFound) {
+    private void updateCross(List<MatOfPoint2f> endPointList) {
         // Add end points of cross to Cross object. Used for debugging
         List<Point> endPoints = new ArrayList<>();
         for (MatOfPoint2f endPoint : endPointList) {
@@ -164,12 +165,25 @@ public class BorderDetector implements SubDetector {
             cross.setEndPoints(endPoints);
         }
 
-        // Add middle coordinate to Cross object
-        if (crossFound) {
-            Point firstPoint = endPoints.get(0);
-            Point middlePoint = endPoints.get(6);
-            cross.setMiddle(new Point((firstPoint.x + middlePoint.x) / 2, (firstPoint.y + middlePoint.y) / 2));
+        Point firstPoint = endPoints.get(0);
+        Point rightFromFirst = endPoints.get(endPoints.size() - 1);
+        Point leftFromFirst = endPoints.get(1);
+
+        // Calculate distance from first point to next point on both sides
+        double lengthRight = Math.sqrt(Math.pow((rightFromFirst.x - firstPoint.x), 2) + Math.pow((rightFromFirst.y - firstPoint.y), 2));
+        double lengthLeft = Math.sqrt(Math.pow((leftFromFirst.x - firstPoint.x), 2) + Math.pow((leftFromFirst.y - firstPoint.y), 2));
+        System.out.println("RIGHT: " + lengthRight);
+        System.out.println("LEFT: " + lengthLeft);
+
+        if (lengthRight > lengthLeft) {
+            cross.setMeasurePoint(new Point((firstPoint.x + leftFromFirst.x) / 2, (firstPoint.y + leftFromFirst.y) / 2));
+        } else {
+            cross.setMeasurePoint(new Point((firstPoint.x + rightFromFirst.x) / 2, (firstPoint.y + rightFromFirst.y) / 2));
         }
+
+        // Add middle coordinate to Cross object
+        Point middlePoint = endPoints.get(6);
+        cross.setMiddle(new Point((firstPoint.x + middlePoint.x) / 2, (firstPoint.y + middlePoint.y) / 2));
     }
 
     public BorderSet getBorderSet() {
