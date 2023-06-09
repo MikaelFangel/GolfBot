@@ -15,9 +15,10 @@ public class BorderDetector implements SubDetector {
     private final List<MaskSet> maskSets = new ArrayList<>();
     private final Cross cross = new Cross();
 
-    // Initialize all OpenCV objects once to not have memory leaks
-    Mat mask, frameBorder, frameGray, frameBlur, frameDummy;
-    MatOfPoint2f lines, approx;
+    // Initialize all OpenCV objects once to not have memory leaks (so they don't get reinitialized every time the function gets called)
+    Mat mask, frameBlur, frameDummy;
+    MatOfPoint2f innerBorderEndPoints;
+    MatOfPoint2f approx;
     private boolean initial = true;
 
     /**
@@ -29,12 +30,8 @@ public class BorderDetector implements SubDetector {
         // Initialize all OpenCV objects once to not have memory leaks
         if (initial) {
             mask = new Mat();
-            frameBorder = new Mat();
-            frameGray = new Mat();
             frameBlur = new Mat();
             frameDummy = new Mat();
-            lines = new MatOfPoint2f();
-            approx = new MatOfPoint2f();
 
             initial = false;
         }
@@ -58,13 +55,13 @@ public class BorderDetector implements SubDetector {
          *  - The boundary of the cross has 12 straight lines in the physical worlds
          *
          * NB! The lines from the physical world might differ a bit from what is found in contours */
-        MatOfPoint2f innerBorderEndPoints = new MatOfPoint2f();
         List<MatOfPoint2f> endPointList = new ArrayList<>();
         boolean crossFound = false;
 
         int innerBorderIndex = contours.size() - 2;
         for (int i = innerBorderIndex; i >= 0; i--) { // The last element would be the outer boundary of the border
             MatOfPoint2f contourConverted = new MatOfPoint2f(contours.get(i).toArray());
+            approx = new MatOfPoint2f();
 
             // Approximate polygon of contour
             Imgproc.approxPolyDP(
@@ -89,6 +86,7 @@ public class BorderDetector implements SubDetector {
         if (innerBorderEndPoints.empty()) return null;
 
         updateCross(endPointList, crossFound);
+        approx.release(); // Prevent memory leak. Used in the endPointList
 
         // Add inner boundary end points of border to BorderSet object
         Point[] linePoints = innerBorderEndPoints.toArray();
