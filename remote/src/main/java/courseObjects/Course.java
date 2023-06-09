@@ -10,48 +10,28 @@ import java.util.List;
  * (3) a list containing the balls located on the course to be picked up by the robot, and (4) the robot object
  */
 public class Course {
-    private final double length, width; // Measured from the innermost sides
-    private Point topLeft, topRight, bottomLeft, bottomRight; // The corners of the border.
+    private final double width = 169.0, height = 123.7; // Measured from the innermost sides
+    private Point cameraPosition;
+
+    private final int resolutionWidth = 1024;
+    private final int ResolutionHeight = 768;
+
+    private Border border;
     private List<Ball> balls;
     private Robot robot;
+    private final double cameraHeight;
 
-    public Course() {
-        this.length = 167.0;
-        this.width = 122.0;
+    public Course(double cameraHeight){
+        this.cameraHeight = cameraHeight;
     }
-
 
     // Getters and setters
-    public synchronized Point getTopLeft() {
-        return topLeft;
+    public Border getBorder() {
+        return border;
     }
 
-    public synchronized void setTopLeft(Point topLeft) {
-        this.topLeft = topLeft;
-    }
-
-    public synchronized Point getTopRight() {
-        return topRight;
-    }
-
-    public synchronized void setTopRight(Point topRight) {
-        this.topRight = topRight;
-    }
-
-    public synchronized Point getBottomLeft() {
-        return bottomLeft;
-    }
-
-    public synchronized void setBottomLeft(Point bottomLeft) {
-        this.bottomLeft = bottomLeft;
-    }
-
-    public synchronized Point getBottomRight() {
-        return bottomRight;
-    }
-
-    public synchronized void setBottomRight(Point bottomRight) {
-        this.bottomRight = bottomRight;
+    public void setBorder(Border border) {
+        this.border = border;
     }
 
     public synchronized List<Ball> getBalls() {
@@ -70,20 +50,31 @@ public class Course {
         this.robot = robot;
     }
 
-    public double getLength() {
-        return length;
+    public double getCameraHeight() {
+        return cameraHeight;
+    }
+
+    public Point getCameraPosition() {
+        return cameraPosition;
+    }
+
+    public void setCameraPosition(Point cameraPosition) {
+        this.cameraPosition = cameraPosition;
+    }
+
+    public int getResolutionHeight() {
+        return ResolutionHeight;
+    }
+
+    public int getResolutionWidth() {
+        return resolutionWidth;
+    }
+
+    public double getHeight() {
+        return height;
     }
 
     public double getWidth() {
         return width;
-    }
-
-    public String printCorners() {
-        return "Border{" +
-                "topLeft=" + topLeft +
-                ", topRight=" + topRight +
-                ", bottomLeft=" + bottomLeft +
-                ", bottomRight=" + bottomRight +
-                '}';
     }
 }
