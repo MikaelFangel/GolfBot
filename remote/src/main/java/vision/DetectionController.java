@@ -48,9 +48,10 @@ public class DetectionController {
      * Start a setup process that requires the different objects to be present in the camera's view.
      * When the setup is over a background thread starts doing background detection.
      * To utilize the found objects, read them from the passed Course object.
-     * @param course The class that contains all the objects and information about the course during runtime.
+     *
+     * @param course      The class that contains all the objects and information about the course during runtime.
      * @param cameraIndex The camera index of intended camera (computer specific).
-     * @param showMasks Only needed for debugging masks. If true, displays mask windows.
+     * @param showMasks   Only needed for debugging masks. If true, displays mask windows.
      */
     public DetectionController(Course course, int cameraIndex, boolean showMasks) {
         this.showMasks = showMasks;
@@ -81,6 +82,7 @@ public class DetectionController {
 
     /**
      * Blocks the thread until all objects are found in the camera's view.
+     *
      * @param capture the video capture from which the frame should be read.
      */
     private void runDetectionSetup(VideoCapture capture) {
@@ -133,6 +135,7 @@ public class DetectionController {
     /**
      * Spawns a thread that will run in the background. This thread runs detections and updates the course when objects
      * are found. (E.g. when the robot moves)
+     *
      * @param capture the video capture from which the frame should be read.
      */
     private void startBackgroundDetection(VideoCapture capture) {
@@ -149,6 +152,7 @@ public class DetectionController {
      * The objects gets corrected using different algorithms (E.g. height correction).
      * Then the objects gets converted to real world units (cm) and updates the Course object.
      * The frames will get displayed.
+     *
      * @param capture the video capture from which the frame should be read.
      */
     private void detectCourse(VideoCapture capture) {
@@ -257,7 +261,8 @@ public class DetectionController {
 
     /**
      * Converts Point from pixel units to centimetres and subtracts a pixel offset.
-     * @param point Point to be converted.
+     *
+     * @param point       Point to be converted.
      * @param pixelOffset The offset to be subtracted before the multiplication of the factor.
      * @return The new converted point in centimetres.
      */

@@ -72,6 +72,7 @@ public class Cross {
 
     /**
      * Distinctively different colors for end endpoints of the cross. This is used for debugging.
+     *
      * @return A list of distinctively different colors
      */
     public List<Scalar> getColors() {

@@ -26,6 +26,7 @@ public class RobotDetector implements SubDetector {
 
     /**
      * Detects the robot from the frame and stores it in the objects
+     *
      * @param frame The frame to be evaluated.
      * @return a boolean symbolizing if the robot was found or not.
      */
@@ -57,12 +58,13 @@ public class RobotDetector implements SubDetector {
 
     /**
      * Finds the coordinates of the robots marker from the frame
+     *
      * @param frame The frame to be evaluated
      * @return Return a Point array of length always 2, or null if not found
      */
     public Point[] getRobotMarkers(Mat frame) {
         // Blur frame to smooth out color inconsistencies
-        Imgproc.GaussianBlur(frame, frameBlur, new Size(7,7), 7, 0);
+        Imgproc.GaussianBlur(frame, frameBlur, new Size(7, 7), 7, 0);
 
         // Blue markers threshold (BGR)
         final Scalar lRobot = new Scalar(100, 100, 0);

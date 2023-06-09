@@ -7,7 +7,7 @@ public class Robot {
     private double angle;
     public final double length = 16.0, width = 17.0, height = 18.0;
 
-    public Robot(Point center, Point front, double angle){
+    public Robot(Point center, Point front, double angle) {
         this.center = center;
         this.front = front;
         this.angle = angle;

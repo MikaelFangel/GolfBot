@@ -23,6 +23,7 @@ public class BorderDetector implements SubDetector {
 
     /**
      * Detects the border from the frame and stores the objects in its own objects.
+     *
      * @param frame The frame to be detected.
      * @return a boolean symbolizing if objects were found or not.
      */
@@ -44,10 +45,11 @@ public class BorderDetector implements SubDetector {
     /**
      * Finds the border and calculates the corners from an approximation of line intersections.
      * Note: The mask is displayed in black and white. White equals true
+     *
      * @param frame to be evaluated
      * @return A BorderSet with the border corners and the offset from the camera.
      */
-    private  BorderSet getBorderFromFrame(Mat frame) {
+    private BorderSet getBorderFromFrame(Mat frame) {
         List<MatOfPoint> contours = getRedContours(frame);
         /* Each contour is a boundary of one of the components (e.g. to boundary of the cross)
          *  - The outer boundary of the border has 28 straight lines in the physical world (not used)
@@ -118,6 +120,7 @@ public class BorderDetector implements SubDetector {
     /**
      * The red color filtered from the frame using a mask with a color threshold. The frame is then scaled grey to blur
      * it and find contours. The frame is blurred to smooth out color inconsistencies, and
+     *
      * @param frame Frame to get contours from
      * @return The red contours of the frame, one for each red 'object'.
      */
@@ -155,6 +158,7 @@ public class BorderDetector implements SubDetector {
 
     /**
      * Update the variables in the Cross object with the newly detected endpoints
+     *
      * @param endPointList List of 12 endpoints on the cross
      */
     private void updateCross(List<MatOfPoint2f> endPointList) {
