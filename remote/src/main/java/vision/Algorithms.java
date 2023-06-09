@@ -46,9 +46,24 @@ public class Algorithms {
         return closestBall;
     }
 
+    /**
+     * Finds the shortest angle between robot and ball.
+     * @param robot
+     * @param ball
+     * @return angle in degrees. Clockwise with the robot returns positive angle-values, counter-clockwise with the robot returns negative angle-values.
+     */
     public static double findRobotsAngleToBall(Robot robot, Ball ball) {
-        double angleToBall = angleBetweenTwoPoints(robot.getCenter().x, robot.getCenter().y, ball.getCenter().x, ball.getCenter().y);
-        return robot.getAngle() - angleToBall;
+        double clockWiseAngleToBall = angleBetweenTwoPoints(robot.getCenter().x, robot.getCenter().y, ball.getCenter().x, ball.getCenter().y);
+
+        double shortestAngleToBall = clockWiseAngleToBall;
+
+        // Check if there is a shorter angle
+        if (clockWiseAngleToBall > 180)
+            shortestAngleToBall = clockWiseAngleToBall - 360;
+        else
+            shortestAngleToBall = robot.getAngle() - clockWiseAngleToBall;
+
+        return shortestAngleToBall;
     }
 
     public static double findRobotsDistanceToBall(Robot robot, Ball ball) {

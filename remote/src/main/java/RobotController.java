@@ -1,16 +1,22 @@
+import courseObjects.Ball;
+import courseObjects.Course;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
+import io.grpc.Status;
+import io.grpc.stub.StreamObserver;
 import proto.*;
+import vision.Algorithms;
 
 import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class RobotController {
     private final ManagedChannel CHANNEL;
     private final MotorsGrpc.MotorsBlockingStub CLIENT;
-
-    private final int DEFAULT_SPEED = 100;
+    private final MotorsGrpc.MotorsStub ASYNCCLIENT;
+    private final int MAX_ITERATIONS = 20;
 
     /**
      * Initializes channel and client to connect with the robot.
@@ -19,6 +25,7 @@ public class RobotController {
     public RobotController(String ip_port) {
         CHANNEL = Grpc.newChannelBuilder(ip_port, InsecureChannelCredentials.create()).build();
         CLIENT = MotorsGrpc.newBlockingStub(CHANNEL);
+        ASYNCCLIENT = MotorsGrpc.newStub(CHANNEL);
     }
 
     /**
@@ -30,21 +37,84 @@ public class RobotController {
     }
 
     /**
-     * Makes the robot drive straight either forward or backwards for the distance given as argument
-     * @param distance Positive values in cm for forward and negative for backwards
+     * Makes the robot drive straight either forward or backwards by using the gyro and streaming distance to the robot
+     * @param course For getting ball and robot coordinates
      * @throws RuntimeException if the robot was not reached
+     * @see <a href="https://github.com/grpc/grpc-java/blob/master/examples/src/main/java/io/grpc/examples/routeguide/RouteGuideClient.java">Example streaming client</a>
      */
-    public void driveStraight(double distance) throws RuntimeException {
-       MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, DEFAULT_SPEED),
-               new MotorPair(OutPort.D, DEFAULT_SPEED));
+    public void driveWGyro(Course course) throws RuntimeException {
+        int speed = 200;
+        MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
+                new MotorPair(OutPort.D, speed));
 
-        DriveRequest driveRequest = DriveRequest.newBuilder()
-                .setMotors(motorsRequest)
-                .setDistance((float) distance)
-                .setSpeed(DEFAULT_SPEED)
-                .build();
+        // Use gRPCs StreamObserver interface and observe the response.
+        StreamObserver<StatusReply> responseObserver = new StreamObserver<>() {
+            @Override
+            public void onNext(StatusReply statusReply) {
+                System.out.println("Ok " + statusReply.getReplyMessage());
+            }
 
-        CLIENT.drive(driveRequest);
+            @Override
+            public void onError(Throwable t) {
+                System.out.println("Something failed...!" + Status.fromThrowable(t));
+            }
+
+            @Override
+            public void onCompleted() {
+                System.out.println("Finished");
+            }
+        };
+
+        // Observe the requests to send
+        StreamObserver<DrivePIDRequest> requestObserver = ASYNCCLIENT.driveWGyro(responseObserver);
+
+        // Calculate distances
+        Ball closestBall = Algorithms.findClosestBall(course.getBalls(), course.getRobot());
+        assert closestBall != null;
+        double distance = Algorithms.findRobotsDistanceToBall(course.getRobot(), closestBall);
+
+        // Iterator used as a failsafe
+        int i = 0;
+
+        try {
+            // Continue to stream messages until reaching target
+            while (distance > 0 && i < MAX_ITERATIONS){
+                // Update distance
+                distance = Algorithms.findRobotsDistanceToBall(course.getRobot(), closestBall);
+
+                DrivePIDRequest drivePIDRequest = DrivePIDRequest.newBuilder()
+                        .setMotors(motorsRequest)
+                        .setDistance((float) distance) // Note: Currently not used on the robot
+                        .setSpeed(speed) // This speed worked well, other speeds could be researched
+                        .build();
+
+                // Send request
+                requestObserver.onNext(drivePIDRequest);
+
+                // Sleep for a bit before sending the next one. TODO: Research timing of the delay with the robot
+                Thread.sleep(700);
+
+                i++;
+            }
+        } catch (RuntimeException e) {
+            // Cancel RPC
+            requestObserver.onError(e);
+            throw e;
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Mark the end of requests
+        requestObserver.onCompleted();
+    }
+
+    /**
+     * Stops the Motor A and D and thus the driving
+     */
+    public void stopMotors() {
+        int motorSpeed = 0;
+        MultipleMotors motorRequests = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, motorSpeed), new MotorPair(OutPort.D, motorSpeed));
+        CLIENT.stopMotors(motorRequests);
     }
 
     /**
@@ -52,18 +122,34 @@ public class RobotController {
      * @param degrees postive values for counter-clockwise and negative for clockwise
      * @throws RuntimeException if the robot was not reached
      */
-    public void rotate(double degrees) throws RuntimeException {
-        MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, DEFAULT_SPEED),
-                new MotorPair(OutPort.D, DEFAULT_SPEED));
+    public void rotateWGyro(double degrees) throws RuntimeException {
+        int speed = 5;
+        MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
+                new MotorPair(OutPort.D, speed));
 
         RotateRequest rotateRequest = RotateRequest.newBuilder()
                 .setMotors(motorsRequest)
                 .setDegrees((int) degrees)
-                .setSpeed(DEFAULT_SPEED)
+                .setSpeed(speed)
                 .build();
 
         try {
-            CLIENT.rotate(rotateRequest);
+            CLIENT.rotateWGyro(rotateRequest);
+        }
+        catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    /**
+     * Recalibrates the gyro
+     * @throws RuntimeException if the robot was not reached
+     */
+    public void recalibrateGyro() throws RuntimeException {
+        EmptyRequest emptyRequest = EmptyRequest.newBuilder().build();
+
+        try {
+            CLIENT.recalibrateGyro(emptyRequest);
         }
         catch (RuntimeException e) {
             System.out.println(e.getMessage());
@@ -95,6 +181,12 @@ public class RobotController {
         }
 
         CLIENT.collectRelease(motorRequests);
+    }
+    public void releaseOneBall() {
+        int speed = 1200;
+        MultipleMotors motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, speed), new MotorPair(OutPort.C, speed));
+
+        CLIENT.releaseOneBall(motorRequests);
     }
 
     /**

@@ -24,8 +24,8 @@ import java.util.List;
 import static vision.math.Geometry.*;
 
 public class DetectionController {
-    private final int refreshRate = 1; // Value for best FPS (ms)
-    private Mat frame; // Frame to detect objects from
+    private final int refreshRate = 33; // Value for best FPS (ms)
+    private Mat frame, overlayFrame; // Frame to detect objects from
 
     // Sub Detectors
     private final List<SubDetector> subDetectors = new ArrayList<>();
@@ -86,12 +86,16 @@ public class DetectionController {
 
         System.out.println("Starting Setup");
 
+        this.frame = new Mat();
+        this.overlayFrame = new Mat();
+
         while (true) {
-            frame = new Mat();
             capture.read(this.frame);
 
             // Display frame in popup window
             showOverlay();
+            if (this.showMasks)
+                showMasks();
             HighGui.waitKey(this.refreshRate);
 
             // Run sub detectors. To get objects in necessary order
@@ -147,7 +151,6 @@ public class DetectionController {
      */
     private void detectCourse(VideoCapture capture) {
         // Grab frame
-        frame = new Mat();
         capture.read(this.frame);
 
         // Run sub detectors. They store the objects
@@ -289,22 +292,21 @@ public class DetectionController {
      * Displays the frames with an overlay
      */
     private void showOverlay() {
-        Mat overlayFrame = createOverlay();
-
         // Display overlay
-        HighGui.imshow("overlay", overlayFrame);
+        createOverlay();
+        HighGui.imshow("overlay", this.overlayFrame);
     }
 
     /**
      * Draws an overlay on the frame and puts it in the display pile.
      */
-    private Mat createOverlay() {
+    private void createOverlay() {
         // Define colors for different objects
         Scalar cornerColor = new Scalar(0, 255, 0); // Green
         Scalar robotMarkerColor = new Scalar(255, 0, 255); // Magenta
         Scalar ballColor = new Scalar(255, 255, 0); // Cyan
 
-        Mat overlayFrame = this.frame.clone();
+        this.overlayFrame = this.frame;
 
         // Draw Corners
         Border border = this.borderDetector.getBorder();
@@ -312,29 +314,27 @@ public class DetectionController {
 
         if (corners != null)
             for (Point corner : corners)
-                Imgproc.circle(overlayFrame, corner, 2, cornerColor, 3);
+                Imgproc.circle(this.overlayFrame, corner, 2, cornerColor, 3);
 
         // Draw Robot Markers
         Robot robot = this.robotDetector.getRobot();
 
         if (robot != null) {
-            Imgproc.circle(overlayFrame, robot.getCenter(), 5, robotMarkerColor, 2);
-            Imgproc.circle(overlayFrame, robot.getFront(), 4, robotMarkerColor, 2);
-            Imgproc.line(overlayFrame, robot.getCenter(), robot.getFront(), robotMarkerColor, 2);
+            Imgproc.circle(this.overlayFrame, robot.getCenter(), 5, robotMarkerColor, 2);
+            Imgproc.circle(this.overlayFrame, robot.getFront(), 4, robotMarkerColor, 2);
+            Imgproc.line(this.overlayFrame, robot.getCenter(), robot.getFront(), robotMarkerColor, 2);
         }
 
         // Draw Balls
         List<Ball> balls = this.ballDetector.getBalls();
 
         for (Ball ball : balls) {
-            Imgproc.circle(overlayFrame, ball.getCenter(), 4, ballColor, 1);
+            Imgproc.circle(this.overlayFrame, ball.getCenter(), 4, ballColor, 1);
 
             // Draw Lines between robot and balls
             if (robot != null)
-                Imgproc.line(overlayFrame, robot.getCenter(), ball.getCenter(), ballColor, 1);
+                Imgproc.line(this.overlayFrame, robot.getCenter(), ball.getCenter(), ballColor, 1);
         }
-
-        return overlayFrame;
     }
 
     /**
