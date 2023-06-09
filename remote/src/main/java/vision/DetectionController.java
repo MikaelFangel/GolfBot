@@ -231,9 +231,8 @@ public class DetectionController {
         // Convert from pixel to centimetres
         Point correctedCenter = convertPixelPointToCmPoint(robot.getCenter(), this.pixelOffset);
         Point correctedFront = convertPixelPointToCmPoint(robot.getFront(), this.pixelOffset);
-        double correctedAngle = angleBetweenTwoPoints(correctedCenter.x, correctedCenter.y, correctedFront.x, correctedFront.y);
 
-        Robot correctedRobot = new Robot(correctedCenter, correctedFront, correctedAngle);
+        Robot correctedRobot = new Robot(correctedCenter, correctedFront);
         this.course.setRobot(correctedRobot);
     }
 
