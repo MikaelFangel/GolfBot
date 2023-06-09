@@ -16,7 +16,7 @@ public class Main {
         RobotController controller = new RobotController(args[0]); // Args[0] being and IP address
 
         Course course = new Course(cameraHeight);
-        DetectionController detectionController = new DetectionController(course, cameraIndex, true);
+        DetectionController detectionController = new DetectionController(course, cameraIndex, false);
 
         while (true) {
 
@@ -34,7 +34,7 @@ public class Main {
                 break;
             }
 
-            double angle = Algorithms.findRobotsAngleToBall(course.getRobot(), closestBall);
+            double angle = Algorithms.findRobotShortestAngleToBall(course.getRobot(), closestBall);
             double distance = Algorithms.findRobotsDistanceToBall(course.getRobot(), closestBall);
             System.out.println("Driving distance: " + distance + " with angle: " + angle);
 

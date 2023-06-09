@@ -28,6 +28,7 @@ public class BallDetector implements SubDetector {
 
     /**
      * Detects the balls on the frame
+     *
      * @param frame the frame to evaluated
      * @return A boolean symbolizing if balls were found or not
      */
@@ -54,6 +55,7 @@ public class BallDetector implements SubDetector {
 
     /**
      * Updates the balls argument with the white balls found on the frame.
+     *
      * @param frame to be used for detection
      * @param balls list that gets updated with newly added balls
      */
@@ -72,7 +74,7 @@ public class BallDetector implements SubDetector {
         maskSets.add(new MaskSet("whiteBalls Mask", mask));
 
         // Apply blur for better noise reduction
-        Imgproc.GaussianBlur(mask, frameBlur, new Size(7,7), 0);
+        Imgproc.GaussianBlur(mask, frameBlur, new Size(7, 7), 0);
 
         // Get white balls from frame
         Imgproc.HoughCircles(frameBlur, frameBallsW, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, minBallRadius,
@@ -89,6 +91,7 @@ public class BallDetector implements SubDetector {
 
     /**
      * Updates the balls argument with the white balls found on the frame.
+     *
      * @param frame to be used for detection
      * @param balls list that gets updated with newly added balls
      */

@@ -3,6 +3,7 @@ package vision;
 import courseObjects.Ball;
 import courseObjects.Border;
 import courseObjects.Course;
+import courseObjects.Cross;
 import courseObjects.Robot;
 import io.grpc.InternalGlobalInterceptors;
 import nu.pattern.OpenCV;
@@ -21,7 +22,6 @@ import vision.helperClasses.MaskSet;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 import static vision.math.Geometry.*;
 
@@ -47,9 +47,9 @@ public class DetectionController {
      * Start a setup process that requires the different objects to be present in the camera's view.
      * When the setup is over a background thread starts doing background detection.
      * To utilize the found objects, read them from the passed Course object.
-     * @param course The class that contains all the objects and information about the course during runtime.
+     * @param course      The class that contains all the objects and information about the course during runtime.
      * @param cameraIndex The camera index of intended camera (computer specific).
-     * @param showMasks Only needed for debugging masks. If true, displays mask windows.
+     * @param showMasks   Only needed for debugging masks. If true, displays mask windows.
      */
     public DetectionController(Course course, int cameraIndex, boolean showMasks) {
         this.showMasks = showMasks;
@@ -68,10 +68,9 @@ public class DetectionController {
 
         if (!capture.isOpened()) throw new RuntimeException("Camera Capture was not opened");
 
-        // Add detectors to list
-        this.subDetectors.add(ballDetector);
-        this.subDetectors.add(robotDetector);
-        this.subDetectors.add(borderDetector);
+        this.subDetectors.add(this.ballDetector);
+        this.subDetectors.add(this.robotDetector);
+        this.subDetectors.add(this.borderDetector);
 
         // Run setup to get initial objects
         runDetectionSetup(capture);
@@ -134,7 +133,6 @@ public class DetectionController {
 
             // Exit when all objects are found
             System.out.println("Exiting Setup. Press enter to proceed");
-            new Scanner(System.in).nextLine();
 
             break;
         }
@@ -169,12 +167,10 @@ public class DetectionController {
         boolean cornersFound = this.borderDetector.detectBorder(this.frame);
 
         if (cornersFound) {
-            //this.frame = Algorithms.transformToRectangle(this.frame, borderDetector.getBorder());
-
-            System.out.println("Found 4 corners");
+            this.frame = Algorithms.transformToRectangle(this.frame, borderDetector.getBorder());
 
             // Then find corners from warped frame
-            //this.borderDetector.detectBorder(this.frame);
+            this.borderDetector.detectBorder(this.frame);
         }
 
         this.robotDetector.detectRobot(this.frame);
@@ -247,7 +243,7 @@ public class DetectionController {
         double correctedAngle = angleBetweenTwoPoints(correctedCenter.x, correctedCenter.y,
                 correctedFront.x, correctedFront.y);
 
-        course.setRobot(new Robot(correctedCenter, correctedFront, correctedAngle));
+        course.setRobot(new Robot(correctedCenter, correctedFront));
     }
 
     /**
@@ -255,16 +251,6 @@ public class DetectionController {
      */
     private void updateCourseCorners() {
         Point[] convertedCorners = this.borderDetector.getBorder().getCornersAsArray();
-
-        // Warp corners
-        /*Border b = new Border(
-                convertedCorners[0],
-                convertedCorners[1],
-                convertedCorners[2],
-                convertedCorners[3]
-        );
-        this.course.setBorder(b);
-        this.frame = Algorithms.transformToRectangle(this.frame, course);*/
 
         // Convert from pixel to cm.
         for (int i = 0; i < convertedCorners.length; i++)
@@ -286,9 +272,8 @@ public class DetectionController {
         // Convert from pixel to centimetres
         Point correctedCenter = convertPixelPointToCmPoint(robot.getCenter(), this.pixelOffset);
         Point correctedFront = convertPixelPointToCmPoint(robot.getFront(), this.pixelOffset);
-        double correctedAngle = angleBetweenTwoPoints(correctedCenter.x, correctedCenter.y, correctedFront.x, correctedFront.y);
 
-        Robot correctedRobot = new Robot(correctedCenter, correctedFront, correctedAngle);
+        Robot correctedRobot = new Robot(correctedCenter, correctedFront);
         this.course.setRobot(correctedRobot);
     }
 
@@ -337,6 +322,7 @@ public class DetectionController {
         Scalar cornerColor = new Scalar(0, 255, 0); // Green
         Scalar robotMarkerColor = new Scalar(255, 0, 255); // Magenta
         Scalar ballColor = new Scalar(255, 255, 0); // Cyan
+        Scalar crossColor = new Scalar(0, 255, 255); // Yellow
 
         this.overlayFrame = this.frame;
 
@@ -348,6 +334,16 @@ public class DetectionController {
             for (Point corner : corners)
                 Imgproc.circle(this.overlayFrame, corner, 2, cornerColor, 3);
 
+        // Draw the middle of the cross
+        Cross cross = borderDetector.getCross();
+        if (cross != null) {
+            Point middle = cross.getMiddle();
+            if (middle != null)
+                Imgproc.circle(overlayFrame, middle, 2, crossColor, 3);
+            Point measurePoint = cross.getMeasurePoint();
+            if (measurePoint != null)
+                Imgproc.circle(overlayFrame, measurePoint, 2, crossColor, 3);
+        }
         // Draw Robot Markers
         Robot robot = this.robotDetector.getRobot();
 

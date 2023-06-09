@@ -5,11 +5,11 @@ public class Geometry {
         return Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2));
     }
 
-    public static double angleBetweenTwoPoints(double x1, double y1, double x2, double y2){
+    public static double angleBetweenTwoPoints(double x1, double y1, double x2, double y2) {
         double xDiff = x2 - x1;
         double yDiff = y2 - y1;
 
-        double angle = Math.atan( (yDiff) / (xDiff)) * 180/Math.PI;
+        double angle = Math.atan((yDiff) / (xDiff)) * 180 / Math.PI;
 
         // Add depending on quadrant
         if (xDiff <= 0 && yDiff >= 0) // Quadrant 2

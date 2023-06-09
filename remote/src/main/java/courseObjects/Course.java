@@ -5,6 +5,10 @@ import org.opencv.core.Point;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * The course consists of (1) the dimensions of the course, (2) coordinates of the corners in centimeters,
+ * (3) a list containing the balls located on the course to be picked up by the robot, and (4) the robot object
+ */
 public class Course {
     private final double width = 169.0, height = 123.7; // Measured from the innermost sides
     private Point cameraPosition;
