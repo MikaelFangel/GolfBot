@@ -287,6 +287,7 @@ public class DetectionController {
         Scalar cornerColor = new Scalar(0, 255, 0); // Green
         Scalar robotMarkerColor = new Scalar(255, 0, 255); // Magenta
         Scalar ballColor = new Scalar(255, 255, 0); // Cyan
+        Scalar crossColor = new Scalar(0, 255, 255); // Yellow
 
         this.overlayFrame = this.frame;
 
@@ -303,7 +304,10 @@ public class DetectionController {
         if (cross != null) {
             Point middle = cross.getMiddle();
             if (middle != null)
-                Imgproc.circle(overlayFrame, middle, 2, cornerColor, 3);
+                Imgproc.circle(overlayFrame, middle, 2, crossColor, 3);
+            Point measurePoint = cross.getMeasurePoint();
+            if (measurePoint != null)
+                Imgproc.circle(overlayFrame, measurePoint, 2, crossColor, 3);
         }
         // Draw Robot Markers
         Robot robot = this.robotDetector.getRobot();
