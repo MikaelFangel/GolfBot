@@ -180,8 +180,10 @@ public class DetectionController {
 
 
     private void categorizeBallsPickupStrategy(List<Ball> balls, Point[] corners) {
-        final double pixelMarginX = conversionFactorX * 5;
-        final double pixelMarginY = conversionFactorY * 5;
+        final double centimeterMargin = 5;
+
+        final double pixelMarginX = centimeterMargin / conversionFactorX;
+        final double pixelMarginY = centimeterMargin / conversionFactorY;
 
         Point TL = corners[0], TR = corners[1], BL = corners[2];
 

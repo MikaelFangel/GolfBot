@@ -50,7 +50,7 @@ public class BorderDetector implements SubDetector {
      */
     private  BorderSet getBorderFromFrame(Mat frame) {
         // Remove everything from frame except border (which is red)
-        Scalar lower = new Scalar(0, 0, 180); // Little red
+        Scalar lower = new Scalar(0, 0, 160); // Little red
         Scalar upper = new Scalar(100, 100, 255); // More red
 
         // Create a mask to filter in next step
