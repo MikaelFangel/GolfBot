@@ -27,7 +27,7 @@ public class Course {
 
     // Getters and setters
     public Border getBorder() {
-        return border;
+        return this.border;
     }
 
     public void setBorder(Border border) {
@@ -35,7 +35,7 @@ public class Course {
     }
 
     public synchronized List<Ball> getBalls() {
-        return balls;
+        return this.balls;
     }
 
     public synchronized void setBalls(List<Ball> balls) {
@@ -43,7 +43,7 @@ public class Course {
     }
 
     public synchronized Robot getRobot() {
-        return robot;
+        return this.robot;
     }
 
     public synchronized void setRobot(Robot robot) {
@@ -51,11 +51,11 @@ public class Course {
     }
 
     public double getCameraHeight() {
-        return cameraHeight;
+        return this.cameraHeight;
     }
 
     public Point getCameraPosition() {
-        return cameraPosition;
+        return this.cameraPosition;
     }
 
     public void setCameraPosition(Point cameraPosition) {
@@ -63,15 +63,15 @@ public class Course {
     }
 
     public int getResolutionHeight() {
-        return ResolutionHeight;
+        return this.resolutionHeight;
     }
 
     public int getResolutionWidth() {
-        return resolutionWidth;
+        return this.resolutionWidth;
     }
 
     public double getHeight() {
-        return height;
+        return this.height;
     }
 
     public double getWidth() {

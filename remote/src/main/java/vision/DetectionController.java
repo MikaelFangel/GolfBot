@@ -1,10 +1,6 @@
 package vision;
 
-import courseObjects.Ball;
-import courseObjects.Border;
-import courseObjects.Course;
-import courseObjects.Cross;
-import courseObjects.Robot;
+import courseObjects.*;
 import nu.pattern.OpenCV;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
@@ -22,7 +18,8 @@ import vision.helperClasses.MaskSet;
 import java.util.ArrayList;
 import java.util.List;
 
-import static vision.math.Geometry.*;
+import static vision.math.Geometry.angleBetweenTwoPoints;
+import static vision.math.Geometry.distanceBetweenTwoPoints;
 
 public class DetectionController {
     private final int refreshRate = 33; // Value for best FPS (ms)
