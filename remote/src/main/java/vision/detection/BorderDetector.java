@@ -86,10 +86,10 @@ public class BorderDetector implements SubDetector {
         if (innerBorderEndPoints.empty()) return null;
 
         updateCross(endPointList, crossFound);
-        approx.release(); // Prevent memory leak. Used in the endPointList
 
         // Add inner boundary end points of border to BorderSet object
-        Point[] linePoints = innerBorderEndPoints.toArray();
+        Point[] linePoints = innerBorderEndPoints.toArray().clone();
+        approx.release(); // Prevent memory leak. Used in the endPointList
 
         // Calculate corners
         Point[] corners = new Point[linePoints.length];
@@ -162,7 +162,6 @@ public class BorderDetector implements SubDetector {
         for (MatOfPoint2f endPoint : endPointList) {
             endPoints.addAll(endPoint.toList());
             cross.setEndPoints(endPoints);
-            System.out.println(cross.toString());
         }
 
         // Add middle coordinate to Cross object
