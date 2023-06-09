@@ -125,10 +125,9 @@ public class BorderDetector implements SubDetector {
         Scalar upper = new Scalar(100, 100, 255); // More red
 
         // Blur frame to smooth out color inconsistencies
-        Mat frameBlur = new Mat();
         Imgproc.GaussianBlur(
                 frame,
-                frameBlur,
+                this.frameBlur,
                 /* Both width and height should be uneven numbers.
                  *  - Should be at least (3, 3) to detect borders.
                  *  - Points of the cross becomes shaky if larger than (3, 3) */
@@ -137,16 +136,15 @@ public class BorderDetector implements SubDetector {
         );
 
         // Create a mask to filter in next step
-        Mat mask = new Mat();
-        Core.inRange(frameBlur, lower, upper, mask); // Filter all red colors from frame to mask
+        Core.inRange(this.frameBlur, lower, upper, this.mask); // Filter all red colors from frame to mask
 
         // Add mask for debugging
-        this.maskSets.add(new MaskSet("border", mask));
+        this.maskSets.add(new MaskSet("border", this.mask));
 
         // Find contours (color patches of the border)
         List<MatOfPoint> contours = new ArrayList<>();
         int method = Imgproc.CHAIN_APPROX_SIMPLE; // Only leaves the end points of the components, e.g. a rectangular contour would be encoded with 4 points.
-        Imgproc.findContours(mask, contours, new Mat(), Imgproc.RETR_LIST, method);
+        Imgproc.findContours(this.mask, contours, frameDummy, Imgproc.RETR_LIST, method);
 
         // Estimate for inner lines of the border using the contours
         System.out.println("Contours: " + contours.toString()); // TODO: delete
