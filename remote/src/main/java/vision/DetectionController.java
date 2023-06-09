@@ -228,8 +228,6 @@ public class DetectionController {
                 robot.height, camHeight);
         Point correctedCenter = Algorithms.correctedCoordinatesOfObject(robot.getCenter(),courseCenter,
                 robot.height, camHeight);
-        double correctedAngle = angleBetweenTwoPoints(correctedCenter.x, correctedCenter.y,
-                correctedFront.x, correctedFront.y);
 
         course.setRobot(new Robot(correctedCenter, correctedFront));
     }

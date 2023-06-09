@@ -23,9 +23,9 @@ public class Geometry {
     }
 
     /**
-     * @param heightCamera Height from floor to camera
-     * @param heightObject Height from floor to measure point on object
-     * @param distanceToCamera distance from object to camera, in a perpendicular line to the camera.
+     * @param heightCamera Height from floor to camera in cm
+     * @param heightObject Height from floor to measure point on object in cm
+     * @param distanceToCamera distance from object to camera, in a perpendicular line to the camera, in cm.
      * @return the distance in centimeter from the camera to the object.
      */
     public static double objectActualPosition(double heightCamera, double heightObject, double distanceToCamera){

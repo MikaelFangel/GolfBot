@@ -14,7 +14,7 @@ public class Course {
     private Point cameraPosition;
 
     private final int resolutionWidth = 1024;
-    private final int ResolutionHeight = 768;
+    private final int resolutionHeight = 768;
 
     private Border border;
     private List<Ball> balls;
@@ -63,7 +63,7 @@ public class Course {
     }
 
     public int getResolutionHeight() {
-        return ResolutionHeight;
+        return resolutionHeight;
     }
 
     public int getResolutionWidth() {

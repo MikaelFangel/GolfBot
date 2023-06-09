@@ -9,7 +9,6 @@ public class Main {
             throw new MissingArgumentException("Please provide an IP and port number (e.g 192.168.1.12:50051) and camera index");
         }
 
-        String ipaddr = args[0];
         int cameraIndex = Integer.parseInt(args[1]);
         double cameraHeight = 168.2;  // in cm TODO make into arg at some point
 
