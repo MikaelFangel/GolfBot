@@ -107,7 +107,7 @@ public class Algorithms {
      * @param course
      * @return
      */
-    public static Mat transformToRectangle(Mat src, Course course){
+    public static Mat transformToRectangle(Mat src, Point[] corners){
         /*ClassLoader appLoader = ClassLoader.getSystemClassLoader();
         ClassLoader currentLoader = this.getClass().getClassLoader();
 
@@ -122,10 +122,18 @@ public class Algorithms {
 
         //control of input
 
+
+
         Point[] srcTri = new Point[3];
-        srcTri[0] = course.getBorder().getTopLeft().clone();
-        srcTri[1] = course.getBorder().getBottomLeft().clone();
-        srcTri[2] = course.getBorder().getTopRight().clone();
+        srcTri[0] = corners[0].clone();
+        srcTri[1] = corners[1].clone();
+        srcTri[2] = corners[2].clone();
+
+        if (srcTri[1].x > srcTri[2].x){
+            Point temp = srcTri[1];
+            srcTri[1] = srcTri[2];
+            srcTri[2] = temp;
+        }
 
         Point[] dstTri = new Point[3];
         dstTri[0] = new Point( 0, 0 );

@@ -4,6 +4,7 @@ import courseObjects.Ball;
 import courseObjects.Border;
 import courseObjects.Course;
 import courseObjects.Robot;
+import io.grpc.InternalGlobalInterceptors;
 import nu.pattern.OpenCV;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
@@ -155,6 +156,10 @@ public class DetectionController {
 
         // Run sub detectors. They store the objects
         this.borderDetector.detectBorder(this.frame);
+
+        // Warp picture
+        this.frame = Algorithms.transformToRectangle(this.frame,borderDetector.getBorder().getCornersAsArray());
+
         this.robotDetector.detectRobot(this.frame);
         this.ballDetector.detectBalls(this.frame);
 
@@ -233,6 +238,16 @@ public class DetectionController {
      */
     private void updateCourseCorners() {
         Point[] convertedCorners = this.borderDetector.getBorder().getCornersAsArray();
+
+        // Warp corners
+        /*Border b = new Border(
+                convertedCorners[0],
+                convertedCorners[1],
+                convertedCorners[2],
+                convertedCorners[3]
+        );
+        this.course.setBorder(b);
+        this.frame = Algorithms.transformToRectangle(this.frame, course);*/
 
         // Convert from pixel to cm.
         for (int i = 0; i < convertedCorners.length; i++)

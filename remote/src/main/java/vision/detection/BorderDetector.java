@@ -25,7 +25,6 @@ public class BorderDetector implements SubDetector {
      * @return a boolean symbolizing if objects were found or not.
      */
     public boolean detectBorder(Mat frame) {
-        this.border = getBorderFromFrame(frame);
         // Initialize all OpenCV objects once to not have memory leaks
         if (initial) {
             mask = new Mat();
@@ -39,7 +38,7 @@ public class BorderDetector implements SubDetector {
             initial = false;
         }
 
-        //this.borderSet = getBorderFromFrame(frame);
+        this.border = getBorderFromFrame(frame);
 
         return border != null;
     }
