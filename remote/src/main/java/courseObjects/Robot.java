@@ -15,6 +15,12 @@ public class Robot {
         this.angle = Geometry.angleBetweenTwoPoints(center.x, center.y, front.x, front.y);
     }
 
+    public void setPosition(Point center, Point front) {
+        this.center = center;
+        this.front = front;
+        this.angle = Geometry.angleBetweenTwoPoints(center.x, center.y, front.x, front.y);
+    }
+
     public void setCenter(Point center) {
         this.center = center;
     }

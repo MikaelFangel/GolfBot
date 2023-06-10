@@ -48,7 +48,7 @@ public class RobotController {
      * @see <a href="https://github.com/grpc/grpc-java/blob/master/examples/src/main/java/io/grpc/examples/routeguide/RouteGuideClient.java">Example streaming client</a>
      */
     public void driveWGyro(Course course, Point target) throws RuntimeException {
-        int speed = 200;
+        int speed = 100;
         MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
                 new MotorPair(OutPort.D, speed));
 
@@ -74,6 +74,7 @@ public class RobotController {
         StreamObserver<DrivePIDRequest> requestObserver = ASYNCCLIENT.driveWGyro(responseObserver);
 
         double distance = Algorithms.findRobotsDistanceToPoint(course.getRobot(), target);
+        System.out.println("Distance " + distance);
         double last_distance = distance;
 
         // Iterator used as a failsafe
@@ -81,25 +82,21 @@ public class RobotController {
 
         try {
             // Continue to stream messages until reaching target
-            while (distance > 3 && i < MAX_ITERATIONS) {
+            while (distance > 0 && i < MAX_ITERATIONS) {
                 // Update distance
                 distance = Algorithms.findRobotsDistanceToPoint(course.getRobot(), target);
 
                 // If we drive past the target
-                if (last_distance < distance) {
+                if ((distance - last_distance) > 0.5) {
+                    System.out.println("Last " + last_distance + " Distance " + distance);
                     break;
-                }
-
-                // Slow down when close to target for increased accuracy
-                if (distance > 15) {
-                    speed /= 2;
                 }
 
                 last_distance = distance;
 
                 DrivePIDRequest drivePIDRequest = DrivePIDRequest.newBuilder()
                         .setMotors(motorsRequest)
-                        .setDistance((float) distance) // Note: Currently not used on the robot
+                        .setDistance((float) distance)
                         .setSpeed(speed) // This speed worked well, other speeds could be researched
                         .build();
 
@@ -107,7 +104,7 @@ public class RobotController {
                 requestObserver.onNext(drivePIDRequest);
 
                 // Sleep for a bit before sending the next one. TODO: Research timing of the delay with the robot
-                Thread.sleep(700);
+                Thread.sleep(500);
 
                 i++;
 
