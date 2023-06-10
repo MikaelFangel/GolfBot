@@ -19,7 +19,6 @@ import vision.detection.SubDetector;
 import vision.helperClasses.BorderSet;
 import vision.helperClasses.MaskSet;
 
-import static vision.math.Geometry.angleBetweenTwoPoints;
 import static vision.math.Geometry.distanceBetweenTwoPoints;
 
 import java.util.ArrayList;
@@ -167,7 +166,7 @@ public class DetectionController {
         // TODO mark balls with category.
         categorizeBallsPickupStrategy(
                 this.ballDetector.getBalls(),
-                this.borderDetector.getBorderSet().getCoords()
+                this.borderDetector.getCross()
         );
 
         correctObjects();
@@ -183,11 +182,12 @@ public class DetectionController {
     }
 
     /**
-     * Changes the BallPickupStrategy for each of the balls in the list, depending on how close they are to the borders.
-     * @param balls The list of balls to be changed
-     * @param corners the corner of the box surrounding the balls.
+     * Categorized the picku strategy for each ball, depending on the closeness to the course corners and object
+     * provided in the arguments.
+     * @param balls The balls to be categorized
+     * @param cross The cross within the border.
      */
-    private void categorizeBallsPickupStrategy(List<Ball> balls, Point[] corners) {
+    private void categorizeBallsPickupStrategy(List<Ball> balls, Cross cross) {
         final double centimeterMargin = 5;
 
         // Convert margin to pixels
@@ -231,6 +231,13 @@ public class DetectionController {
                 else
                     ball.setStrategy(BallPickupStrategy.BORDER);
             }
+
+            // For the cross (Circle hit box) | (x - center.x)^2 + (y - center.y)^2 < radius^2
+            Point crossCenter = cross.getMiddle();
+            double radius = (cross.getLongestSide() / 2 + centimeterMargin) / conversionFactorX;
+
+            if (Math.pow(position.x - crossCenter.x, 2) + Math.pow(position.y - crossCenter.y , 2) < Math.pow(radius, 2))
+                ball.setStrategy(BallPickupStrategy.CROSS);
         }
     }
 

@@ -10,7 +10,9 @@ import java.util.List;
 public class Cross {
     private List<Point> endPoints = new ArrayList<>();
     private Point middle;
-    private Point measurePoint; //
+    private Point measurePoint;
+    private final double longestSide = 20.1; // CM
+    private final double shortestSide = 3.1; // CM
 
     List<Scalar> colors = Arrays.asList(
             new Scalar(255, 255, 255), // White
@@ -77,5 +79,13 @@ public class Cross {
      */
     public List<Scalar> getColors() {
         return colors;
+    }
+
+    public double getLongestSide() {
+        return longestSide;
+    }
+
+    public double getShortestSide() {
+        return shortestSide;
     }
 }
