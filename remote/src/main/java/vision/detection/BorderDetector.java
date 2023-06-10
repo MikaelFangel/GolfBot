@@ -1,9 +1,9 @@
 package vision.detection;
 
+import courseObjects.Border;
 import courseObjects.Cross;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
-import vision.helperClasses.BorderSet;
 import vision.helperClasses.MaskSet;
 
 import java.util.ArrayList;
@@ -11,8 +11,9 @@ import java.util.Arrays;
 import java.util.List;
 
 public class BorderDetector implements SubDetector {
-    private BorderSet borderSet;
-    private final List<MaskSet> maskSets = new ArrayList<>();
+    private Border border;
+    private Point cameraOffset;
+    private final List<MaskSet> maskSets = new ArrayList<>();;
     private final Cross cross = new Cross();
 
     // Initialize all OpenCV objects once to not have memory leaks (so they don't get reinitialized every time the function gets called)
@@ -23,7 +24,6 @@ public class BorderDetector implements SubDetector {
 
     /**
      * Detects the border from the frame and stores the objects in its own objects.
-     *
      * @param frame The frame to be detected.
      * @return a boolean symbolizing if objects were found or not.
      */
@@ -37,9 +37,9 @@ public class BorderDetector implements SubDetector {
             initial = false;
         }
 
-        this.borderSet = getBorderFromFrame(frame);
+        this.border = getBorderFromFrame(frame);
 
-        return borderSet != null;
+        return border != null;
     }
 
     /**
@@ -49,7 +49,7 @@ public class BorderDetector implements SubDetector {
      * @param frame to be evaluated
      * @return A BorderSet with the border corners and the offset from the camera.
      */
-    private BorderSet getBorderFromFrame(Mat frame) {
+    private Border getBorderFromFrame(Mat frame) {
         List<MatOfPoint> contours = getRedContours(frame);
         /* Each contour is a boundary of one of the components (e.g. to boundary of the cross)
          *  - The outer boundary of the border has 28 straight lines in the physical world (not used)
@@ -112,8 +112,9 @@ public class BorderDetector implements SubDetector {
         // Get offset
         double offsetX = sortedCorners.get(0).x;
         double offsetY = sortedCorners.get(0).y;
+        this.cameraOffset = new Point(offsetX, offsetY);
 
-        return new BorderSet(sortedCorners.toArray(Point[]::new), new Point(offsetX, offsetY));
+        return new Border(sortedCorners.get(0), sortedCorners.get(1), sortedCorners.get(2), sortedCorners.get(3));
     }
 
     /**
@@ -125,7 +126,7 @@ public class BorderDetector implements SubDetector {
      */
     private List<MatOfPoint> getRedContours(Mat frame) {
         // Remove everything from frame except border (which is red)
-        Scalar lower = new Scalar(0, 0, 180); // Little red
+        Scalar lower = new Scalar(0, 0, 160); // Little red
         Scalar upper = new Scalar(100, 100, 255); // More red
 
         // Blur frame to smooth out color inconsistencies
@@ -185,8 +186,12 @@ public class BorderDetector implements SubDetector {
         cross.setMiddle(new Point((firstPoint.x + middlePoint.x) / 2, (firstPoint.y + middlePoint.y) / 2));
     }
 
-    public BorderSet getBorderSet() {
-        return this.borderSet;
+    public Border getBorder() {
+        return this.border;
+    }
+    
+    public Point getCameraOffset() {
+        return this.cameraOffset;
     }
 
     @Override
