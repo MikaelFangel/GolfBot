@@ -81,12 +81,6 @@ func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
 	// Prepare the motors for running
 	distance := int(driveRequest.Distance)
 
-	// Change speed value if distance is negative
-	speed := -int(driveRequest.Speed)
-	if speed > 0 {
-		speed *= -1
-	}
-
 	gyro, err := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
 	if err != nil {
 		return err
@@ -106,6 +100,8 @@ func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
 		// "I term", the running sum of errors to correct for
 		// "D term", trying to predict next error
 		turn := (kp * gyroErr) + (ki * integral) + (kd * derivative)
+
+		power := setPowerInDrive(distance, -int(driveRequest.Speed), 2)
 
 		// Slice the array to reuse positions
 		motorRequests = motorRequests[0:0]
