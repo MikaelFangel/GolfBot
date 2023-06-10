@@ -57,8 +57,8 @@ public class RobotDetector implements SubDetector {
         Imgproc.GaussianBlur(frame, frameBlur, new Size(7, 7), 7, 0);
 
         // Blue markers threshold (BGR)
-        final Scalar lRobot = new Scalar(210, 120, 0);
-        final Scalar uRobot = new Scalar(255, 170, 80);
+        final Scalar lRobot = new Scalar(180, 100, 0);
+        final Scalar uRobot = new Scalar(255, 200, 80);
 
         // Create a mask to filter out unnecessary contours
         Core.inRange(frameBlur, lRobot, uRobot, mask);

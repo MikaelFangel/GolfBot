@@ -67,6 +67,17 @@ public class Algorithms {
         return shortestAngleToBall;
     }
 
+    /**
+     * Finds distance between the robots front ball collection mechanism and a point.
+     * @param robot
+     * @param p
+     * @return distance in cm
+     */
+    public static double findRobotsDistanceToPoint(Robot robot, Point p) {
+        int offsetFromFrontMarker = -4;
+        return distanceBetweenTwoPoints(robot.getFront().x, robot.getFront().y, p.x, p.y) - offsetFromFrontMarker;
+    }
+
     public static double findRobotsDistanceToBall(Robot robot, Ball ball) {
         return distanceBetweenTwoPoints(robot.getCenter().x, robot.getCenter().y, ball.getCenter().x, ball.getCenter().y) - robot.length;
     }
