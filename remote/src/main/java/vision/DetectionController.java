@@ -15,11 +15,10 @@ import vision.detection.RobotDetector;
 import vision.detection.SubDetector;
 import vision.helperClasses.MaskSet;
 
+import static vision.math.Geometry.distanceBetweenTwoPoints;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import static vision.math.Geometry.angleBetweenTwoPoints;
-import static vision.math.Geometry.distanceBetweenTwoPoints;
 
 public class DetectionController {
     private final int refreshRate = 33; // Value for best FPS (ms)
@@ -159,6 +158,12 @@ public class DetectionController {
         this.robotDetector.detectRobot(this.frame);
         this.ballDetector.detectBalls(this.frame);
 
+        // TODO mark balls with category.
+        categorizeBallsPickupStrategy(
+                this.ballDetector.getBalls(),
+                this.borderDetector.getCross()
+        );
+
         updateCourse();
         correctCourseObjects();
         showOverlay();
@@ -169,6 +174,73 @@ public class DetectionController {
 
         // Open all window pop-ups
         HighGui.waitKey(this.refreshRate);
+    }
+
+    /**
+     * Categorized the picku strategy for each ball, depending on the closeness to the course corners and object
+     * provided in the arguments.
+     * @param balls The balls to be categorized
+     * @param cross The cross within the border.
+     */
+    private void categorizeBallsPickupStrategy(List<Ball> balls, Cross cross) {
+        final double centimeterMargin = 5;
+
+        // Convert margin to pixels
+        final double pixelMarginX = centimeterMargin / conversionFactorX;
+        final double pixelMarginY = centimeterMargin / conversionFactorY;
+
+        // Get corners, TopLeft, TopRight, BottomLeft
+        Point[] corners = this.borderDetector.getBorder().getCornersAsArray();
+        Point TL = corners[0], TR = corners[1], BL = corners[2];
+
+        for (Ball ball : balls) {
+            Point position = ball.getCenter();
+
+            // Close to Top Border
+            if (position.y <= TL.y + pixelMarginY) {
+                ball.setStrategy(BallPickupStrategy.BORDER);
+            }
+
+            // Close to Bottom Border
+            if (position.y >= BL.y - pixelMarginY) {
+                // If already in another border, up the strategy to corner.
+                if (ball.getStrategy() == BallPickupStrategy.BORDER)
+                    ball.setStrategy(BallPickupStrategy.CORNER);
+                else
+                    ball.setStrategy(BallPickupStrategy.BORDER);
+            }
+
+            // Close to Right Border
+            if (position.x >= TR.x - pixelMarginX) {
+                // If already in another border, up the strategy to corner.
+                if (ball.getStrategy() == BallPickupStrategy.BORDER)
+                    ball.setStrategy(BallPickupStrategy.CORNER);
+                else
+                    ball.setStrategy(BallPickupStrategy.BORDER);
+            }
+
+            // Close to Left Border
+            if (position.x <= TL.x + pixelMarginX) {
+                // If already in another border, up the strategy to corner.
+                if (ball.getStrategy() == BallPickupStrategy.BORDER)
+                    ball.setStrategy(BallPickupStrategy.CORNER);
+                else
+                    ball.setStrategy(BallPickupStrategy.BORDER);
+            }
+
+            // For the cross (Circle hit box) | (x - center.x)^2 + (y - center.y)^2 < radius^2
+            Point crossCenter = cross.getMiddle();
+            if (crossCenter != null) {
+                double radius = (cross.getLongestSide() / 2 + centimeterMargin) / conversionFactorX;
+
+                if (Math.pow(position.x - crossCenter.x, 2) + Math.pow(position.y - crossCenter.y , 2) < Math.pow(radius, 2))
+                    ball.setStrategy(BallPickupStrategy.CROSS);
+            }
+        }
+    }
+
+    private void correctObjects() {
+        // TODO nothing yet to do.
     }
 
     /**
@@ -215,7 +287,7 @@ public class DetectionController {
                     ball.getRadius(),
                     camHeight);
 
-            correctedBalls.add(new Ball(correctedCenter, ball.getColor()));
+            correctedBalls.add(new Ball(correctedCenter, ball.getColor(), ball.getStrategy()));
         }
         course.setBalls(correctedBalls);
 
@@ -271,7 +343,7 @@ public class DetectionController {
         for (Ball ball : balls) {
             Point correctedCenter = convertPixelPointToCmPoint(ball.getCenter(), this.pixelOffset);
 
-            Ball correctedBall = new Ball(correctedCenter, ball.getColor());
+            Ball correctedBall = new Ball(correctedCenter, ball.getColor(), ball.getStrategy());
             correctedBalls.add(correctedBall);
         }
 

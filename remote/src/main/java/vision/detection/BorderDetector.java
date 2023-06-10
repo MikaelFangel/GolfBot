@@ -45,7 +45,6 @@ public class BorderDetector implements SubDetector {
     /**
      * Finds the border and calculates the corners from an approximation of line intersections.
      * Note: The mask is displayed in black and white. White equals true
-     *
      * @param frame to be evaluated
      * @return A BorderSet with the border corners and the offset from the camera.
      */
@@ -194,12 +193,12 @@ public class BorderDetector implements SubDetector {
         return this.cameraOffset;
     }
 
+    public Cross getCross() {
+        return cross;
+    }
+
     @Override
     public List<MaskSet> getMaskSets() {
         return this.maskSets;
-    }
-
-    public Cross getCross() {
-        return cross;
     }
 }
