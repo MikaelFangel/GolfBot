@@ -1,10 +1,12 @@
 import courseObjects.Ball;
 import courseObjects.Course;
+import courseObjects.Robot;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import org.opencv.core.Point;
 import proto.*;
 import vision.Algorithms;
 
@@ -45,7 +47,7 @@ public class RobotController {
      * @throws RuntimeException if the robot was not reached
      * @see <a href="https://github.com/grpc/grpc-java/blob/master/examples/src/main/java/io/grpc/examples/routeguide/RouteGuideClient.java">Example streaming client</a>
      */
-    public void driveWGyro(Course course) throws RuntimeException {
+    public void driveWGyro(Course course, Point target) throws RuntimeException {
         int speed = 200;
         MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
                 new MotorPair(OutPort.D, speed));
@@ -71,21 +73,29 @@ public class RobotController {
         // Observe the requests to send
         StreamObserver<DrivePIDRequest> requestObserver = ASYNCCLIENT.driveWGyro(responseObserver);
 
-        // Calculate distances
-        Ball closestBall = Algorithms.findClosestBall(course.getBalls(), course.getRobot());
-        assert closestBall != null;
-        double distance = Algorithms.findRobotsDistanceToBall(course.getRobot(), closestBall);
+        double distance = Algorithms.findRobotsDistanceToPoint(course.getRobot(), target);
+        double last_distance = distance;
 
         // Iterator used as a failsafe
         int i = 0;
 
         try {
             // Continue to stream messages until reaching target
-            while (distance > 5 && i < MAX_ITERATIONS) {
-                System.out.println("Distance left " + distance);
-
+            while (distance > 3 && i < MAX_ITERATIONS) {
                 // Update distance
-                distance = Algorithms.findRobotsDistanceToBall(course.getRobot(), closestBall);
+                distance = Algorithms.findRobotsDistanceToPoint(course.getRobot(), target);
+
+                // If we drive past the target
+                if (last_distance < distance) {
+                    break;
+                }
+
+                // Slow down when close to target for increased accuracy
+                if (distance > 15) {
+                    speed /= 2;
+                }
+
+                last_distance = distance;
 
                 DrivePIDRequest drivePIDRequest = DrivePIDRequest.newBuilder()
                         .setMotors(motorsRequest)
@@ -100,6 +110,8 @@ public class RobotController {
                 Thread.sleep(700);
 
                 i++;
+
+                System.out.println("Distance " + distance);
             }
         } catch (RuntimeException e) {
             // Cancel RPC
