@@ -190,6 +190,7 @@ public class DetectionController {
         final double pixelMarginY = centimeterMargin / conversionFactorY;
 
         // Get corners, TopLeft, TopRight, BottomLeft
+        Point[] corners = this.borderDetector.getBorder().getCornersAsArray();
         Point TL = corners[0], TR = corners[1], BL = corners[2];
 
         for (Ball ball : balls) {
@@ -229,10 +230,12 @@ public class DetectionController {
 
             // For the cross (Circle hit box) | (x - center.x)^2 + (y - center.y)^2 < radius^2
             Point crossCenter = cross.getMiddle();
-            double radius = (cross.getLongestSide() / 2 + centimeterMargin) / conversionFactorX;
+            if (crossCenter != null) {
+                double radius = (cross.getLongestSide() / 2 + centimeterMargin) / conversionFactorX;
 
-            if (Math.pow(position.x - crossCenter.x, 2) + Math.pow(position.y - crossCenter.y , 2) < Math.pow(radius, 2))
-                ball.setStrategy(BallPickupStrategy.CROSS);
+                if (Math.pow(position.x - crossCenter.x, 2) + Math.pow(position.y - crossCenter.y , 2) < Math.pow(radius, 2))
+                    ball.setStrategy(BallPickupStrategy.CROSS);
+            }
         }
     }
 
@@ -284,7 +287,7 @@ public class DetectionController {
                     ball.getRadius(),
                     camHeight);
 
-            correctedBalls.add(new Ball(correctedCenter, ball.getColor()));
+            correctedBalls.add(new Ball(correctedCenter, ball.getColor(), ball.getStrategy()));
         }
         course.setBalls(correctedBalls);
 
