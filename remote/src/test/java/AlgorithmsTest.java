@@ -1,8 +1,8 @@
 import courseObjects.Ball;
 import courseObjects.BallColor;
 import courseObjects.Course;
+import org.junit.jupiter.api.Assertions;
 import courseObjects.Robot;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opencv.core.Point;
@@ -26,7 +26,8 @@ public class AlgorithmsTest {
                 40,
                 165
         );
-        System.out.println(newPoint.toString());
+        Assertions.assertEquals((int) newPoint.x, 51);
+        Assertions.assertEquals((int) newPoint.y, 51);
     }
 
     @Test
@@ -37,7 +38,8 @@ public class AlgorithmsTest {
                 40,
                 165
         );
-        System.out.println(newPoint.toString());
+        Assertions.assertEquals((int) newPoint.x, 187);
+        Assertions.assertEquals((int) newPoint.y, 187);
     }
 
     @Test

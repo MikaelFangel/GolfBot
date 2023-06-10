@@ -1,10 +1,6 @@
 package vision;
 
-import courseObjects.Ball;
-import courseObjects.Border;
-import courseObjects.Course;
-import courseObjects.Cross;
-import courseObjects.Robot;
+import courseObjects.*;
 import nu.pattern.OpenCV;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
@@ -22,7 +18,8 @@ import vision.helperClasses.MaskSet;
 import java.util.ArrayList;
 import java.util.List;
 
-import static vision.math.Geometry.*;
+import static vision.math.Geometry.angleBetweenTwoPoints;
+import static vision.math.Geometry.distanceBetweenTwoPoints;
 
 public class DetectionController {
     private final int refreshRate = 33; // Value for best FPS (ms)
@@ -228,8 +225,6 @@ public class DetectionController {
                 robot.height, camHeight);
         Point correctedCenter = Algorithms.correctedCoordinatesOfObject(robot.getCenter(),courseCenter,
                 robot.height, camHeight);
-        double correctedAngle = angleBetweenTwoPoints(correctedCenter.x, correctedCenter.y,
-                correctedFront.x, correctedFront.y);
 
         course.setRobot(new Robot(correctedCenter, correctedFront));
     }

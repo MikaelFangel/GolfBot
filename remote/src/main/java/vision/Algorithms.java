@@ -1,7 +1,6 @@
 package vision;
 
 import courseObjects.Ball;
-import courseObjects.Course;
 import courseObjects.Robot;
 import org.opencv.core.Point;
 import vision.math.Geometry;
@@ -84,13 +83,13 @@ public class Algorithms {
 
     public static Point correctedCoordinatesOfObject(Point originalCoords, Point camera, double objectHeight , double cameraHeight){
         //changing point, so that camera is origo
-        Point myCamera = new Point(0,0);
+        Point myCamera = new Point(0, 0);
         Point myObject = new Point(originalCoords.x - camera.x, originalCoords.y - camera.y);
 
         //finds the angel between the camera and the point
         double angelToPointInDegree = Geometry.angleBetweenTwoPoints(myCamera.x, myCamera.y, myObject.x, myObject.y);
 
-        //distanec between objects
+        //distance between objects
         double distance = Geometry.distanceBetweenTwoPoints(myCamera.x, myCamera.y, myObject.x, myObject.y);
 
         double newDistance = Geometry.objectActualPosition(
@@ -101,16 +100,8 @@ public class Algorithms {
 
         Point newPoint = new Point();
 
-        newPoint.x = (Math.cos(Math.toRadians(angelToPointInDegree))*newDistance)+camera.x;
-        newPoint.y = (Math.sin(Math.toRadians(angelToPointInDegree))*newDistance)+camera.y;
-
-        /*
-        if (camera.x >= originalCoords.x) newPoint.x = camera.x - newPoint.x;
-        else newPoint.x = camera.x + newPoint.x;
-
-        if (camera.y >= originalCoords.y) newPoint.y = camera.y - newPoint.y;
-        else newPoint.y = camera.y + newPoint.y;
-        */
+        newPoint.x = (Math.cos(Math.toRadians(angelToPointInDegree)) * newDistance) + camera.x;
+        newPoint.y = (Math.sin(Math.toRadians(angelToPointInDegree)) * newDistance) + camera.y;
 
         return newPoint;
     }

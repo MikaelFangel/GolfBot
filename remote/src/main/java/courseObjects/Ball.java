@@ -7,7 +7,7 @@ import java.awt.Color;
 public class Ball {
     private Point center;
     private BallColor color;
-    private final double radius = 4;
+    private final double radius = 4; // CM
 
     public Ball(Point center, BallColor color) {
         this.center = center;
@@ -31,6 +31,6 @@ public class Ball {
     }
 
     public double getRadius() {
-        return radius;
+        return this.radius;
     }
 }
