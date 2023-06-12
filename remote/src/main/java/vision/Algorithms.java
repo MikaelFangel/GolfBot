@@ -1,11 +1,16 @@
 package vision;
 
 import courseObjects.Ball;
+import courseObjects.Border;
 import courseObjects.Robot;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.imgproc.Imgproc;
 import vision.math.Geometry;
 
 import java.util.List;
+import java.util.stream.IntStream;
 
 import static vision.math.Geometry.angleBetweenTwoPoints;
 import static vision.math.Geometry.distanceBetweenTwoPoints;
@@ -66,28 +71,80 @@ public class Algorithms {
         return distanceBetweenTwoPoints(robot.getCenter().x, robot.getCenter().y, ball.getCenter().x, ball.getCenter().y) - robot.length;
     }
 
+    /**
+     * Computes the actual cartesian coords of an object
+     *
+     * @param originalCoords Where the camera has detected the object
+     * @param camera Point on surface perpendicular to the center of the camera
+     * @param objectHeight The height of the object
+     * @param cameraHeight Height the camera is from the course
+     * @return the coordinate where the object in on the ground
+     */
     public static Point correctedCoordinatesOfObject(Point originalCoords, Point camera, double objectHeight , double cameraHeight){
-        //changing point, so that camera is origo
-        Point myCamera = new Point(0, 0);
+        //changing point, so that camera is ORIGO
+        Point myCamera = new Point(0,0);
         Point myObject = new Point(originalCoords.x - camera.x, originalCoords.y - camera.y);
 
-        //finds the angel between the camera and the point
+        // finds the angel between the camera and the point
         double angelToPointInDegree = Geometry.angleBetweenTwoPoints(myCamera.x, myCamera.y, myObject.x, myObject.y);
 
-        //distance between objects
+        // distance between objects and camera
         double distance = Geometry.distanceBetweenTwoPoints(myCamera.x, myCamera.y, myObject.x, myObject.y);
 
+        // Finds the actual distance to the object
         double newDistance = Geometry.objectActualPosition(
                 cameraHeight,
                 objectHeight,
                 distance
         );
 
+        //Convert from polar coordinates to cartesian
         Point newPoint = new Point();
-
-        newPoint.x = (Math.cos(Math.toRadians(angelToPointInDegree)) * newDistance) + camera.x;
-        newPoint.y = (Math.sin(Math.toRadians(angelToPointInDegree)) * newDistance) + camera.y;
+        newPoint.x = (Math.cos(Math.toRadians(angelToPointInDegree))*newDistance)+camera.x;
+        newPoint.y = (Math.sin(Math.toRadians(angelToPointInDegree))*newDistance)+camera.y;
 
         return newPoint;
+    }
+
+
+    /**
+     * Warp the picture based on the corners position, to remove what ever is outside the field.
+     *
+     * @param src the livefeed from the webcam
+     * @param border that knows where the corners of the field is on the current livefeed.
+     * @return A transformed picture, only containing the field, and not everything outside the frame.
+     */
+    public static Mat transformToRectangle(Mat src, Border border){
+        //Offset that is needed, because the corners are the inner corners, and we would like to keep the borders in the frame.
+        final double pixelOffset = 20;
+
+        //Gets 3 of the 4 corners.
+        Point[] srcTri = new Point[3];
+        srcTri[0] = border.getTopLeft();
+        srcTri[1] = border.getTopRight();
+        srcTri[2] = border.getBottomLeft();
+
+        //adds the offset to each corner
+        IntStream.range(0,2).forEach(i -> {
+            srcTri[i].x += i%2 == 0 ? -pixelOffset : pixelOffset;   //subtract on odd, and add on even
+            srcTri[i].y += i/2*2 == 0 ? -pixelOffset : pixelOffset; //subtract on 0 and 1, and add on 2
+        });
+
+        //sets the end position of the pixels
+        Point[] dstTri = new Point[3];
+        dstTri[0] = new Point( 0, 0 );
+        dstTri[1] = new Point( src.cols()-1, 0 );
+        dstTri[2] = new Point( 0, src.rows()-1 );
+
+        //Computes the new unit vector of the new frame
+        MatOfPoint2f s = new MatOfPoint2f(srcTri);
+        MatOfPoint2f d = new MatOfPoint2f(dstTri);
+        Mat warpMat = Imgproc.getAffineTransform(s , d);
+
+        //Creates the new Mat
+        Mat warpDst = Mat.zeros(src.rows(), src.cols(), src.type());
+        Imgproc.warpAffine(src, warpDst, warpMat, warpDst.size());
+
+        return warpDst;
     }
 }
