@@ -43,34 +43,46 @@ public class Main {
         }
 
         double angle = Algorithms.findRobotShortestAngleToBall(course.getRobot(), closestBall);
-        System.out.println("Degrees to rotate " + angle);
+        controller.recalibrateGyro();
+        controller.rotateWGyro(angle);
+    }
 
-        System.out.println(closestBall.getCenter());
+    public static void driveRoutine(RobotController controller, Course course) {
+        Ball closestBall;
+
+        // Check if there is balls left
+        if (course.getBalls() != null) {
+            // Use new Target object
+            closestBall = Algorithms.findClosestBall(course.getBalls(), course.getRobot());
+
+            // Do we need both checks? This check also make sure program won't crash after collecting last ball
+            if (closestBall == null)
+                return;
+        } else {
+            // No balls left on the course. TODO: Should drive to drop off point
+            return;
+        }
+
+        //double angle = Algorithms.findRobotShortestAngleToBall(course.getRobot(), closestBall);
+        //System.out.println("Degrees to rotate " + angle);
 
         // Quick integration test, rotate to the ball and collect it
         controller.recalibrateGyro();
-        controller.collectRelease(true);
         controller.driveWGyro(course, closestBall.getCenter());
-        controller.stopCollectRelease();
     }
 
-    public static void collectBallRoutine(RobotController controller, Course course) {
-        while (true) {
+    public static void collectAllBallsRoutine(RobotController controller, Course course) throws InterruptedException {
+        while (!course.getBalls().isEmpty()) {
 
-            Ball closestBall;
+            for (Ball ball : course.getBalls())
+                System.out.println(ball);
 
-            // Check if there is balls left
-            if (course.getBalls() != null) {
-                // Use new Target object
-                closestBall = Algorithms.findClosestBall(course.getBalls(), course.getRobot());
+            // Use new Target object
+            Ball closestBall = Algorithms.findClosestBall(course.getBalls(), course.getRobot());
 
-                // Do we need both checks? This check also make sure program won't crash after collecting last ball
-                if (closestBall == null)
-                    break;
-            } else {
-                // No balls left on the course. TODO: Should drive to drop off point
+            // Do we need both checks? This check also make sure program won't crash after collecting last ball
+            if (closestBall == null)
                 break;
-            }
 
             double angle = Algorithms.findRobotShortestAngleToBall(course.getRobot(), closestBall);
             System.out.println("Degrees to rotate " + angle);
@@ -82,6 +94,7 @@ public class Main {
             controller.collectRelease(true);
             controller.driveWGyro(course, closestBall.getCenter());
             controller.stopCollectRelease();
+            Thread.sleep(100);
         }
     }
 }
