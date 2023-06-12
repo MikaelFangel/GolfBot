@@ -2,18 +2,13 @@ package vision;
 
 import courseObjects.Ball;
 import courseObjects.Border;
-import courseObjects.Course;
 import courseObjects.Robot;
-import jdk.incubator.vector.VectorOperators;
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
-import vision.helperClasses.ClassScope;
 import vision.math.Geometry;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 
