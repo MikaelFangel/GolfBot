@@ -9,22 +9,32 @@ import java.util.List;
 /**
  * The course consists of (1) the dimensions of the course, (2) coordinates of the corners in centimeters,
  * (3) a list containing the balls located on the course to be picked up by the robot, and (4) the robot object
+ * <br/><br/>
+ * NB! All measurements are given in centimetres
  */
 public class Course {
-    private final double width = 169.0, height = 123.7; // Measured from the innermost sides
-    private Point cameraPosition;
+    private final double width, height;
+    private final int resolutionWidth;
+    private final int resolutionHeight;
 
-    private final int resolutionWidth = 1024;
-    private final int resolutionHeight = 768;
+    private Point cameraPosition;
 
     private final Border border = new Border();
     private final List<Ball> balls = Collections.synchronizedList(new ArrayList<>());
     private final Robot robot = new Robot();
     private final Cross cross = new Cross();
+
     private final double cameraHeight;
 
-    public Course(double cameraHeight){
+    public Course(double cameraHeight) {
         this.cameraHeight = cameraHeight;
+
+        // Measured from the innermost sides
+        this.width = 169.0;
+        this.height = 123.7;
+
+        this.resolutionWidth = 1024;
+        this.resolutionHeight = 768;
     }
 
     // Getters and setters

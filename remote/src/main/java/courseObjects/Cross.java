@@ -1,18 +1,22 @@
 package courseObjects;
 
 import org.opencv.core.Point;
-import org.opencv.core.Scalar;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Cross {
     private List<Point> endPoints = new ArrayList<>();
     private Point middle;
     private Point measurePoint;
-    private final double longestSide = 20.1; // CM
-    private final double shortestSide = 3.1; // CM
+    private final double longestSide;
+    private final double shortestSide;
+
+    public Cross() {
+        // Measurements are in CM
+        this.longestSide = 20.1;
+        this.shortestSide = 3.1;
+    }
 
     public List<Point> getEndPoints() {
         return endPoints;

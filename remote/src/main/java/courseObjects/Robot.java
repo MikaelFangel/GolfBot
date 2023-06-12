@@ -6,15 +6,24 @@ import vision.math.Geometry;
 public class Robot {
     private Point center, front;
     private double angle;
-    public final double length = 16.0, width = 17.0, height = 20.0; // CM
+    public final double length, width, height;
 
-    public Robot(Point center, Point front){
+    public Robot(Point center, Point front) {
+        this(); // Call default constructor
+
         this.center = center;
         this.front = front;
         this.angle = Geometry.angleBetweenTwoPoints(center.x, center.y, front.x, front.y);
     }
-    
-    public Robot(){};
+
+    public Robot() {
+        // Measurements are in CM
+        this.length = 16.0;
+        this.width = 17.0;
+        this.height = 20.0;
+    }
+
+    ;
 
     public synchronized Point getCenter() {
         return center;
