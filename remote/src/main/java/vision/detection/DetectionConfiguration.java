@@ -6,8 +6,10 @@ public class DetectionConfiguration {
     private static DetectionConfiguration single_instance = null;
 
     // Balls
-    final Scalar lowerBallThreshold = new Scalar(180, 180, 180);
-    final Scalar upperBallThreshold = new Scalar(255, 255, 255);
+    final Scalar lowerWhiteBallThreshold = new Scalar(180, 180, 180);
+    final Scalar upperWhiteBallThreshold = new Scalar(255, 255, 255);
+    final Scalar lowerOrangeBallThreshold = new Scalar(0, 100, 220);
+    final Scalar upperOrangeBallThreshold = new Scalar(170, 255, 255);
     int lowerBallSize = 2;
     int upperBallSize = 8;
 
@@ -51,12 +53,20 @@ public class DetectionConfiguration {
 
 
     //                  Balls                   //
-    public Scalar getLowerBallThreshold() {
-        return lowerBallThreshold;
+    public Scalar getLowerWhiteBallThreshold() {
+        return lowerWhiteBallThreshold;
     }
 
-    public Scalar getUpperBallThreshold() {
-        return upperBallThreshold;
+    public Scalar getUpperWhiteBallThreshold() {
+        return upperWhiteBallThreshold;
+    }
+
+    public Scalar getLowerOrangeBallThreshold() {
+        return lowerOrangeBallThreshold;
+    }
+
+    public Scalar getUpperOrangeBallThreshold() {
+        return upperOrangeBallThreshold;
     }
 
     public int getLowerBallSize() {

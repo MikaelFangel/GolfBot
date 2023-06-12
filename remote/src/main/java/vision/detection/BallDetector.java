@@ -22,7 +22,7 @@ public class BallDetector implements SubDetector {
     List<MaskSet> maskSets = new ArrayList<>();
 
     // Initialize all OpenCV objects once to not have memory leaks
-    private Mat frameGray, frameBlur, mask, frameBallsW, frameBallsO, frameHSV;
+    private Mat frameBlur, maskWhite, maskOrange, frameBallsW, frameBallsO;
     private boolean initial = true;
 
     private final DetectionConfiguration config = DetectionConfiguration.DetectionConfiguration();
@@ -36,20 +36,21 @@ public class BallDetector implements SubDetector {
     public boolean detectBalls(Mat frame) {
         // Initialize all OpenCV objects once to not have memory leaks
         if (initial) {
-            frameGray = new Mat();
             frameBlur = new Mat();
-            mask = new Mat();
+            maskWhite = new Mat();
+            maskOrange = new Mat();
             frameBallsW = new Mat();
             frameBallsO = new Mat();
-            frameHSV = new Mat();
-
             initial = false;
         }
 
         balls = new ArrayList<>();
 
-        findWhiteBalls(frame, balls);
-        //findOrangeBalls(frame, balls); TODO! Fix me
+        // Apply blur for better noise reduction
+        Imgproc.GaussianBlur(frame, frameBlur, new Size(9, 9), 0);
+
+        findWhiteBalls(balls);
+        findOrangeBalls(balls);
 
         return !balls.isEmpty();
     }
@@ -57,19 +58,15 @@ public class BallDetector implements SubDetector {
     /**
      * Updates the balls argument with the white balls found on the frame.
      *
-     * @param frame to be used for detection
      * @param balls list that gets updated with newly added balls
      */
-    private void findWhiteBalls(Mat frame, List<Ball> balls) {
-        // Apply blur for better noise reduction
-        Imgproc.GaussianBlur(frame, frameBlur, new Size(9, 9), 0);
-
+    private void findWhiteBalls(List<Ball> balls) {
         // Create mask
-        Core.inRange(frameBlur, config.getLowerBallThreshold(), config.getUpperBallThreshold(), mask);
-        maskSets.add(new MaskSet("Whiteball Mask", mask.clone()));
+        Core.inRange(frameBlur, config.getLowerWhiteBallThreshold(), config.getUpperWhiteBallThreshold(), maskWhite);
+        maskSets.add(new MaskSet("White Ball Mask", maskWhite));
 
         //Get white balls from frame
-        Imgproc.HoughCircles(mask, frameBallsW, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, config.getLowerBallSize(),
+        Imgproc.HoughCircles(maskWhite, frameBallsW, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, config.getLowerBallSize(),
             config.getUpperBallSize());
 
         // Add balls to array
@@ -84,40 +81,23 @@ public class BallDetector implements SubDetector {
     /**
      * Updates the balls argument with the white balls found on the frame.
      *
-     * @param frame to be used for detection
      * @param balls list that gets updated with newly added balls
      */
-    private void findOrangeBalls(Mat frame, List<Ball> balls) {
-        // Apply hsv filter to distinguish orange ball
-        Imgproc.cvtColor(frame, frameHSV, Imgproc.COLOR_BGR2HSV);
+    private void findOrangeBalls(List<Ball> balls) {
+        // Create mask
+        Core.inRange(frameBlur, config.getLowerOrangeBallThreshold(), config.getUpperOrangeBallThreshold(), maskOrange);
+        maskSets.add(new MaskSet("Orange Ball Mask", maskOrange));
 
-        // Orange balls threshold (BGR)
-        final Scalar lOrangeBall = new Scalar(0, 100, 220);
-        final Scalar uOrangeBall = new Scalar(170, 255, 255);
-
-        // Create a mask to separate the orange ball
-        Core.inRange(frameHSV, lOrangeBall, uOrangeBall, mask);
-
-        // Create MaskSet for debugging
-        maskSets.add(new MaskSet("orangeBallsMask", mask));
-
-        // Apply blur for noise reduction
-        Imgproc.GaussianBlur(mask, frameBlur, new Size(7, 7), 0);
-
-        // Stores orange circles from the HoughCircles algorithm
-        // Get the orange ball from the frame
-        Imgproc.HoughCircles(frameBlur, frameBallsO, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, config.getLowerBallSize(), config.getUpperBallSize());
-
-        // Delete the orange ball pixels from the frame, to not disturb later detection for white balls
-        // TODO: Should be explored later if this is method should be used
-        Core.bitwise_not(frame, frame, mask);
+        //Get white balls from frame
+        Imgproc.HoughCircles(maskOrange, frameBallsO, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, config.getLowerBallSize(),
+                config.getUpperBallSize());
 
         // Add orange ball to list
         if (!frameBallsO.empty()) {
-            double[] center = frameBallsO.get(0, 0);
-            Point coords = new Point(center[0], center[1]);
-
-            balls.add(new Ball(coords, BallColor.ORANGE, BallPickupStrategy.FREE));
+            for (int i = 0; i < frameBallsO.width(); i++) {
+                double[] center = frameBallsO.get(0, i);
+                balls.add(new Ball(new Point(center[0], center[1]), BallColor.ORANGE, BallPickupStrategy.FREE));
+            }
         }
     }
 
