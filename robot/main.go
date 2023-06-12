@@ -387,6 +387,12 @@ func (s *motorServer) ReleaseOneBall(_ context.Context, in *pBuff.MultipleMotors
 		time.Sleep(250)
 	}
 
+	// Busy wait -> Return only when done running
+	for _, motor := range motors {
+		for util.IsRunning(motor) {
+		}
+	}
+
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
