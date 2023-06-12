@@ -111,7 +111,7 @@ public class BorderDetector implements SubDetector {
         // Get offset
         double offsetX = sortedCorners.get(0).x;
         double offsetY = sortedCorners.get(0).y;
-        cameraOffset = new Point(offsetX, offsetY);
+        this.cameraOffset = new Point(offsetX, offsetY);
 
         return new Border(sortedCorners.get(0), sortedCorners.get(1), sortedCorners.get(2), sortedCorners.get(3));
     }
@@ -175,29 +175,30 @@ public class BorderDetector implements SubDetector {
         double lengthLeft = Math.sqrt(Math.pow((leftFromFirst.x - firstPoint.x), 2) + Math.pow((leftFromFirst.y - firstPoint.y), 2));
 
         if (lengthRight > lengthLeft) {
-            this.cross.setMeasurePoint(new Point((firstPoint.x + leftFromFirst.x) / 2, (firstPoint.y + leftFromFirst.y) / 2));
+            cross.setMeasurePoint(new Point((firstPoint.x + leftFromFirst.x) / 2, (firstPoint.y + leftFromFirst.y) / 2));
         } else {
-            this.cross.setMeasurePoint(new Point((firstPoint.x + rightFromFirst.x) / 2, (firstPoint.y + rightFromFirst.y) / 2));
+            cross.setMeasurePoint(new Point((firstPoint.x + rightFromFirst.x) / 2, (firstPoint.y + rightFromFirst.y) / 2));
         }
 
         // Add middle coordinate to Cross object
         Point middlePoint = endPoints.get(6);
-        this.cross.setMiddle(new Point((firstPoint.x + middlePoint.x) / 2, (firstPoint.y + middlePoint.y) / 2));
+        cross.setMiddle(new Point((firstPoint.x + middlePoint.x) / 2, (firstPoint.y + middlePoint.y) / 2));
     }
 
     public Border getBorder() {
         return this.border;
     }
+    
     public Point getCameraOffset() {
         return this.cameraOffset;
+    }
+
+    public Cross getCross() {
+        return cross;
     }
 
     @Override
     public List<MaskSet> getMaskSets() {
         return this.maskSets;
-    }
-
-    public Cross getCross() {
-        return this.cross;
     }
 }

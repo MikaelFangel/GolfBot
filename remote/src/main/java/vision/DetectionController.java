@@ -1,11 +1,6 @@
 package vision;
 
-import courseObjects.Ball;
-import courseObjects.Border;
-import courseObjects.Course;
-import courseObjects.Cross;
-import courseObjects.Robot;
-import io.grpc.InternalGlobalInterceptors;
+import courseObjects.*;
 import nu.pattern.OpenCV;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
@@ -20,10 +15,10 @@ import vision.detection.RobotDetector;
 import vision.detection.SubDetector;
 import vision.helperClasses.MaskSet;
 
+import static vision.math.Geometry.distanceBetweenTwoPoints;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import static vision.math.Geometry.*;
 
 public class DetectionController {
     private final int refreshRate = 33; // Value for best FPS (ms)
@@ -47,6 +42,7 @@ public class DetectionController {
      * Start a setup process that requires the different objects to be present in the camera's view.
      * When the setup is over a background thread starts doing background detection.
      * To utilize the found objects, read them from the passed Course object.
+     *
      * @param course      The class that contains all the objects and information about the course during runtime.
      * @param cameraIndex The camera index of intended camera (computer specific).
      * @param showMasks   Only needed for debugging masks. If true, displays mask windows.
@@ -80,6 +76,7 @@ public class DetectionController {
 
     /**
      * Blocks the thread until all objects are found in the camera's view.
+     *
      * @param capture the video capture from which the frame should be read.
      */
     private void runDetectionSetup(VideoCapture capture) {
@@ -101,9 +98,7 @@ public class DetectionController {
 
             // Run sub detectors. To get objects in necessary order
             if (!borderFound) {
-                // Find corners and then warp frame
                 borderFound = this.borderDetector.detectBorder(this.frame);
-
                 if (!borderFound) continue;
 
                 System.out.println("Found Corners");
@@ -123,17 +118,10 @@ public class DetectionController {
                 System.out.println("Found least a ball");
             }
 
-            // Display frame in popup window AGAIN
-            showOverlay();
-            if (this.showMasks)
-                showMasks();
-            HighGui.waitKey(this.refreshRate);
-
             updateCourse();
 
             // Exit when all objects are found
-            System.out.println("Exiting Setup. Press enter to proceed");
-
+            System.out.println("Exiting Setup");
             break;
         }
     }
@@ -141,6 +129,7 @@ public class DetectionController {
     /**
      * Spawns a thread that will run in the background. This thread runs detections and updates the course when objects
      * are found. (E.g. when the robot moves)
+     *
      * @param capture the video capture from which the frame should be read.
      */
     private void startBackgroundDetection(VideoCapture capture) {
@@ -157,24 +146,23 @@ public class DetectionController {
      * The objects gets corrected using different algorithms (E.g. height correction).
      * Then the objects gets converted to real world units (cm) and updates the Course object.
      * The frames will get displayed.
+     *
      * @param capture the video capture from which the frame should be read.
      */
     private void detectCourse(VideoCapture capture) {
         // Grab frame
         capture.read(this.frame);
 
-        // Find corners and then warp frame
-        boolean cornersFound = this.borderDetector.detectBorder(this.frame);
-
-        if (cornersFound) {
-            this.frame = Algorithms.transformToRectangle(this.frame, borderDetector.getBorder());
-
-            // Then find corners from warped frame
-            this.borderDetector.detectBorder(this.frame);
-        }
-
+        // Run sub detectors. They store the objects
+        this.borderDetector.detectBorder(this.frame);
         this.robotDetector.detectRobot(this.frame);
         this.ballDetector.detectBalls(this.frame);
+
+        // TODO mark balls with category.
+        categorizeBallsPickupStrategy(
+                this.ballDetector.getBalls(),
+                this.borderDetector.getCross()
+        );
 
         updateCourse();
         correctCourseObjects();
@@ -186,6 +174,73 @@ public class DetectionController {
 
         // Open all window pop-ups
         HighGui.waitKey(this.refreshRate);
+    }
+
+    /**
+     * Categorized the picku strategy for each ball, depending on the closeness to the course corners and object
+     * provided in the arguments.
+     * @param balls The balls to be categorized
+     * @param cross The cross within the border.
+     */
+    private void categorizeBallsPickupStrategy(List<Ball> balls, Cross cross) {
+        Border border = this.borderDetector.getBorder();
+
+        if (border == null) return;
+
+        final double centimeterMargin = 5;
+
+        // Convert margin to pixels
+        final double pixelMarginX = centimeterMargin / conversionFactorX;
+        final double pixelMarginY = centimeterMargin / conversionFactorY;
+
+        // Get corners, TopLeft, TopRight, BottomLeft
+        Point[] corners = border.getCornersAsArray();
+        Point TL = corners[0], TR = corners[1], BL = corners[2];
+
+        for (Ball ball : balls) {
+            Point position = ball.getCenter();
+
+            // Close to Top Border
+            if (position.y <= TL.y + pixelMarginY) {
+                ball.setStrategy(BallPickupStrategy.BORDER);
+            }
+
+            // Close to Bottom Border
+            if (position.y >= BL.y - pixelMarginY) {
+                // If already in another border, up the strategy to corner.
+                if (ball.getStrategy() == BallPickupStrategy.BORDER)
+                    ball.setStrategy(BallPickupStrategy.CORNER);
+                else
+                    ball.setStrategy(BallPickupStrategy.BORDER);
+            }
+
+            // Close to Right Border
+            if (position.x >= TR.x - pixelMarginX) {
+                // If already in another border, up the strategy to corner.
+                if (ball.getStrategy() == BallPickupStrategy.BORDER)
+                    ball.setStrategy(BallPickupStrategy.CORNER);
+                else
+                    ball.setStrategy(BallPickupStrategy.BORDER);
+            }
+
+            // Close to Left Border
+            if (position.x <= TL.x + pixelMarginX) {
+                // If already in another border, up the strategy to corner.
+                if (ball.getStrategy() == BallPickupStrategy.BORDER)
+                    ball.setStrategy(BallPickupStrategy.CORNER);
+                else
+                    ball.setStrategy(BallPickupStrategy.BORDER);
+            }
+
+            // For the cross (Circle hit box) | (x - center.x)^2 + (y - center.y)^2 < radius^2
+            Point crossCenter = cross.getMiddle();
+            if (crossCenter != null) {
+                double radius = (cross.getLongestSide() / 2 + centimeterMargin) / conversionFactorX;
+
+                if (Math.pow(position.x - crossCenter.x, 2) + Math.pow(position.y - crossCenter.y , 2) < Math.pow(radius, 2))
+                    ball.setStrategy(BallPickupStrategy.CROSS);
+            }
+        }
     }
 
     /**
@@ -201,13 +256,16 @@ public class DetectionController {
             // Calculate conversion factors and get offset
             this.conversionFactorX = this.course.getWidth() / distanceBetweenTwoPoints(border.getTopLeft().x, border.getTopLeft().y,
                     border.getTopRight().x, border.getTopRight().y);
+
             this.conversionFactorY = this.course.getHeight() / distanceBetweenTwoPoints(border.getTopLeft().x, border.getTopLeft().y,
                     border.getBottomLeft().x, border.getBottomLeft().y);
+
             this.pixelOffset = this.borderDetector.getCameraOffset();
 
             updateCourseCorners();
             updateCourseRobot();
             updateCourseBalls();
+            updateCourseCross();
         }
     }
 
@@ -220,34 +278,31 @@ public class DetectionController {
         Point courseCenter = new Point(course.getWidth() / 2, course.getHeight() / 2);
 
         // Balls
-        List<Ball> balls = course.getBalls();
-        List<Ball> correctedBalls = new ArrayList<>();
+        List<Ball> courseBalls = course.getBalls();
 
-        for (Ball ball : balls) {
+        for (Ball courseBall : courseBalls) {
             Point correctedCenter = Algorithms.correctedCoordinatesOfObject(
-                    ball.getCenter(),
+                    courseBall.getCenter(),
                     courseCenter,
-                    ball.getRadius(),
+                    courseBall.getRadius(),
                     camHeight);
 
-            correctedBalls.add(new Ball(correctedCenter, ball.getColor()));
+            courseBall.setCenter(correctedCenter);
         }
-        course.setBalls(correctedBalls);
 
         // Robot
-        Robot robot = course.getRobot();
-        Point correctedFront = Algorithms.correctedCoordinatesOfObject(robot.getFront(),courseCenter,
-                robot.height, camHeight);
-        Point correctedCenter = Algorithms.correctedCoordinatesOfObject(robot.getCenter(),courseCenter,
-                robot.height, camHeight);
-        double correctedAngle = angleBetweenTwoPoints(correctedCenter.x, correctedCenter.y,
-                correctedFront.x, correctedFront.y);
+        Robot courseRobot = course.getRobot();
 
-        course.setRobot(new Robot(correctedCenter, correctedFront));
+        Point correctedFront = Algorithms.correctedCoordinatesOfObject(courseRobot.getFront(),courseCenter,
+                courseRobot.height, camHeight);
+        Point correctedCenter = Algorithms.correctedCoordinatesOfObject(courseRobot.getCenter(),courseCenter,
+                courseRobot.height, camHeight);
+
+        courseRobot.setFrontAndCenter(correctedCenter, correctedFront);
     }
 
     /**
-     * Updates the corner positions of Course object, in centimetres.
+     * Updates the Border in the Course object, in centimetres.
      */
     private void updateCourseCorners() {
         Point[] convertedCorners = this.borderDetector.getBorder().getCornersAsArray();
@@ -256,11 +311,13 @@ public class DetectionController {
         for (int i = 0; i < convertedCorners.length; i++)
             convertedCorners[i] = convertPixelPointToCmPoint(convertedCorners[i], this.pixelOffset);
 
-        // Update Course
-        Border border = new Border(convertedCorners[0], convertedCorners[1],
-                convertedCorners[2], convertedCorners[3]);
+        // Update Course Border
+        Border courseBorder = this.course.getBorder();
 
-        this.course.setBorder(border);
+        courseBorder.setTopLeft(convertedCorners[0]);
+        courseBorder.setTopRight(convertedCorners[1]);
+        courseBorder.setBottomLeft(convertedCorners[2]);
+        courseBorder.setBottomRight(convertedCorners[3]);
     }
 
     /**
@@ -273,8 +330,9 @@ public class DetectionController {
         Point correctedCenter = convertPixelPointToCmPoint(robot.getCenter(), this.pixelOffset);
         Point correctedFront = convertPixelPointToCmPoint(robot.getFront(), this.pixelOffset);
 
-        Robot correctedRobot = new Robot(correctedCenter, correctedFront);
-        this.course.setRobot(correctedRobot);
+        // Update Course Robot
+        Robot courseRobot = this.course.getRobot();
+        courseRobot.setFrontAndCenter(correctedCenter, correctedFront);
     }
 
     /**
@@ -282,22 +340,38 @@ public class DetectionController {
      */
     private void updateCourseBalls() {
         List<Ball> balls = this.ballDetector.getBalls();
-        List<Ball> correctedBalls = new ArrayList<>();
+
+        List<Ball> courseBalls = this.course.getBalls();
+        courseBalls.clear();
 
         // Convert position from pixel to cm
         for (Ball ball : balls) {
             Point correctedCenter = convertPixelPointToCmPoint(ball.getCenter(), this.pixelOffset);
+            Ball correctedBall = new Ball(correctedCenter, ball.getColor(), ball.getStrategy());
 
-            Ball correctedBall = new Ball(correctedCenter, ball.getColor());
-            correctedBalls.add(correctedBall);
+            // Update Course Balls
+            courseBalls.add(correctedBall);
         }
+    }
 
-        this.course.setBalls(correctedBalls);
+    /**
+     * Updates the Course's Cross object
+     */
+    private void updateCourseCross() {
+        Cross cross = this.borderDetector.getCross();
+        Cross courseCross = this.course.getCross();
+
+        // Update Course Cross
+        if (cross.getMiddle() != null && cross.getMeasurePoint() != null) {
+            courseCross.setMiddle(convertPixelPointToCmPoint(cross.getMiddle(), this.pixelOffset));
+            courseCross.setMeasurePoint(convertPixelPointToCmPoint(cross.getMeasurePoint(), this.pixelOffset));
+        }
     }
 
     /**
      * Converts Point from pixel units to centimetres and subtracts a pixel offset.
-     * @param point Point to be converted.
+     *
+     * @param point       Point to be converted.
      * @param pixelOffset The offset to be subtracted before the multiplication of the factor.
      * @return The new converted point in centimetres.
      */
@@ -344,6 +418,7 @@ public class DetectionController {
             if (measurePoint != null)
                 Imgproc.circle(overlayFrame, measurePoint, 2, crossColor, 3);
         }
+
         // Draw Robot Markers
         Robot robot = this.robotDetector.getRobot();
 

@@ -1,17 +1,24 @@
 package courseObjects;
 
 import org.opencv.core.Point;
-
-import java.awt.Color;
+import vision.BallPickupStrategy;
 
 public class Ball {
     private Point center;
     private BallColor color;
-    private final double radius = 4;
+    private BallPickupStrategy strategy;
+    private final double radius;
 
-    public Ball(Point center, BallColor color) {
+    public Ball(Point center, BallColor color, BallPickupStrategy strategy) {
+        this(); // Call default constructor
+
         this.center = center;
         this.color = color;
+        this.strategy = strategy;
+    }
+
+    public Ball(){
+        this.radius = 4; // CM
     }
 
     public BallColor getColor() {
@@ -30,7 +37,15 @@ public class Ball {
         this.center = center;
     }
 
+    public BallPickupStrategy getStrategy() {
+        return strategy;
+    }
+
+    public void setStrategy(BallPickupStrategy strategy) {
+        this.strategy = strategy;
+    }
+
     public double getRadius() {
-        return radius;
+        return this.radius;
     }
 }

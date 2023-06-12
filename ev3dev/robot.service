@@ -1,0 +1,10 @@
+[Unit]
+Description=gRPC server for the robot 
+
+[Service]
+User=root
+ExecStart=/home/robot/main
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

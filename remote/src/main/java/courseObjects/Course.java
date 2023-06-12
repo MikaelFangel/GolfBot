@@ -2,60 +2,64 @@ package courseObjects;
 
 import org.opencv.core.Point;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 /**
  * The course consists of (1) the dimensions of the course, (2) coordinates of the corners in centimeters,
  * (3) a list containing the balls located on the course to be picked up by the robot, and (4) the robot object
+ * <br/><br/>
+ * NB! All measurements are given in centimetres
  */
 public class Course {
-    private final double width = 169.0, height = 123.7; // Measured from the innermost sides
+    private final double width, height;
+    private final int resolutionWidth;
+    private final int resolutionHeight;
+
     private Point cameraPosition;
 
-    private final int resolutionWidth = 1024;
-    private final int ResolutionHeight = 768;
+    private final Border border = new Border();
+    private final List<Ball> balls = Collections.synchronizedList(new ArrayList<>());
+    private final Robot robot = new Robot();
+    private final Cross cross = new Cross();
 
-    private Border border;
-    private List<Ball> balls;
-    private Robot robot;
     private final double cameraHeight;
 
-    public Course(double cameraHeight){
+    public Course(double cameraHeight) {
         this.cameraHeight = cameraHeight;
+
+        // Measured from the innermost sides
+        this.width = 169.0;
+        this.height = 123.7;
+
+        this.resolutionWidth = 1024;
+        this.resolutionHeight = 768;
     }
 
     // Getters and setters
     public Border getBorder() {
-        return border;
+        return this.border;
     }
 
-    public void setBorder(Border border) {
-        this.border = border;
+    public List<Ball> getBalls() {
+        return this.balls;
     }
 
-    public synchronized List<Ball> getBalls() {
-        return balls;
+    public Robot getRobot() {
+        return this.robot;
     }
 
-    public synchronized void setBalls(List<Ball> balls) {
-        this.balls = Collections.synchronizedList(balls);
-    }
-
-    public synchronized Robot getRobot() {
-        return robot;
-    }
-
-    public synchronized void setRobot(Robot robot) {
-        this.robot = robot;
+    public Cross getCross() {
+        return this.cross;
     }
 
     public double getCameraHeight() {
-        return cameraHeight;
+        return this.cameraHeight;
     }
 
     public Point getCameraPosition() {
-        return cameraPosition;
+        return this.cameraPosition;
     }
 
     public void setCameraPosition(Point cameraPosition) {
@@ -63,15 +67,15 @@ public class Course {
     }
 
     public int getResolutionHeight() {
-        return ResolutionHeight;
+        return this.resolutionHeight;
     }
 
     public int getResolutionWidth() {
-        return resolutionWidth;
+        return this.resolutionWidth;
     }
 
     public double getHeight() {
-        return height;
+        return this.height;
     }
 
     public double getWidth() {

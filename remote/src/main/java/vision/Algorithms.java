@@ -108,6 +108,14 @@ public class Algorithms {
         newPoint.x = (Math.cos(Math.toRadians(angelToPointInDegree))*newDistance)+camera.x;
         newPoint.y = (Math.sin(Math.toRadians(angelToPointInDegree))*newDistance)+camera.y;
 
+        /*
+        if (camera.x >= originalCoords.x) newPoint.x = camera.x - newPoint.x;
+        else newPoint.x = camera.x + newPoint.x;
+
+        if (camera.y >= originalCoords.y) newPoint.y = camera.y - newPoint.y;
+        else newPoint.y = camera.y + newPoint.y;
+        */
+
         return newPoint;
     }
 
