@@ -118,7 +118,7 @@ public class DetectionController {
                 System.out.println("Found least a ball");
             }
 
-            //updateCourse();
+            updateCourse();
 
             // Exit when all objects are found
             System.out.println("Exiting Setup");
