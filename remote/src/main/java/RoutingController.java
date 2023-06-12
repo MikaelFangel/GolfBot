@@ -1,6 +1,7 @@
 import courseObjects.Course;
 import courseObjects.Cross;
 import org.opencv.core.Point;
+import vision.Algorithms;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ public class RoutingController {
     public RoutingController(Course course, String ip) {
         this.course = course;
         robotController = new RobotController(ip);
+        currentRoute = new Route();
     }
 
     /**
@@ -30,25 +32,26 @@ public class RoutingController {
         if (nextRoute == null) return;
 
         /*TODO: execute nextRoute*/
+        nextRoute.getDriveCommands();
 
     }
 
-    // Plan next route
+    // Plan next route from point to point
     public void planRoute(Point from, Point to) {
+
         //if (!fullRoute.isEmpty()) clearFullRoute();
+        int turns = 0;
 
-        Point mid = course.getCross().getMiddle();
-        if (distance(from.x, from.y, mid.x, mid.y) + distance(to.x, to.y, mid.x, mid.y) ==
-                distance(from.x, from.y, to.x, to.y)) {
-            // center of circle is obstructing path
+        if (lineIsIntersectingCircle(from, to, course.getCross().getMiddle(), course.getCross().getLongestSide()/2)) {
+            /*TODO: handle reroute*/
+            return;
         }
-
-        /*TODO: while balls: algorithm for planning next ball*/
-
+        currentRoute.setTurns(turns+1);
+        currentRoute.addDriveCommandToRoute(DriveCommand.ROTATE);
+        currentRoute.addDriveCommandToRoute(DriveCommand.DRIVE_STRAIGHT);
+        currentRoute.setEndingCommand(BallCommand.COLLECT);
 
         fullRoute.add(currentRoute);
-
-
 
         driveRoutes();
     }
