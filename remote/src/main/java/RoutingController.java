@@ -16,9 +16,9 @@ public class RoutingController {
 
     //
     public void planRoute(Point from, Point to) {
-        if ( /*TODO*/ ) {
+        //if ( /*TODO*/ ) {
 
-        }
+        //}
     }
 
     // Clear planned routes
