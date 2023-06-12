@@ -12,8 +12,8 @@ public class DetectionConfiguration {
     int upperBallSize = 10;
 
     // Robot (Blue)
-    final Scalar lowerRobotThreshold = new Scalar(100, 100, 0);
-    final Scalar upperRobotThreshold = new Scalar(255, 255, 20);
+    final Scalar lowerRobotThreshold = new Scalar(130, 90, 20);
+    final Scalar upperRobotThreshold = new Scalar(255, 200, 110);
     int lowerRobotSize = 350;
     int upperRobotSize = 1300;
 

@@ -69,9 +69,6 @@ public class RobotDetector implements SubDetector {
         List<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(mask, contours, frameDummy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        // Size of contours (number of pixels in cohesive area)
-
-
         // Get useful contour areas
         ArrayList<ContourSet> contourSets = new ArrayList<>();
         for (MatOfPoint contour : contours) {
