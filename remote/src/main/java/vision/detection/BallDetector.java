@@ -16,7 +16,7 @@ public class BallDetector implements SubDetector {
     private final int dp = 1; // Don't question or change
     private final int minDist = 5; // Minimum distance between balls
     private final int param1 = 25;  // gradient value used in the edge detection
-    private final int param2 = 10;  // lower values allow more circles to be detected (false positives)
+    private final int param2 = 8;  // lower values allow more circles to be detected (false positives)
 
     private List<Ball> balls = new ArrayList<>();
     List<MaskSet> maskSets = new ArrayList<>();
@@ -62,7 +62,7 @@ public class BallDetector implements SubDetector {
      */
     private void findWhiteBalls(Mat frame, List<Ball> balls) {
         // Apply blur for better noise reduction
-        Imgproc.GaussianBlur(frame, frameBlur, new Size(5, 5), 0);
+        Imgproc.GaussianBlur(frame, frameBlur, new Size(9, 9), 0);
 
         // Create mask
         Core.inRange(frameBlur, config.getLowerBallThreshold(), config.getUpperBallThreshold(), mask);
