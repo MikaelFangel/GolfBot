@@ -11,12 +11,13 @@ public class RoutingController {
     private Route currentRoute;
     private RobotController robotController;
 
-    // Drive next planned route
 
-    public RoutingController(Course course) {
+    public RoutingController(Course course, String ip) {
         this.course = course;
+        robotController = new RobotController(ip);
     }
-    //
+
+    // Drive next planned route
     public void driveRoutes () {
         if (fullRoute.isEmpty()) return;
         Route nextRoute = fullRoute.iterator().next();
@@ -63,6 +64,6 @@ public class RoutingController {
 
     // Stop ongoing route
     public void stopCurrentRoute() {
-
+        robotController.stopMotors();
     }
 }
