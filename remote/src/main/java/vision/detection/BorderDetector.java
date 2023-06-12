@@ -78,7 +78,8 @@ public class BorderDetector implements SubDetector {
             if (i == innerBorderIndex && numOfEndPoints == 4) { // The boundary of inner border
                 innerBorderEndPoints = approx;
             } else { // Obstacles with same color as border
-                if (numOfEndPoints == 12) { // Objects with 12 end points, e.g. a cross
+                double crossContourSize = Imgproc.contourArea(contours.get(i));
+                if (numOfEndPoints == 12 && crossContourSize >= 800 && crossContourSize <= 2000) { // Objects with 12 end points, e.g. a cross
                     crossFound = true;
                     endPointList.add(approx);
                 }
