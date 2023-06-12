@@ -3,7 +3,6 @@ package vision.detection;
 import courseObjects.Robot;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
-import vision.DetectionConfiguration;
 import vision.helperClasses.ContourSet;
 import vision.helperClasses.MaskSet;
 

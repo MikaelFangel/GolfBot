@@ -1,4 +1,4 @@
-package vision;
+package vision.detection;
 
 import org.opencv.core.Scalar;
 
@@ -12,8 +12,8 @@ public class DetectionConfiguration {
     int upperBallSize = 10;
 
     // Robot (Blue)
-    final Scalar lowerRobotThreshold = new Scalar(130, 90, 20);
-    final Scalar upperRobotThreshold = new Scalar(255, 200, 110);
+    final Scalar lowerRobotThreshold = new Scalar(150, 90, 20);
+    final Scalar upperRobotThreshold = new Scalar(230, 155, 100);
     int lowerRobotSize = 350;
     int upperRobotSize = 1300;
 

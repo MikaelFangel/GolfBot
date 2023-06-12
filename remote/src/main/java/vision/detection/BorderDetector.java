@@ -4,7 +4,6 @@ import courseObjects.Border;
 import courseObjects.Cross;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
-import vision.DetectionConfiguration;
 import vision.helperClasses.MaskSet;
 
 import java.util.ArrayList;

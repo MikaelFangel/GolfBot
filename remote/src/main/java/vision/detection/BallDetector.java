@@ -6,7 +6,6 @@ import org.opencv.core.*;
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 import vision.BallPickupStrategy;
-import vision.DetectionConfiguration;
 import vision.helperClasses.MaskSet;
 
 import java.util.ArrayList;
