@@ -9,21 +9,33 @@ public class RoutingController {
     private final Course course;
     private final List<Route> fullRoute = new ArrayList<>();
     private Route currentRoute;
+    private RobotController robotController;
 
+    // Drive next planned route
 
     public RoutingController(Course course) {
         this.course = course;
     }
     //
     public void driveRoutes () {
+        if (fullRoute.isEmpty()) return;
+        Route nextRoute = fullRoute.iterator().next();
+        if (nextRoute == null) return;
+        fullRoute.remove(nextRoute);
+        /*TODO: execute nextRoute*/
 
     }
 
-    //
-    public void planRoute(Point from, Point to) {
-        //if ( /*TODO*/ ) {
+    // Plan next route
+    public void planRoute(Point curr, Point next) {
+        if (!fullRoute.isEmpty()) clearFullRoute();
+        Route nextRoute = fullRoute.iterator().next();
+        /*TODO: algorithm for planning next ball*/
 
-        //}
+
+
+
+        driveRoutes();
     }
 
     /**
