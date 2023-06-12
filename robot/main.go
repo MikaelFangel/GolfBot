@@ -283,7 +283,7 @@ func setPowerInDrive(distance int, power int, powerFactor int) int {
 		power *= -1
 	}
 
-	if math.Abs(float64(distance)) > 12 {
+	if math.Abs(float64(distance)) > 15 {
 		power *= powerFactor
 	}
 

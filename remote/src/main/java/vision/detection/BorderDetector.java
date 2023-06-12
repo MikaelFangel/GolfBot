@@ -76,6 +76,7 @@ public class BorderDetector implements SubDetector {
             int numOfEndPoints = approx.toArray().length;
 
             if (i == innerBorderIndex && numOfEndPoints == 4) { // The boundary of inner border
+                System.out.println(Arrays.toString(approx.toArray()));
                 innerBorderEndPoints = approx;
             } else { // Obstacles with same color as border
                 if (numOfEndPoints == 12) { // Objects with 12 end points, e.g. a cross
@@ -125,8 +126,8 @@ public class BorderDetector implements SubDetector {
      */
     private List<MatOfPoint> getRedContours(Mat frame) {
         // Remove everything from frame except border (which is red)
-        Scalar lower = new Scalar(0, 0, 160); // Little red
-        Scalar upper = new Scalar(100, 100, 255); // More red
+        Scalar lower = new Scalar(0, 0, 150); // Little red
+        Scalar upper = new Scalar(120, 130, 255); // More red
 
         // Blur frame to smooth out color inconsistencies
         Imgproc.GaussianBlur(

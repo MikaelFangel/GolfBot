@@ -94,7 +94,7 @@ public class Main {
             controller.collectRelease(true);
             controller.driveWGyro(course, closestBall.getCenter());
             controller.stopCollectRelease();
-            Thread.sleep(100);
+            Thread.sleep(300);
         }
     }
 }
