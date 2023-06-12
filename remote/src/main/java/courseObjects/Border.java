@@ -1,35 +1,57 @@
 package courseObjects;
 
 import org.opencv.core.Point;
-public class Border {
-    public double height = 7; // In cm
-    final private Point topLeft, topRight, bottomLeft, bottomRight;
 
+public class Border {
+    public double height;
+    private Point topLeft, topRight, bottomLeft, bottomRight;
 
     public Border(Point topLeft, Point topRight, Point bottomLeft, Point bottomRight) {
+        this(); // Call default constructor
+
         this.topLeft = topLeft;
         this.topRight = topRight;
         this.bottomLeft = bottomLeft;
         this.bottomRight = bottomRight;
     }
 
-    public Point getBottomRight() {
+    public Border() {
+        this.height = 7; // CM
+    }
+
+    public synchronized Point getBottomRight() {
         return bottomRight;
     }
 
-    public Point getBottomLeft() {
+    public synchronized void setBottomRight(Point bottomRight) {
+        this.bottomRight = bottomRight;
+    }
+
+    public synchronized Point getBottomLeft() {
         return bottomLeft;
     }
 
-    public Point getTopRight() {
+    public synchronized void setBottomLeft(Point bottomLeft) {
+        this.bottomLeft = bottomLeft;
+    }
+
+    public synchronized Point getTopRight() {
         return topRight;
     }
 
-    public Point getTopLeft() {
+    public synchronized void setTopRight(Point topRight) {
+        this.topRight = topRight;
+    }
+
+    public synchronized Point getTopLeft() {
         return topLeft;
     }
 
-    public Point[] getCornersAsArray() {
-        return new Point[] {topLeft, topRight, bottomLeft, bottomRight};
+    public synchronized void setTopLeft(Point topLeft) {
+        this.topLeft = topLeft;
+    }
+
+    public synchronized Point[] getCornersAsArray() {
+        return new Point[]{topLeft, topRight, bottomLeft, bottomRight};
     }
 }
