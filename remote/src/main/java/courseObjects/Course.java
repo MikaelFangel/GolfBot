@@ -2,6 +2,7 @@ package courseObjects;
 
 import org.opencv.core.Point;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -17,7 +18,7 @@ public class Course {
     private final int resolutionHeight = 768;
 
     private Border border;
-    private List<Ball> balls;
+    private List<Ball> balls = Collections.synchronizedList(new ArrayList<>());
     private Robot robot;
     private final double cameraHeight;
 
@@ -30,24 +31,12 @@ public class Course {
         return this.border;
     }
 
-    public void setBorder(Border border) {
-        this.border = border;
-    }
-
-    public synchronized List<Ball> getBalls() {
+    public List<Ball> getBalls() {
         return this.balls;
     }
 
-    public synchronized void setBalls(List<Ball> balls) {
-        this.balls = Collections.synchronizedList(balls);
-    }
-
-    public synchronized Robot getRobot() {
+    public Robot getRobot() {
         return this.robot;
-    }
-
-    public synchronized void setRobot(Robot robot) {
-        this.robot = robot;
     }
 
     public double getCameraHeight() {

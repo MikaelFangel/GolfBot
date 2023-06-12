@@ -277,32 +277,32 @@ public class DetectionController {
         Point courseCenter = new Point(course.getWidth() / 2, course.getHeight() / 2);
 
         // Balls
-        List<Ball> balls = course.getBalls();
-        List<Ball> correctedBalls = new ArrayList<>();
+        List<Ball> courseBalls = course.getBalls();
 
-        for (Ball ball : balls) {
+
+        for (Ball courseBall : courseBalls) {
             Point correctedCenter = Algorithms.correctedCoordinatesOfObject(
-                    ball.getCenter(),
+                    courseBall.getCenter(),
                     courseCenter,
-                    ball.getRadius(),
+                    courseBall.getRadius(),
                     camHeight);
 
-            correctedBalls.add(new Ball(correctedCenter, ball.getColor(), ball.getStrategy()));
+            courseBall.setCenter(correctedCenter);
         }
-        course.setBalls(correctedBalls);
 
         // Robot
-        Robot robot = course.getRobot();
-        Point correctedFront = Algorithms.correctedCoordinatesOfObject(robot.getFront(),courseCenter,
-                robot.height, camHeight);
-        Point correctedCenter = Algorithms.correctedCoordinatesOfObject(robot.getCenter(),courseCenter,
-                robot.height, camHeight);
+        Robot courseRobot = course.getRobot();
 
-        course.setRobot(new Robot(correctedCenter, correctedFront));
+        Point correctedFront = Algorithms.correctedCoordinatesOfObject(courseRobot.getFront(),courseCenter,
+                courseRobot.height, camHeight);
+        Point correctedCenter = Algorithms.correctedCoordinatesOfObject(courseRobot.getCenter(),courseCenter,
+                courseRobot.height, camHeight);
+
+        courseRobot.setFrontAndCenter(correctedCenter, correctedFront);
     }
 
     /**
-     * Updates the corner positions of Course object, in centimetres.
+     * Updates the Border in the Course object, in centimetres.
      */
     private void updateCourseCorners() {
         Point[] convertedCorners = this.borderDetector.getBorder().getCornersAsArray();
@@ -311,11 +311,12 @@ public class DetectionController {
         for (int i = 0; i < convertedCorners.length; i++)
             convertedCorners[i] = convertPixelPointToCmPoint(convertedCorners[i], this.pixelOffset);
 
-        // Update Course
-        Border border = new Border(convertedCorners[0], convertedCorners[1],
-                convertedCorners[2], convertedCorners[3]);
-
-        this.course.setBorder(border);
+        // Update Course Border
+        Border courseBorder = this.course.getBorder();
+        courseBorder.setTopLeft(convertedCorners[0]);
+        courseBorder.setTopRight(convertedCorners[1]);
+        courseBorder.setBottomLeft(convertedCorners[2]);
+        courseBorder.setBottomRight(convertedCorners[3]);
     }
 
     /**
@@ -329,7 +330,10 @@ public class DetectionController {
         Point correctedFront = convertPixelPointToCmPoint(robot.getFront(), this.pixelOffset);
 
         Robot correctedRobot = new Robot(correctedCenter, correctedFront);
-        this.course.setRobot(correctedRobot);
+
+        // Update Course Robot
+        Robot courseRobot = this.course.getRobot();
+        courseRobot.setFrontAndCenter(correctedCenter, correctedFront);
     }
 
     /**
@@ -337,17 +341,18 @@ public class DetectionController {
      */
     private void updateCourseBalls() {
         List<Ball> balls = this.ballDetector.getBalls();
-        List<Ball> correctedBalls = new ArrayList<>();
+
+        List<Ball> courseBalls = this.course.getBalls();
+        courseBalls.clear();
 
         // Convert position from pixel to cm
         for (Ball ball : balls) {
             Point correctedCenter = convertPixelPointToCmPoint(ball.getCenter(), this.pixelOffset);
-
             Ball correctedBall = new Ball(correctedCenter, ball.getColor(), ball.getStrategy());
-            correctedBalls.add(correctedBall);
-        }
 
-        this.course.setBalls(correctedBalls);
+            // Update Course Balls
+            courseBalls.add(correctedBall);
+        }
     }
 
     /**

@@ -14,27 +14,25 @@ public class Robot {
         this.angle = Geometry.angleBetweenTwoPoints(center.x, center.y, front.x, front.y);
     }
 
-    public void setCenter(Point center) {
-        this.center = center;
-    }
-
-    public Point getCenter() {
+    public synchronized Point getCenter() {
         return center;
     }
 
-    public void setFront(Point front) {
+    public synchronized void setFrontAndCenter(Point center, Point front) {
         this.front = front;
+        this.center = center;
+        this.angle = Geometry.angleBetweenTwoPoints(center.x, center.y, front.x, front.y);
     }
 
-    public Point getFront() {
+    public synchronized Point getFront() {
         return front;
     }
 
-    public void setAngle(double angle) {
+    public synchronized void setAngle(double angle) {
         this.angle = angle;
     }
 
-    public double getAngle() {
+    public synchronized double getAngle() {
         return angle;
     }
 }
