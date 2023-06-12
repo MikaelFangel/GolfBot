@@ -85,7 +85,7 @@ public class BorderDetector implements SubDetector {
 
             } else if (numOfEndPoints == 12) { // The cross
                 // Only proceed if cross is of correct size
-                if (contourSize >= 800 && contourSize <= 2000) {
+                if (contourSize >= 800 && contourSize <= 4000) {
                     crossFound = true;
                     endPointList.add(approx);
                 }
