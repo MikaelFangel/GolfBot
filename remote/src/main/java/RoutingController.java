@@ -28,7 +28,7 @@ public class RoutingController {
     }
 
     // Plan next route
-    public void planRoute(Point curr, Point next) {
+    public void planRoute(Point from, Point to) {
         if (!fullRoute.isEmpty()) clearFullRoute();
         Route nextRoute = fullRoute.iterator().next();
         /*TODO: algorithm for planning next ball*/
