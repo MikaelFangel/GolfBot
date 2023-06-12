@@ -15,8 +15,8 @@ public class BallDetector implements SubDetector {
     // HoughCircles parameters. These configurations works okay with the current course setup (Most likely pixel values)
     private final int dp = 1; // Don't question or change
     private final int minDist = 5; // Minimum distance between balls
-    private final int param1 = 20;  // gradient value used in the edge detection
-    private final int param2 = 12;  // lower values allow more circles to be detected (false positives)
+    private final int param1 = 10;  // gradient value used in the edge detection
+    private final int param2 = 13;  // lower values allow more circles to be detected (false positives)
 
     private List<Ball> balls = new ArrayList<>();
     List<MaskSet> maskSets = new ArrayList<>();
@@ -71,7 +71,7 @@ public class BallDetector implements SubDetector {
         maskSets.add(new MaskSet("whiteBalls Mask", mask));
 
         // Apply blur for better noise reduction
-        Imgproc.GaussianBlur(mask, frameBlur, new Size(7, 7), 0);
+        Imgproc.GaussianBlur(mask, frameBlur, new Size(13, 13), 0);
 
         // Get white balls from frame
         Imgproc.HoughCircles(frameBlur, frameBallsW, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, config.getLowerBallSize(),

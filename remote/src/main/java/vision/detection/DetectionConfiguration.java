@@ -6,10 +6,10 @@ public class DetectionConfiguration {
     private static DetectionConfiguration single_instance = null;
 
     // Balls
-    double lowerBallThreshold = 205;
+    double lowerBallThreshold = 200;
     double upperBallThreshold = 255;
     int lowerBallSize = 3;
-    int upperBallSize = 10;
+    int upperBallSize = 7;
 
     // Robot (Blue)
     final Scalar lowerRobotThreshold = new Scalar(150, 90, 20);
