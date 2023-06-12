@@ -1,6 +1,7 @@
 import exceptions.MissingArgumentException;
 import courseObjects.*;
 import vision.Algorithms;
+import vision.DetectionConfiguration;
 import vision.DetectionController;
 
 public class Main {
@@ -16,6 +17,8 @@ public class Main {
 
         Course course = new Course(cameraHeight);
         DetectionController detectionController = new DetectionController(course, cameraIndex, true);
+
+        DetectionConfiguration.DetectionConfiguration();
 
         while (true) {
 

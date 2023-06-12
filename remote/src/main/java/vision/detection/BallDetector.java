@@ -6,6 +6,7 @@ import org.opencv.core.*;
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 import vision.BallPickupStrategy;
+import vision.DetectionConfiguration;
 import vision.helperClasses.MaskSet;
 
 import java.util.ArrayList;
@@ -17,8 +18,6 @@ public class BallDetector implements SubDetector {
     private final int minDist = 5; // Minimum distance between balls
     private final int param1 = 20;  // gradient value used in the edge detection
     private final int param2 = 12;  // lower values allow more circles to be detected (false positives)
-    private final int minBallRadius = 3;  // limits the smallest circle to this size (via radius) on camera feed
-    private final int maxBallRadius = 10;  // similarly sets the limit for the largest circles on camera feed
 
     private List<Ball> balls = new ArrayList<>();
     List<MaskSet> maskSets = new ArrayList<>();
@@ -26,6 +25,8 @@ public class BallDetector implements SubDetector {
     // Initialize all OpenCV objects once to not have memory leaks
     private Mat frameGray, frameBlur, mask, frameBallsW, frameBallsO, frameHSV;
     private boolean initial = true;
+
+    private final DetectionConfiguration config = DetectionConfiguration.DetectionConfiguration();
 
     /**
      * Detects the balls on the frame
@@ -64,12 +65,8 @@ public class BallDetector implements SubDetector {
         // Apply gray frame for detecting white balls
         Imgproc.cvtColor(frame, frameGray, Imgproc.COLOR_BGR2GRAY);
 
-        // White balls grey scale threshold (0-255)
-        final int lWhiteBall = 205;
-        final int uWhiteBall = 255;
-
         // Apply a binary threshold mask to separate out all colors than white.
-        Imgproc.threshold(frameGray, mask, lWhiteBall, uWhiteBall, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(frameGray, mask, config.getLowerBallThreshold(), config.getUpperBallThreshold(), Imgproc.THRESH_BINARY);
 
         // Create mask set for debugging
         maskSets.add(new MaskSet("whiteBalls Mask", mask));
@@ -78,8 +75,8 @@ public class BallDetector implements SubDetector {
         Imgproc.GaussianBlur(mask, frameBlur, new Size(7, 7), 0);
 
         // Get white balls from frame
-        Imgproc.HoughCircles(frameBlur, frameBallsW, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, minBallRadius,
-                maxBallRadius); // Approximate circles on the frame. Middle coordinates is stored in first row
+        Imgproc.HoughCircles(frameBlur, frameBallsW, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, config.getLowerBallSize(),
+                config.getUpperBallSize()); // Approximate circles on the frame. Middle coordinates is stored in first row
 
         // Add balls to array
         if (!frameBallsW.empty()) {
@@ -115,7 +112,7 @@ public class BallDetector implements SubDetector {
 
         // Stores orange circles from the HoughCircles algorithm
         // Get the orange ball from the frame
-        Imgproc.HoughCircles(frameBlur, frameBallsO, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, minBallRadius, maxBallRadius);
+        Imgproc.HoughCircles(frameBlur, frameBallsO, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, config.getLowerBallSize(), config.getUpperBallSize());
 
         // Delete the orange ball pixels from the frame, to not disturb later detection for white balls
         // TODO: Should be explored later if this is method should be used

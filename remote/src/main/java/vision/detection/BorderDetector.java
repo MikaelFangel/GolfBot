@@ -4,6 +4,7 @@ import courseObjects.Border;
 import courseObjects.Cross;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
+import vision.DetectionConfiguration;
 import vision.helperClasses.MaskSet;
 
 import java.util.ArrayList;
@@ -21,6 +22,8 @@ public class BorderDetector implements SubDetector {
     MatOfPoint2f innerBorderEndPoints;
     MatOfPoint2f approx;
     private boolean initial = true;
+
+    private final DetectionConfiguration config = DetectionConfiguration.DetectionConfiguration();
 
     /**
      * Detects the border from the frame and stores the objects in its own objects.
@@ -124,10 +127,6 @@ public class BorderDetector implements SubDetector {
      * @return The red contours of the frame, one for each red 'object'.
      */
     private List<MatOfPoint> getRedContours(Mat frame) {
-        // Remove everything from frame except border (which is red)
-        Scalar lower = new Scalar(0, 0, 160); // Little red
-        Scalar upper = new Scalar(100, 100, 255); // More red
-
         // Blur frame to smooth out color inconsistencies
         Imgproc.GaussianBlur(
                 frame,
@@ -140,7 +139,7 @@ public class BorderDetector implements SubDetector {
         );
 
         // Create a mask to filter in next step
-        Core.inRange(this.frameBlur, lower, upper, this.mask); // Filter all red colors from frame to mask
+        Core.inRange(this.frameBlur, config.getLowerObstacleThreshold(), config.getUpperObstacleThreshold(), this.mask); // Filter all red colors from frame to mask
 
         // Add mask for debugging
         this.maskSets.add(new MaskSet("border", this.mask));
