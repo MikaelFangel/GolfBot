@@ -50,14 +50,14 @@ func main() {
 }
 
 // DriveWGyro Rotates the robot given a speed using the gyro. This function has the side effect that it recalibrates the gyro.
-func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
+func (s *motorServer) DriveWGyro(stream pBuff.Motors_DriveWGyroServer) error {
 	// PID constant, how much we want to correct errors of each term
 	kp := 0.5
 	ki := 0.25
 	kd := 0.1
 
 	// Begin stream from client
-	driveRequest, err := in.Recv()
+	driveRequest, err := stream.Recv()
 	if err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
 		// "P term", how much we want to change the motors' power in proportion with the error
 		// "I term", the running sum of errors to correct for
 		// "D term", trying to predict next error
-		turn := (kp * gyroErr) + (ki * integral) + (kd * derivative)
+		correction := (kp * gyroErr) + (ki * integral) + (kd * derivative)
 
 		power := setPowerInDrive(distance, -int(driveRequest.Speed), 2)
 
@@ -117,9 +117,9 @@ func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
 			motor.SetRampDownSetpoint(3 * time.Second)
 			switch request.GetMotorPort() {
 			case pBuff.OutPort_A:
-				motor.SetSpeedSetpoint(power + int(turn))
+				motor.SetSpeedSetpoint(power + int(correction))
 			case pBuff.OutPort_D:
-				motor.SetSpeedSetpoint(power - int(turn))
+				motor.SetSpeedSetpoint(power - int(correction))
 			default:
 				return err
 			}
@@ -139,17 +139,17 @@ func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
 			return err
 		}
 
-		message, err := in.Recv()
+		driveRequest, err := stream.Recv()
 		if err != nil {
 			break
 		}
-		distance = int(message.Distance)
+		distance = int(driveRequest.Distance)
 	}
 
 	stopAllMotors(motorRequests)
 
 	// Stop streaming connection
-	err = in.SendAndClose(&pBuff.StatusReply{ReplyMessage: true})
+	err = stream.SendAndClose(&pBuff.StatusReply{ReplyMessage: true})
 	if err != nil {
 		return err
 	}
@@ -189,7 +189,7 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 		direction = -1.0
 	}
 
-	// Set the default PID values
+	// Set the default PD values
 	kp := 0.125
 	kd := 0.5
 
