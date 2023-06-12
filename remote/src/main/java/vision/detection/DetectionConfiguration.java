@@ -21,7 +21,7 @@ public class DetectionConfiguration {
 
     // Obstacles (Red)
     Scalar lowerObstacleThreshold = new Scalar(0, 0, 160);
-    Scalar upperObstacleThreshold = new Scalar(100, 100, 255);
+    Scalar upperObstacleThreshold = new Scalar(130, 50, 255);
 
     private DetectionConfiguration() {
 
