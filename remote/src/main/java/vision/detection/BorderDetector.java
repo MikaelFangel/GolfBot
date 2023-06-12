@@ -82,12 +82,15 @@ public class BorderDetector implements SubDetector {
 
             if (i == innerBorderIndex && numOfEndPoints == 4) { // The border
                 // Only proceed if border is of correct size
-                if (contourSize >= 100000)
+                if (contourSize >= config.getLowerBorderSize())
                     innerBorderEndPoints = approx;
+
+                // hello there
+                // hello.there
 
             } else if (numOfEndPoints == 12) { // The cross
                 // Only proceed if cross is of correct size
-                if (contourSize >= 800 && contourSize <= 4000) {
+                if (contourSize >= config.getLowerCrossSize() && contourSize <= config.getUpperCrossSize()) {
                     crossFound = true;
                     endPointList.add(approx);
                 }

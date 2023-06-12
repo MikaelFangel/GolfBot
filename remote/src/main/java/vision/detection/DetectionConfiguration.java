@@ -6,22 +6,25 @@ public class DetectionConfiguration {
     private static DetectionConfiguration single_instance = null;
 
     // Balls
-    final Scalar lowerWhiteBallThreshold = new Scalar(180, 180, 180);
-    final Scalar upperWhiteBallThreshold = new Scalar(255, 255, 255);
-    final Scalar lowerOrangeBallThreshold = new Scalar(0, 100, 220);
-    final Scalar upperOrangeBallThreshold = new Scalar(170, 255, 255);
-    int lowerBallSize = 2;
-    int upperBallSize = 8;
+    private Scalar lowerWhiteBallThreshold = new Scalar(180, 180, 180);
+    private Scalar upperWhiteBallThreshold = new Scalar(255, 255, 255);
+    private Scalar lowerOrangeBallThreshold = new Scalar(0, 100, 220);
+    private Scalar upperOrangeBallThreshold = new Scalar(170, 255, 255);
+    private int lowerBallSize = 2;
+    private int upperBallSize = 8;
 
     // Robot (Blue)
-    final Scalar lowerRobotThreshold = new Scalar(150, 90, 20);
-    final Scalar upperRobotThreshold = new Scalar(230, 155, 100);
-    int lowerRobotSize = 350;
-    int upperRobotSize = 1300;
+    private Scalar lowerRobotThreshold = new Scalar(150, 90, 20);
+    private Scalar upperRobotThreshold = new Scalar(230, 155, 100);
+    private int lowerRobotSize = 350;
+    private int upperRobotSize = 1300;
 
     // Obstacles (Red)
-    Scalar lowerObstacleThreshold = new Scalar(0, 0, 160);
-    Scalar upperObstacleThreshold = new Scalar(130, 50, 255);
+    private Scalar lowerObstacleThreshold = new Scalar(0, 0, 160);
+    private Scalar upperObstacleThreshold = new Scalar(130, 50, 255);
+    private double lowerBorderSize = 100000;
+    private double lowerCrossSize = 800;
+    private double upperCrossSize = 4000;
 
     private DetectionConfiguration() {
 
@@ -84,5 +87,17 @@ public class DetectionConfiguration {
 
     public Scalar getUpperObstacleThreshold() {
         return upperObstacleThreshold;
+    }
+
+    public double getLowerBorderSize() {
+        return lowerBorderSize;
+    }
+
+    public double getLowerCrossSize() {
+        return lowerCrossSize;
+    }
+
+    public double getUpperCrossSize() {
+        return upperCrossSize;
     }
 }
