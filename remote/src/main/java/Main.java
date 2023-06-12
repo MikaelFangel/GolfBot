@@ -16,7 +16,7 @@ public class Main {
         RobotController controller = new RobotController(args[0]); // Args[0] being and IP address
 
         Course course = new Course(cameraHeight);
-        DetectionController detectionController = new DetectionController(course, cameraIndex, true);
+        DetectionController detectionController = new DetectionController(course, cameraIndex, false);
 
         DetectionConfiguration.DetectionConfiguration();
 
