@@ -189,6 +189,13 @@ public class RobotController {
         CLIENT.collectRelease(motorRequests);
     }
 
+    public void collectCornerBalls() throws InterruptedException {
+        releaseOneBall();
+        collectRelease(true);
+        Thread.sleep(1000);
+        stopCollectRelease();
+    }
+
     public void releaseOneBall() {
         int speed = 1200;
         MultipleMotors motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, speed), new MotorPair(OutPort.C, speed));
