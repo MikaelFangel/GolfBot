@@ -2,12 +2,16 @@ import courseObjects.Course;
 import courseObjects.Cross;
 import org.opencv.core.Point;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
+
+import static java.awt.geom.Point2D.distance;
 
 public class RoutingController {
     private final Course course;
-    private final List<Route> fullRoute = new ArrayList<>();
+    private final Queue<Route> fullRoute = new ArrayDeque<>();
     private Route currentRoute;
     private RobotController robotController;
 
@@ -17,22 +21,32 @@ public class RoutingController {
         robotController = new RobotController(ip);
     }
 
-    // Drive next planned route
+    /**
+     * This method executes all planned routes in sequence
+     */
     public void driveRoutes () {
         if (fullRoute.isEmpty()) return;
-        Route nextRoute = fullRoute.iterator().next();
+        Route nextRoute = fullRoute.poll();
         if (nextRoute == null) return;
-        fullRoute.remove(nextRoute);
+
         /*TODO: execute nextRoute*/
 
     }
 
     // Plan next route
     public void planRoute(Point from, Point to) {
-        if (!fullRoute.isEmpty()) clearFullRoute();
-        Route nextRoute = fullRoute.iterator().next();
-        /*TODO: algorithm for planning next ball*/
+        //if (!fullRoute.isEmpty()) clearFullRoute();
 
+        Point mid = course.getCross().getMiddle();
+        if (distance(from.x, from.y, mid.x, mid.y) + distance(to.x, to.y, mid.x, mid.y) ==
+                distance(from.x, from.y, to.x, to.y)) {
+            // center of circle is obstructing path
+        }
+
+        /*TODO: while balls: algorithm for planning next ball*/
+
+
+        fullRoute.add(currentRoute);
 
 
 
