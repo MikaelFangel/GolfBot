@@ -7,12 +7,18 @@ public class Ball {
     private Point center;
     private BallColor color;
     private BallPickupStrategy strategy;
-    private final double radius = 4; // CM
+    private final double radius;
 
     public Ball(Point center, BallColor color, BallPickupStrategy strategy) {
+        this(); // Call default constructor
+
         this.center = center;
         this.color = color;
         this.strategy = strategy;
+    }
+
+    public Ball(){
+        this.radius = 4; // CM
     }
 
     public BallColor getColor() {
@@ -38,6 +44,7 @@ public class Ball {
     public void setStrategy(BallPickupStrategy strategy) {
         this.strategy = strategy;
     }
+
     public double getRadius() {
         return this.radius;
     }
