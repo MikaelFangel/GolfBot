@@ -13,6 +13,8 @@ public class Border {
         this.bottomRight = bottomRight;
     }
 
+    public Border(){};
+
     public synchronized Point getBottomRight() {
         return bottomRight;
     }

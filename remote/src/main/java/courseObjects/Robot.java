@@ -13,6 +13,8 @@ public class Robot {
         this.front = front;
         this.angle = Geometry.angleBetweenTwoPoints(center.x, center.y, front.x, front.y);
     }
+    
+    public Robot(){};
 
     public synchronized Point getCenter() {
         return center;

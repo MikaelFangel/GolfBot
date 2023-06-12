@@ -17,9 +17,10 @@ public class Course {
     private final int resolutionWidth = 1024;
     private final int resolutionHeight = 768;
 
-    private Border border;
-    private List<Ball> balls = Collections.synchronizedList(new ArrayList<>());
-    private Robot robot;
+    private final Border border = new Border();
+    private final List<Ball> balls = Collections.synchronizedList(new ArrayList<>());
+    private final Robot robot = new Robot();
+    private final Cross cross = new Cross();
     private final double cameraHeight;
 
     public Course(double cameraHeight){
@@ -37,6 +38,10 @@ public class Course {
 
     public Robot getRobot() {
         return this.robot;
+    }
+
+    public Cross getCross() {
+        return this.cross;
     }
 
     public double getCameraHeight() {

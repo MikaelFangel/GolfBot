@@ -15,6 +15,8 @@ public class Ball {
         this.strategy = strategy;
     }
 
+    public Ball(){};
+
     public BallColor getColor() {
         return color;
     }
