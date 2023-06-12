@@ -15,8 +15,8 @@ public class BallDetector implements SubDetector {
     // HoughCircles parameters. These configurations works okay with the current course setup (Most likely pixel values)
     private final int dp = 1; // Don't question or change
     private final int minDist = 5; // Minimum distance between balls
-    private final int param1 = 10;  // gradient value used in the edge detection
-    private final int param2 = 13;  // lower values allow more circles to be detected (false positives)
+    private final int param1 = 25;  // gradient value used in the edge detection
+    private final int param2 = 10;  // lower values allow more circles to be detected (false positives)
 
     private List<Ball> balls = new ArrayList<>();
     List<MaskSet> maskSets = new ArrayList<>();
@@ -61,21 +61,16 @@ public class BallDetector implements SubDetector {
      * @param balls list that gets updated with newly added balls
      */
     private void findWhiteBalls(Mat frame, List<Ball> balls) {
-        // Apply gray frame for detecting white balls
-        Imgproc.cvtColor(frame, frameGray, Imgproc.COLOR_BGR2GRAY);
-
-        // Apply a binary threshold mask to separate out all colors than white.
-        Imgproc.threshold(frameGray, mask, config.getLowerBallThreshold(), config.getUpperBallThreshold(), Imgproc.THRESH_BINARY);
-
-        // Create mask set for debugging
-        maskSets.add(new MaskSet("whiteBalls Mask", mask));
-
         // Apply blur for better noise reduction
-        Imgproc.GaussianBlur(mask, frameBlur, new Size(13, 13), 0);
+        Imgproc.GaussianBlur(frame, frameBlur, new Size(5, 5), 0);
 
-        // Get white balls from frame
-        Imgproc.HoughCircles(frameBlur, frameBallsW, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, config.getLowerBallSize(),
-                config.getUpperBallSize()); // Approximate circles on the frame. Middle coordinates is stored in first row
+        // Create mask
+        Core.inRange(frameBlur, config.getLowerBallThreshold(), config.getUpperBallThreshold(), mask);
+        maskSets.add(new MaskSet("Whiteball Mask", mask.clone()));
+
+        //Get white balls from frame
+        Imgproc.HoughCircles(mask, frameBallsW, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, config.getLowerBallSize(),
+            config.getUpperBallSize());
 
         // Add balls to array
         if (!frameBallsW.empty()) {
