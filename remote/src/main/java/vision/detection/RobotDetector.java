@@ -71,8 +71,8 @@ public class RobotDetector implements SubDetector {
         Imgproc.findContours(mask, contours, frameDummy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
 
         // Size of contours (number of pixels in cohesive area)
-        final int areaLowerThreshold = 200;
-        final int areaUpperThreshold = 1500;
+        final int areaLowerThreshold = 300;
+        final int areaUpperThreshold = 2600;
 
         // Get useful contour areas
         ArrayList<ContourSet> contourSets = new ArrayList<>();

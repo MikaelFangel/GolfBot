@@ -64,7 +64,7 @@ public class BallDetector implements SubDetector {
         Imgproc.cvtColor(frame, frameGray, Imgproc.COLOR_BGR2GRAY);
 
         // White balls grey scale threshold (0-255)
-        final int lWhiteBall = 205;
+        final int lWhiteBall = 200;
         final int uWhiteBall = 255;
 
         // Apply a binary threshold mask to separate out all colors than white.

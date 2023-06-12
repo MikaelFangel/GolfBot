@@ -1,6 +1,4 @@
-import courseObjects.Ball;
 import courseObjects.Course;
-import courseObjects.Robot;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
@@ -11,7 +9,6 @@ import proto.*;
 import vision.Algorithms;
 
 import java.util.ArrayList;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class RobotController {
@@ -183,8 +180,7 @@ public class RobotController {
             // Just used the greatest speed
             int motorSpeed = -1200;
             motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, motorSpeed), new MotorPair(OutPort.C, motorSpeed));
-        }
-        else {
+        } else {
             /* If the front motor is slow, the balls will hit each other and will thereby deviate from expected course.
              * This is because they won't be able to leave the space between the motors before the next ball is
              * released from storage
