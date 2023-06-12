@@ -5,6 +5,7 @@ import courseObjects.BallColor;
 import org.opencv.core.*;
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
+import vision.BallPickupStrategy;
 import vision.helperClasses.MaskSet;
 
 import java.util.ArrayList;
@@ -84,7 +85,7 @@ public class BallDetector implements SubDetector {
         if (!frameBallsW.empty()) {
             for (int i = 0; i < frameBallsW.width(); i++) {
                 double[] center = frameBallsW.get(0, i);
-                balls.add(new Ball(new Point(center[0], center[1]), BallColor.WHITE));
+                balls.add(new Ball(new Point(center[0], center[1]), BallColor.WHITE, BallPickupStrategy.FREE));
             }
         }
     }
@@ -125,7 +126,7 @@ public class BallDetector implements SubDetector {
             double[] center = frameBallsO.get(0, 0);
             Point coords = new Point(center[0], center[1]);
 
-            balls.add(new Ball(coords, BallColor.ORANGE));
+            balls.add(new Ball(coords, BallColor.ORANGE, BallPickupStrategy.FREE));
         }
     }
 
