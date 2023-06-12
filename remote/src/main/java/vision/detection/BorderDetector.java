@@ -80,7 +80,7 @@ public class BorderDetector implements SubDetector {
 
             if (i == innerBorderIndex && numOfEndPoints == 4) { // The border
                 // Only proceed if border is of correct size
-                if (contourSize >= 100000 && contourSize <= 350000)
+                if (contourSize >= 100000)
                     innerBorderEndPoints = approx;
 
             } else if (numOfEndPoints == 12) { // The cross
