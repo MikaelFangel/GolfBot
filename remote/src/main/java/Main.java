@@ -10,12 +10,12 @@ public class Main {
         }
 
         int cameraIndex = Integer.parseInt(args[1]);
-        double cameraHeight = 168.2;  // in cm TODO make into arg at some point
+        double cameraHeight = 192;  // in cm TODO make into arg at some point
 
         RobotController controller = new RobotController(args[0]); // Args[0] being and IP address
 
         Course course = new Course(cameraHeight);
-        new DetectionController(course, cameraIndex, true);
+        new DetectionController(course, cameraIndex, false);
 
         //collectBallRoutine(controller, course);
         //controller.collectRelease(false);
@@ -26,7 +26,7 @@ public class Main {
         System.out.println("Done");
     }
 
-    public static void driveRoutine(RobotController controller, Course course) {
+    public static void rotateRoutine(RobotController controller, Course course) {
         Ball closestBall;
 
         // Check if there is balls left
