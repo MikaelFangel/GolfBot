@@ -6,18 +6,17 @@ import vision.detection.DetectionConfiguration;
 import vision.DetectionController;
 
 public class Main {
-    public static void main(String[] args) throws InterruptedException, MissingArgumentException {
-        if (args.length < 2) {
-            throw new MissingArgumentException("Please provide an IP and port number (e.g 192.168.1.12:50051) and camera index");
+    public static void main(String[] args) throws MissingArgumentException {
+        if (args.length < 1) {
+            throw new MissingArgumentException("Please provide a camera index");
         }
 
-        int cameraIndex = Integer.parseInt(args[1]);
-        double cameraHeight = 168.2;  // in cm TODO make into arg at some point
+        int cameraIndex = Integer.parseInt(args[0]);
 
-        RobotController controller = new RobotController(args[0]); // Args[0] being and IP address
+        RobotController controller = new RobotController();
 
-        Course course = new Course(cameraHeight);
-        DetectionController detectionController = new DetectionController(course, cameraIndex, true);
+        Course course = new Course();
+        new DetectionController(course, cameraIndex, true); // Runs in the background
 
         DetectionConfiguration.DetectionConfiguration();
 

@@ -8,6 +8,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import proto.*;
+import configs.GlobalConfig;
 import vision.Algorithms;
 
 import java.util.ArrayList;
@@ -21,11 +22,12 @@ public class RobotController {
 
     /**
      * Initializes channel and client to connect with the robot.
-     *
-     * @param ip_port the ip and port of the robot on the subnet. e.g. 192.168.1.12:50051
      */
-    public RobotController(String ip_port) {
-        this.CHANNEL = Grpc.newChannelBuilder(ip_port, InsecureChannelCredentials.create()).build();
+    public RobotController() {
+        this.CHANNEL = Grpc.newChannelBuilder(
+                GlobalConfig.getConfigProperties().getProperty("ipPort"),
+                InsecureChannelCredentials.create()
+            ).build();
         this.CLIENT = MotorsGrpc.newBlockingStub(CHANNEL);
         this.ASYNCCLIENT = MotorsGrpc.newStub(CHANNEL);
 

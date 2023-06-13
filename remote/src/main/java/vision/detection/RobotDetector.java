@@ -15,11 +15,15 @@ public class RobotDetector implements SubDetector {
     private Robot robot;
     List<MaskSet> maskSets = new ArrayList<>();
 
-    private final int numberOfMarkers = 2;
+    private final int NUMBER_OF_MARKERS;
 
     // Initialize all OpenCV objects once to not have memory leaks
     Mat frameBlur, mask, frameDummy;
     private boolean initial = true;
+
+    public RobotDetector() {
+        this.NUMBER_OF_MARKERS = 2;
+    }
 
     private final DetectionConfiguration config = DetectionConfiguration.DetectionConfiguration();
 
@@ -78,7 +82,7 @@ public class RobotDetector implements SubDetector {
         }
 
         // Exit if there are less than two coordinates
-        if (contourSets.size() < numberOfMarkers) return null;
+        if (contourSets.size() < this.NUMBER_OF_MARKERS) return null;
 
         // ! Find coords of markers !
         double[] bigMarkerCoords = new double[2], smallMarkerCoords = new double[2];
@@ -87,7 +91,7 @@ public class RobotDetector implements SubDetector {
         contourSets.sort(Comparator.comparingDouble(ContourSet::getArea));
         Collections.reverse(contourSets);
 
-        for (int i = 0; i < numberOfMarkers; i++) { // Loop through 2 biggest contours
+        for (int i = 0; i < this.NUMBER_OF_MARKERS; i++) { // Loop through 2 biggest contours
             MatOfPoint contour = contourSets.get(i).getContour();
 
             // Get bounding rectangle
@@ -107,7 +111,7 @@ public class RobotDetector implements SubDetector {
         }
 
         // Convert to Point[]
-        Point[] coords = new Point[numberOfMarkers];
+        Point[] coords = new Point[this.NUMBER_OF_MARKERS];
         coords[0] = new Point(bigMarkerCoords);
         coords[1] = new Point(smallMarkerCoords);
 

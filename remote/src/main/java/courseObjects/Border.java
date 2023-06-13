@@ -17,7 +17,7 @@ public class Border {
     }
 
     public Border() {
-        this.height = 7; // CM
+        this.height = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("borderHeight"));
     }
 
     public synchronized Point getBottomRight() {

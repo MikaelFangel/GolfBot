@@ -1,7 +1,5 @@
 package courseObjects;
 
-import org.opencv.core.Point;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -17,8 +15,6 @@ public class Course {
     private final int resolutionWidth;
     private final int resolutionHeight;
 
-    private Point cameraPosition;
-
     private final Border border = new Border();
     private final List<Ball> balls = Collections.synchronizedList(new ArrayList<>());
     private final Robot robot = new Robot();
@@ -26,15 +22,15 @@ public class Course {
 
     private final double cameraHeight;
 
-    public Course(double cameraHeight) {
-        this.cameraHeight = cameraHeight;
+    public Course() {
+        this.cameraHeight = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("camHeight"));
 
         // Measured from the innermost sides
-        this.width = 169.0;
-        this.height = 123.7;
+        this.width = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("courseWidth"));
+        this.height = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("courseHeight"));
 
-        this.resolutionWidth = 1024;
-        this.resolutionHeight = 768;
+        this.resolutionWidth = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("camResolutionWidth"));
+        this.resolutionHeight = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("camResolutionHeight"));
     }
 
     // Getters and setters
@@ -56,14 +52,6 @@ public class Course {
 
     public double getCameraHeight() {
         return this.cameraHeight;
-    }
-
-    public Point getCameraPosition() {
-        return this.cameraPosition;
-    }
-
-    public void setCameraPosition(Point cameraPosition) {
-        this.cameraPosition = cameraPosition;
     }
 
     public int getResolutionHeight() {
