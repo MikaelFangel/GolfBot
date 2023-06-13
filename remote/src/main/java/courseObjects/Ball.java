@@ -18,7 +18,7 @@ public class Ball {
     }
 
     public Ball(){
-        this.radius = 4; // CM
+        this.radius = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("ballRadius")); // CM
     }
 
     public BallColor getColor() {
