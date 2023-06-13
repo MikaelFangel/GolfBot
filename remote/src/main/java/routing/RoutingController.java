@@ -1,16 +1,10 @@
+package routing;
+
 import courseObjects.Course;
-import courseObjects.Cross;
 import org.opencv.core.Point;
-import vision.Algorithms;
-import vision.math.Geometry;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Queue;
-
-import static java.awt.geom.Point2D.distance;
-import static vision.math.Geometry.lineIsIntersectingCircle;
 
 public class RoutingController {
     private final Course course;

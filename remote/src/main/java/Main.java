@@ -1,5 +1,6 @@
 import exceptions.MissingArgumentException;
 import courseObjects.*;
+import routing.RobotController;
 import vision.Algorithms;
 import vision.DetectionController;
 
