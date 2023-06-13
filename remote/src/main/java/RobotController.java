@@ -23,8 +23,7 @@ public class RobotController {
      */
     public RobotController() {
         this.CHANNEL = Grpc.newChannelBuilder(
-                // The ip and port of the robot on the subnet. e.g. 192.168.1.12:50051
-                GlobalConfig.getConfigProperties().getProperty("ipPort", "192.168.1.12:50051"),
+                GlobalConfig.getConfigProperties().getProperty("ipPort"),
                 InsecureChannelCredentials.create()
             ).build();
         this.CLIENT = MotorsGrpc.newBlockingStub(CHANNEL);
