@@ -208,11 +208,8 @@ func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff
 	gyro, _ := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
 	gyroVal, _ := util.GetGyroValue(gyro)
 
-	MaxIterations := 20
-	i := 0
-
 	// Run until the input degrees match the gyro value.
-	for math.Abs(gyroVal) != math.Abs(float64(in.Degrees)) && (i < MaxIterations) {
+	for math.Abs(gyroVal) != math.Abs(float64(in.Degrees)) {
 		gyroVal, _ = util.GetGyroValue(gyro)
 		target = gyroVal - float64(in.Degrees)
 
@@ -251,7 +248,6 @@ func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff
 		for _, motorRequest := range motorRequests {
 			motorRequest.motor.Command(run)
 		}
-		i++
 	}
 
 	stopAllMotors(motorRequests)
