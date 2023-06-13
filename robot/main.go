@@ -351,6 +351,11 @@ func stopAllMotors(motorRequests []motorRequest) {
 	for _, motorRequest := range motorRequests {
 		motorRequest.motor.Command(stop)
 	}
+
+	// Reset the motors
+	for _, motorRequest := range motorRequests {
+		motorRequest.motor.Command(reset)
+	}
 }
 
 func (s *motorServer) ReleaseOneBall(_ context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
@@ -386,6 +391,9 @@ func (s *motorServer) ReleaseOneBall(_ context.Context, in *pBuff.MultipleMotors
 		motor.Command(absPos)
 		time.Sleep(250)
 	}
+
+	// Sleep long enough to let the motors run to absolute position sat above
+	time.Sleep(80 * time.Millisecond)
 
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }

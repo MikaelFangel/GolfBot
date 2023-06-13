@@ -1,3 +1,5 @@
+package routing;
+
 import courseObjects.Ball;
 import courseObjects.Course;
 import io.grpc.Grpc;
@@ -9,14 +11,13 @@ import proto.*;
 import vision.Algorithms;
 
 import java.util.ArrayList;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class RobotController {
     private final ManagedChannel CHANNEL;
     private final MotorsGrpc.MotorsBlockingStub CLIENT;
     private final MotorsGrpc.MotorsStub ASYNCCLIENT;
-    private final int MAX_ITERATIONS = 20;
+    private final int MAX_ITERATIONS;
 
     /**
      * Initializes channel and client to connect with the robot.
@@ -24,9 +25,11 @@ public class RobotController {
      * @param ip_port the ip and port of the robot on the subnet. e.g. 192.168.1.12:50051
      */
     public RobotController(String ip_port) {
-        CHANNEL = Grpc.newChannelBuilder(ip_port, InsecureChannelCredentials.create()).build();
-        CLIENT = MotorsGrpc.newBlockingStub(CHANNEL);
-        ASYNCCLIENT = MotorsGrpc.newStub(CHANNEL);
+        this.CHANNEL = Grpc.newChannelBuilder(ip_port, InsecureChannelCredentials.create()).build();
+        this.CLIENT = MotorsGrpc.newBlockingStub(CHANNEL);
+        this.ASYNCCLIENT = MotorsGrpc.newStub(CHANNEL);
+
+        this.MAX_ITERATIONS = 20;
     }
 
     /**
@@ -189,6 +192,18 @@ public class RobotController {
         CLIENT.collectRelease(motorRequests);
     }
 
+    /**
+     * Collect balls located in the corners by shooting the corner ball with another ball and collect balls returning
+     * @throws InterruptedException Can happen when sleeping
+     * TODO! Move to Routine class to made yet
+     */
+    public void collectCornerBalls() throws InterruptedException {
+        releaseOneBall();
+        collectRelease(true);
+        Thread.sleep(2000); // Can be adjusted. How long we collect
+        stopCollectRelease();
+    }
+
     public void releaseOneBall() {
         int speed = 1200;
         MultipleMotors motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, speed), new MotorPair(OutPort.C, speed));
@@ -202,7 +217,13 @@ public class RobotController {
     public void stopCollectRelease() {
         int motorSpeed = 0;
         MultipleMotors motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, motorSpeed), new MotorPair(OutPort.C, motorSpeed));
-        CLIENT.stopMotors(motorRequests);
+        try {
+            StatusReply reply = CLIENT.stopMotors(motorRequests);
+            if (!reply.getReplyMessage())
+                System.out.println("An error occurred");
+        } catch (RuntimeException e) {
+            System.err.println(e.getMessage());
+        }
     }
 
     /**

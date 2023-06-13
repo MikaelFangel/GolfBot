@@ -1,16 +1,10 @@
+package routing;
+
 import courseObjects.Course;
-import courseObjects.Cross;
 import org.opencv.core.Point;
-import vision.Algorithms;
-import vision.math.Geometry;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Queue;
-
-import static java.awt.geom.Point2D.distance;
-import static vision.math.Geometry.lineIsIntersectingCircle;
 
 public class RoutingController {
     private final Course course;
@@ -39,17 +33,16 @@ public class RoutingController {
 
 
     }
-    int turns = 0;
+
     /**
      * Plans next sequence of route from point to point
      */
-    public void planRoute(Point from, Point to, boolean isBall) {
+    public void planRoute(Point from, Point to) {
 
-        currentRoute.setTurns(turns+1);
-        currentRoute.addDriveCommandToRoute(DriveCommand.ROTATE);
-
-        if (isBall) {
-            currentRoute.setEndingCommand(BallCommand.COLLECT);
+        if (currentRoute.getTurns() > 0) {
+            currentRoute.addDriveCommandToRoute(DriveCommand.ROTATE);
+        }
+        if (currentRoute.getEndingCommand() != null) {
             fullRoute.add(currentRoute);
             currentRoute.getDriveCommands().clear();
             return;
