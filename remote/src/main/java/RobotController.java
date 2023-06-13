@@ -214,7 +214,13 @@ public class RobotController {
     public void stopCollectRelease() {
         int motorSpeed = 0;
         MultipleMotors motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, motorSpeed), new MotorPair(OutPort.C, motorSpeed));
-        CLIENT.stopMotors(motorRequests);
+        try {
+            StatusReply reply = CLIENT.stopCollectRelease(motorRequests);
+            if (!reply.getReplyMessage())
+                System.out.println("An error occurred");
+        } catch (RuntimeException e) {
+            System.err.println(e.getMessage());
+        }
     }
 
     /**
