@@ -37,13 +37,12 @@ public class RoutingController {
     /**
      * Plans next sequence of route from point to point
      */
-    public void planRoute(Point from, Point to, boolean isBall) {
+    public void planRoute(Point from, Point to) {
 
         currentRoute.setTurns(turns+1);
         currentRoute.addDriveCommandToRoute(DriveCommand.ROTATE);
 
-        if (isBall) {
-            currentRoute.setEndingCommand(BallCommand.COLLECT);
+        if (currentRoute.getEndingCommand() != null) {
             fullRoute.add(currentRoute);
             currentRoute.getDriveCommands().clear();
             return;
