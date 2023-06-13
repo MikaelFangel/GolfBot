@@ -358,9 +358,7 @@ func stopAllMotors(motorRequests []motorRequest) {
 			fmt.Println(request.motor)
 			request.motor.Command(stop)
 		}
-		fmt.Println("NEXT MOTOR")
 	}
-	fmt.Println("ALL STOPPED")
 }
 
 func (s *motorServer) ReleaseOneBall(_ context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
