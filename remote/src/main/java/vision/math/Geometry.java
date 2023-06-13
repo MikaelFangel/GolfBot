@@ -1,5 +1,7 @@
 package vision.math;
 
+import org.opencv.core.Point;
+
 public class Geometry {
     public static double distanceBetweenTwoPoints(double x1, double y1, double x2, double y2) {
         return Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2));
@@ -40,5 +42,23 @@ public class Geometry {
                 (heightObject*Math.sin(Math.toRadians(smallTriangleGroundAngel))) / Math.sin(Math.toRadians(angelHeight));
 
         return distanceToCamera - smallTriangleLength;
+    }
+
+    /**
+     * This method checks whether a given line calculated from two points is intersecting a circle.
+     * @param from the starting point of the line
+     * @param to the ending point of the line
+     * @param circleCenter the center point of the circle (eg. course.getCross().getMiddle())
+     * @param circleRadius the radius of the circle to check if intersecting  (eg. course.getLongestSide() / 2)
+     * @return true if the line is intersecting with the circle
+     */
+    public static boolean lineIsIntersectingCircle(Point from, Point to, Point circleCenter, double circleRadius) {
+        // Calculate the line between two points
+        double a = (from.y - to.y) / (from.x - to.x);
+        double b = from.y - a * from.x;
+
+        // Calculate the distance from the center of the circle
+        double dist = Math.abs(a*circleCenter.x + b - circleCenter.y) / Math.sqrt(Math.pow(a, 2) + 1);
+        return dist < circleRadius;
     }
 }
