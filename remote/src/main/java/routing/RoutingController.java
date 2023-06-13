@@ -5,15 +5,21 @@ import courseObjects.Course;
 import org.jetbrains.annotations.NotNull;
 import org.opencv.core.Point;
 import vision.BallPickupStrategy;
+import vision.Algorithms;
 
 import java.util.ArrayDeque;
+import java.util.List;
 import java.util.Queue;
+
+import static routing.DriveCommand.DRIVE_STRAIGHT;
+import static routing.DriveCommand.ROTATE;
 
 public class RoutingController {
     private final Course course;
     private final Queue<Route> fullRoute = new ArrayDeque<>();
     private Route nextRoute;
-    private RobotController robotController;
+    private Route currentRoute;
+    private final RobotController robotController;
 
 
     public RoutingController(Course course, String ip) {
@@ -27,13 +33,11 @@ public class RoutingController {
      */
     public void driveRoutes () {
         if (fullRoute.isEmpty()) return;
-        Route currentRoute = fullRoute.poll();
+        currentRoute = fullRoute.poll();
         if (currentRoute == null) return;
 
-        /*TODO: execute currentRoute*/
-
         for (int i = 0; i < currentRoute.getDriveCommands().size(); i++) {
-            currentRoute.getDriveCommands().get(i);
+            handleCommand(currentRoute.getDriveCommands().get(i), DRIVE_STRAIGHT.getNextPoint());
         }
     }
 
@@ -42,15 +46,29 @@ public class RoutingController {
      */
     public void planRoute(Point from, Point to) {
 
-        if (nextRoute.getTurns() > 0) {
-            nextRoute.addDriveCommandToRoute(DriveCommand.ROTATE);
-        }
+        nextRoute.addDriveCommandToRoute(ROTATE);
+
         if (nextRoute.getEndingCommand() != null) {
             fullRoute.add(nextRoute);
             nextRoute.getDriveCommands().clear();
             return;
         }
-        nextRoute.addDriveCommandToRoute(DriveCommand.DRIVE_STRAIGHT);
+        nextRoute.addDriveCommandToRoute(DRIVE_STRAIGHT);
+    }
+
+    public void handleCommand (DriveCommand driveCommand, Point nextPoint) {
+        switch (driveCommand) {
+            case DRIVE_STRAIGHT :
+                robotController.recalibrateGyro();
+                robotController.driveWGyro(course);
+                break;
+            case ROTATE :
+                double angle = Algorithms.findShortestAngleToPoint(course.getRobot(), nextPoint);
+                robotController.recalibrateGyro();
+                robotController.rotateWGyro(-angle);
+                break;
+            default : break;
+        }
     }
 
     // Clear planned routes
