@@ -18,9 +18,9 @@ public class Robot {
 
     public Robot() {
         // Measurements are in CM
-        this.length = 16.0;
-        this.width = 17.0;
-        this.height = 20.0;
+        this.length = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("robotLength"));
+        this.width = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("robotWidth"));
+        this.height = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("robotHeight"));
     }
 
     ;
