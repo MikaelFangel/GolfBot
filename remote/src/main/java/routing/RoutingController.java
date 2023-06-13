@@ -1,7 +1,10 @@
 package routing;
 
+import courseObjects.Ball;
 import courseObjects.Course;
+import org.jetbrains.annotations.NotNull;
 import org.opencv.core.Point;
+import vision.BallPickupStrategy;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
@@ -58,5 +61,16 @@ public class RoutingController {
     // Stop ongoing route
     public void stopCurrentRoute() {
         robotController.stopMotors();
+    }
+
+    private Point projectPoint(@NotNull final Ball ball, final double distance) {
+        BallPickupStrategy strategy = ball.getStrategy();
+        Point projectedPoint;
+        switch (strategy) {
+            case FREE -> projectedPoint = ball.getCenter();
+            default -> projectedPoint = ball.getCenter();
+        }
+
+        return projectedPoint;
     }
 }
