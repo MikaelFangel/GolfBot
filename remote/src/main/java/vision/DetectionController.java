@@ -59,9 +59,7 @@ public class DetectionController {
         VideoCapture capture = new VideoCapture();
         capture.open(cameraIndex);
 
-        // Set capture resolution
-        capture.set(Videoio.CAP_PROP_FRAME_WIDTH, course.getResolutionWidth());
-        capture.set(Videoio.CAP_PROP_FRAME_HEIGHT, course.getResolutionHeight());
+        setCaptureProperties(capture);
 
         if (!capture.isOpened()) throw new RuntimeException("Camera Capture was not opened");
 
@@ -73,6 +71,25 @@ public class DetectionController {
         runDetectionSetup(capture);
 
         startBackgroundDetection(capture);
+    }
+
+    /**
+     * Sets the properties of the capture.
+     * @param capture to be changed.
+     */
+    private void setCaptureProperties(VideoCapture capture) {
+        // Resolution
+        capture.set(Videoio.CAP_PROP_FRAME_WIDTH, course.getResolutionWidth());
+        capture.set(Videoio.CAP_PROP_FRAME_HEIGHT, course.getResolutionHeight());
+
+        // Focus
+        capture.set(Videoio.CAP_PROP_AUTOFOCUS, 0);
+        capture.set(Videoio.CAP_PROP_FOCUS, 0);
+
+        // Brightness, Contrast and Saturation
+        capture.set(Videoio.CAP_PROP_BRIGHTNESS, 90);
+        capture.set(Videoio.CAP_PROP_SATURATION, 180);
+        capture.set(Videoio.CAP_PROP_CONTRAST, 80);
     }
 
     /**
