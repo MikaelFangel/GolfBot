@@ -14,7 +14,7 @@ import java.util.List;
 public class BallDetector implements SubDetector {
     // HoughCircles parameters. These configurations works okay with the current course setup (Most likely pixel values)
     private final int dp = 1; // Don't question or change
-    private final int minDist = 7; // Minimum distance between balls
+    private final int minDist = 8; // Minimum distance between balls
     private final int param1 = 30;  // gradient value used in the edge detection
     private final int param2 = 10;  // lower values allow more circles to be detected (false positives)
 
@@ -47,7 +47,7 @@ public class BallDetector implements SubDetector {
         balls = new ArrayList<>();
 
         // Apply blur for better noise reduction
-        Imgproc.GaussianBlur(frame, frameBlur, new Size(7, 7), 0);
+        Imgproc.GaussianBlur(frame, frameBlur, new Size(11, 11), 0);
 
         findWhiteBalls(balls);
         findOrangeBalls(balls);

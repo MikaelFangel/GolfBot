@@ -8,8 +8,8 @@ public class DetectionConfiguration {
     // Balls
     private Scalar lowerWhiteBallThreshold = new Scalar(105, 105, 105);
     private Scalar upperWhiteBallThreshold = new Scalar(230, 230, 230);
-    private Scalar lowerOrangeBallThreshold = new Scalar(0, 110, 220);
-    private Scalar upperOrangeBallThreshold = new Scalar(170, 255, 255);
+    private Scalar lowerOrangeBallThreshold = new Scalar(0, 40, 130);
+    private Scalar upperOrangeBallThreshold = new Scalar(20, 170, 255);
     private int lowerBallSize = 6;
     private int upperBallSize = 15;
 
@@ -20,8 +20,8 @@ public class DetectionConfiguration {
     private int upperRobotSize = 5000;
 
     // Obstacles (Red)
-    private Scalar lowerObstacleThreshold = new Scalar(0, 0, 120);
-    private Scalar upperObstacleThreshold = new Scalar(30, 60, 255);
+    private Scalar lowerObstacleThreshold = new Scalar(0, 0, 100);
+    private Scalar upperObstacleThreshold = new Scalar(5, 5, 255);
     private double lowerBorderSize = 100000;
     private double lowerCrossSize = 800;
     private double upperCrossSize = 4000;

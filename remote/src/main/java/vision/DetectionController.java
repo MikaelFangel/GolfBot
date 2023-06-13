@@ -72,6 +72,10 @@ public class DetectionController {
         startBackgroundDetection(capture);
     }
 
+    /**
+     * Sets the properties of the capture.
+     * @param capture to be changed.
+     */
     private void setCaptureProperties(VideoCapture capture) {
         // Resolution
         capture.set(Videoio.CAP_PROP_FRAME_WIDTH, course.getResolutionWidth());
@@ -82,7 +86,7 @@ public class DetectionController {
         capture.set(Videoio.CAP_PROP_FOCUS, 0);
 
         // Brightness, Contrast and Saturation
-        capture.set(Videoio.CAP_PROP_BRIGHTNESS, 100);
+        capture.set(Videoio.CAP_PROP_BRIGHTNESS, 90);
         capture.set(Videoio.CAP_PROP_SATURATION, 180);
         capture.set(Videoio.CAP_PROP_CONTRAST, 80);
     }
