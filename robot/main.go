@@ -351,6 +351,16 @@ func stopAllMotors(motorRequests []motorRequest) {
 	for _, motorRequest := range motorRequests {
 		motorRequest.motor.Command(stop)
 	}
+
+	// Busy wait -> Return only when done running
+	for _, request := range motorRequests {
+		for util.IsRunning(request.motor) {
+			fmt.Println(request.motor)
+			request.motor.Command(stop)
+		}
+		fmt.Println("NEXT MOTOR")
+	}
+	fmt.Println("ALL STOPPED")
 }
 
 func (s *motorServer) ReleaseOneBall(_ context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
