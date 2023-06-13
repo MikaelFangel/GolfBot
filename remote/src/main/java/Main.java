@@ -1,6 +1,7 @@
 import exceptions.MissingArgumentException;
 import courseObjects.*;
 import vision.Algorithms;
+import vision.detection.DetectionConfiguration;
 import vision.DetectionController;
 
 public class Main {
@@ -15,7 +16,9 @@ public class Main {
         RobotController controller = new RobotController(args[0]); // Args[0] being and IP address
 
         Course course = new Course(cameraHeight);
-        DetectionController detectionController = new DetectionController(course, cameraIndex, false);
+        DetectionController detectionController = new DetectionController(course, cameraIndex, true);
+
+        DetectionConfiguration.DetectionConfiguration();
 
         while (true) {
 
