@@ -19,6 +19,7 @@ import static math.Geometry.distanceBetweenTwoPoints;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 public class DetectionController {
     private final int refreshRate = 33; // Value for best FPS (ms)
@@ -197,50 +198,57 @@ public class DetectionController {
         Point[] corners = border.getCornersAsArray();
         Point TL = corners[0], TR = corners[1], BL = corners[2];
 
-        for (Ball ball : balls) {
+        balls.forEach(ball -> {
             Point position = ball.getCenter();
 
-            // Close to Top Border
-            if (position.y <= TL.y + pixelMarginY) {
-                ball.setStrategy(BallPickupStrategy.BORDER);
+            //order: top, Bottom, Right, Left
+            boolean[] closeTo = new boolean[4];
+
+            if (position.y <= TL.y + pixelMarginY) closeTo[0] = true;
+            else if (position.y >= BL.y - pixelMarginY) closeTo[1] = true;
+            else if (position.x >= TR.x - pixelMarginX) closeTo[2] = true;
+            else if (position.x <= TL.x + pixelMarginX) closeTo[3] = true;
+
+            int amountCloseTo = 0;
+            for (boolean b : closeTo){
+                if (b) amountCloseTo++;
             }
 
-            // Close to Bottom Border
-            if (position.y >= BL.y - pixelMarginY) {
-                // If already in another border, up the strategy to corner.
-                if (ball.getStrategy() == BallPickupStrategy.BORDER)
-                    ball.setStrategy(BallPickupStrategy.CORNER);
-                else
-                    ball.setStrategy(BallPickupStrategy.BORDER);
-            }
+            //free or cross
+            if (amountCloseTo == 0) {
+                Point crossCenter = cross.getMiddle();
+                if (crossCenter != null) {
+                    double radius = (cross.getLongestSide() / 2 + centimeterMargin) / conversionFactorX;
 
-            // Close to Right Border
-            if (position.x >= TR.x - pixelMarginX) {
-                // If already in another border, up the strategy to corner.
-                if (ball.getStrategy() == BallPickupStrategy.BORDER)
-                    ball.setStrategy(BallPickupStrategy.CORNER);
-                else
-                    ball.setStrategy(BallPickupStrategy.BORDER);
-            }
+                    if (Math.pow(position.x - crossCenter.x, 2) + Math.pow(position.y - crossCenter.y, 2) < Math.pow(radius, 2))
+                        ball.setStrategy(BallPickupStrategy.CROSS);
+                } else
+                    ball.setStrategy(BallPickupStrategy.FREE);
+            // Border
+            }else if (amountCloseTo == 1) {
+                if (closeTo[0]) ball.setStrategy(BallPickupStrategy.BORDER_TOP);
+                else if (closeTo[1]) ball.setStrategy(BallPickupStrategy.BORDER_BOTTOM);
+                else if (closeTo[2]) ball.setStrategy(BallPickupStrategy.BORDER_RIGHT);
+                else ball.setStrategy(BallPickupStrategy.BORDER_LEFT);
 
-            // Close to Left Border
-            if (position.x <= TL.x + pixelMarginX) {
-                // If already in another border, up the strategy to corner.
-                if (ball.getStrategy() == BallPickupStrategy.BORDER)
-                    ball.setStrategy(BallPickupStrategy.CORNER);
-                else
-                    ball.setStrategy(BallPickupStrategy.BORDER);
-            }
+            // Corner
+            } else if (amountCloseTo == 2) {
 
-            // For the cross (Circle hit box) | (x - center.x)^2 + (y - center.y)^2 < radius^2
-            Point crossCenter = cross.getMiddle();
-            if (crossCenter != null) {
-                double radius = (cross.getLongestSide() / 2 + centimeterMargin) / conversionFactorX;
+                //Top corner
+                if (closeTo[0]){
+                    if (closeTo[2]) ball.setStrategy(BallPickupStrategy.CORNER_TOP_RIGHT);
+                    else ball.setStrategy(BallPickupStrategy.CORNER_TOP_LEFT);
+                }
 
-                if (Math.pow(position.x - crossCenter.x, 2) + Math.pow(position.y - crossCenter.y , 2) < Math.pow(radius, 2))
-                    ball.setStrategy(BallPickupStrategy.CROSS);
+                //Bottom Corner
+                else if (closeTo[1]){
+                    if (closeTo[2]) ball.setStrategy(BallPickupStrategy.CORNER_BOTTOM_RIGHT);
+                    else ball.setStrategy(BallPickupStrategy.CORNER_BOTTOM_LEFT);
+                }
+            } else {
+                //TODO: error handling
             }
-        }
+        });
     }
 
     /**
