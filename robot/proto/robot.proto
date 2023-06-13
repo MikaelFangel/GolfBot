@@ -40,7 +40,6 @@ enum OutPort {
 service Motors {
   rpc DriveWGyro(stream DrivePIDRequest) returns (StatusReply) {}
   rpc StopMotors(MultipleMotors) returns (StatusReply) {}
-  rpc StopCollectRelease(MultipleMotors) returns (StatusReply) {}
   rpc RotateWGyro(RotateRequest) returns (StatusReply) {}
   rpc CollectRelease(MultipleMotors) returns (StatusReply) {}
   rpc ReleaseOneBall(MultipleMotors) returns (StatusReply) {}

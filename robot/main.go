@@ -181,33 +181,6 @@ func (s *motorServer) StopMotors(_ context.Context, in *pBuff.MultipleMotors) (*
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
 
-// StopCollectRelease Has a busy-wait unlike StopMotors
-func (s *motorServer) StopCollectRelease(c context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
-	// motorRequests stores the request and the motor, so we don't need to get them again in the 2nd loop
-	var motorRequests []motorRequest
-
-	// Gets the motors
-	for _, request := range in.GetMotor() {
-		motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
-
-		if err != nil {
-			return &pBuff.StatusReply{ReplyMessage: false}, err
-		}
-		motor.SetSpeedSetpoint(0)
-		motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
-	}
-
-	stopAllMotors(motorRequests)
-
-	// Busy wait -> Return only when all motors have stopped
-	for _, request := range motorRequests {
-		for util.IsRunning(request.motor) {
-		}
-	}
-
-	return &pBuff.StatusReply{ReplyMessage: true}, nil
-}
-
 // RotateWGyro Rotates the robot given a speed using a gyro. This function has the side effect that it recalibrates the gyro.
 func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*pBuff.StatusReply, error) {
 	// Change the rotation direction
@@ -379,6 +352,10 @@ func stopAllMotors(motorRequests []motorRequest) {
 		motorRequest.motor.Command(stop)
 	}
 
+	// Reset the motors
+	for _, motorRequest := range motorRequests {
+		motorRequest.motor.Command(reset)
+	}
 }
 
 func (s *motorServer) ReleaseOneBall(_ context.Context, in *pBuff.MultipleMotors) (*pBuff.StatusReply, error) {
@@ -416,7 +393,7 @@ func (s *motorServer) ReleaseOneBall(_ context.Context, in *pBuff.MultipleMotors
 	}
 
 	// Sleep long enough to let the motors run to absolute position sat above
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(80 * time.Millisecond)
 
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
 }
