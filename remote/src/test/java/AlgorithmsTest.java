@@ -15,6 +15,7 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 import vision.Algorithms;
+import vision.BallPickupStrategy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -65,7 +66,7 @@ public class AlgorithmsTest {
 
         Robot robot = new Robot(new Point(robotCenterX,robotCenterY), new Point(robotFrontX, robotFrontY));
 
-        Ball ball = new Ball(new Point(ballCenterX,ballCenterY), BallColor.WHITE);
+        Ball ball = new Ball(new Point(ballCenterX,ballCenterY), BallColor.WHITE, BallPickupStrategy.FREE);
 
         double calculatedAngle = Algorithms.findRobotShortestAngleToBall(robot, ball);
 
@@ -86,7 +87,7 @@ public class AlgorithmsTest {
 
         Robot robot = new Robot(new Point(robotCenterX,robotCenterY), new Point(robotFrontX, robotFrontY));
 
-        Ball ball = new Ball(new Point(ballCenterX,ballCenterY), BallColor.WHITE);
+        Ball ball = new Ball(new Point(ballCenterX,ballCenterY), BallColor.WHITE, BallPickupStrategy.FREE);
 
         double calculatedAngle = Algorithms.findRobotShortestAngleToBall(robot, ball);
 
@@ -108,7 +109,7 @@ public class AlgorithmsTest {
 
         Robot robot = new Robot(new Point(robotCenterX,robotCenterY), new Point(robotFrontX, robotFrontY));
 
-        Ball ball = new Ball(new Point(ballCenterX,ballCenterY), BallColor.WHITE);
+        Ball ball = new Ball(new Point(ballCenterX,ballCenterY), BallColor.WHITE, BallPickupStrategy.FREE);
 
         double calculatedAngle = Algorithms.findRobotShortestAngleToBall(robot, ball);
 
@@ -128,9 +129,9 @@ public class AlgorithmsTest {
 
         double shortestAngleToCalculate = -45;
 
-        Robotsmall fixes robot = new Robot(new Point(robotCenterX,robotCenterY), new Point(robotFrontX, robotFrontY));
+        Robot robot = new Robot(new Point(robotCenterX,robotCenterY), new Point(robotFrontX, robotFrontY));
 
-        Ball ball = new Ball(new Point(ballCenterX,ballCenterY), BallColor.WHITE);
+        Ball ball = new Ball(new Point(ballCenterX,ballCenterY), BallColor.WHITE, BallPickupStrategy.FREE);
 
         double calculatedAngle = Algorithms.findRobotShortestAngleToBall(robot, ball);
 
@@ -152,7 +153,7 @@ public class AlgorithmsTest {
 
         Robot robot = new Robot(new Point(robotCenterX,robotCenterY), new Point(robotFrontX, robotFrontY));
 
-        Ball ball = new Ball(new Point(ballCenterX,ballCenterY), BallColor.WHITE);
+        Ball ball = new Ball(new Point(ballCenterX,ballCenterY), BallColor.WHITE, BallPickupStrategy.FREE);
 
         double calculatedAngle = Algorithms.findRobotShortestAngleToBall(robot, ball);
 
@@ -174,7 +175,7 @@ public class AlgorithmsTest {
 
         Robot robot = new Robot(new Point(robotCenterX,robotCenterY), new Point(robotFrontX, robotFrontY));
 
-        Ball ball = new Ball(new Point(ballCenterX,ballCenterY), BallColor.WHITE);
+        Ball ball = new Ball(new Point(ballCenterX,ballCenterY), BallColor.WHITE, BallPickupStrategy.FREE);
 
         double calculatedAngle = Algorithms.findRobotShortestAngleToBall(robot, ball);
 

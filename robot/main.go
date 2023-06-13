@@ -50,7 +50,7 @@ func main() {
 }
 
 // DriveWGyro Rotates the robot given a speed using the gyro. This function has the side effect that it recalibrates the gyro.
-func (s *motorServer) DriveWGyro(stream pBuff.Motors_DriveWGyroServer) error {
+func (s *motorServer) Drive(stream pBuff.Motors_DriveServer) error {
 	// PID constant, how much we want to correct errors of each term
 	kp := 0.5
 	ki := 0.25
@@ -101,7 +101,7 @@ func (s *motorServer) DriveWGyro(stream pBuff.Motors_DriveWGyroServer) error {
 		// "D term", trying to predict next error
 		correction := (kp * gyroErr) + (ki * integral) + (kd * derivative)
 
-		power := setPowerInDrive(distance, -int(driveRequest.Speed), 2)
+		power := setPowerInDrive(distance, -int(driveRequest.Speed), 3)
 
 		// Slice the array to reuse positions
 		motorRequests = motorRequests[0:0]
@@ -178,7 +178,7 @@ func (s *motorServer) StopMotors(_ context.Context, in *pBuff.MultipleMotors) (*
 }
 
 // RotateWGyro Rotates the robot given a speed using a gyro. This function has the side effect that it recalibrates the gyro.
-func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*pBuff.StatusReply, error) {
+func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff.StatusReply, error) {
 	// Change the rotation direction
 	var rotateSpeed = int(in.Speed)
 
@@ -208,8 +208,11 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 	gyro, _ := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
 	gyroVal, _ := util.GetGyroValue(gyro)
 
+	MaxIterations := 20
+	i := 0
+
 	// Run until the input degrees match the gyro value.
-	for math.Abs(gyroVal) != math.Abs(float64(in.Degrees)) {
+	for math.Abs(gyroVal) != math.Abs(float64(in.Degrees)) && (i < MaxIterations) {
 		gyroVal, _ = util.GetGyroValue(gyro)
 		target = gyroVal - float64(in.Degrees)
 
@@ -220,7 +223,7 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 		turn := (kp * target) + (kd * derivative)
 
 		power := rotateSpeed + int(turn)
-		power = setPowerInRotate(target, power, direction, 4)
+		power = setPowerInRotate(target, power, direction, 10)
 
 		// Slice the array to reuse positions
 		motorRequests = motorRequests[0:0]
@@ -248,6 +251,7 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 		for _, motorRequest := range motorRequests {
 			motorRequest.motor.Command(run)
 		}
+		i++
 	}
 
 	stopAllMotors(motorRequests)
@@ -261,11 +265,13 @@ func setPowerInRotate(target float64, power int, direction float64, powerFactor 
 		power *= -1
 	}
 
-	if math.Abs(target) > 5 {
+	if math.Abs(target) > 10 {
 		power *= powerFactor
+	} else if math.Abs(target) > 5 {
+		power *= powerFactor / 2
 	}
 
-	powerCap := 80
+	powerCap := 180
 	switch {
 	case power > powerCap:
 		power = powerCap
@@ -283,11 +289,13 @@ func setPowerInDrive(distance int, power int, powerFactor int) int {
 		power *= -1
 	}
 
-	if math.Abs(float64(distance)) > 15 {
+	if math.Abs(float64(distance)) > 25 {
 		power *= powerFactor
+	} else if math.Abs(float64(distance)) > 13 {
+		power *= powerFactor / 2
 	}
 
-	powerCap := 300
+	powerCap := 400
 	switch {
 	case power > powerCap:
 		power = powerCap
