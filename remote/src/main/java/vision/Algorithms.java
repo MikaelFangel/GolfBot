@@ -51,18 +51,22 @@ public class Algorithms {
     }
 
     /**
-     * Finds the shortest angle between robot and ball.
+     * Finds the shortest angle between robot and point.
      *
      * @return angle in degrees. Clockwise with the robot returns positive angle-values, counter-clockwise with the robot returns negative angle-values.
      */
-    public static double findRobotShortestAngleToBall(Robot robot, Ball ball) {
-        double clockWiseAngleToBall = angleBetweenTwoPoints(robot.getCenter().x, robot.getCenter().y, ball.getCenter().x, ball.getCenter().y);
+    public static double findRobotShortestAngleToPoint(Robot robot, Point p) {
+        double clockWiseAngleToBall = angleBetweenTwoPoints(robot.getCenter().x, robot.getCenter().y, p.x, p.y);
+        clockWiseAngleToBall -= robot.getAngle();
 
         double shortestAngleToBall = clockWiseAngleToBall;
 
         // Check if there is a shorter angle
         if (clockWiseAngleToBall > 180)
             shortestAngleToBall = clockWiseAngleToBall - 360;
+        else if (clockWiseAngleToBall < -180) {
+            shortestAngleToBall = clockWiseAngleToBall + 360;
+        }
 
         return shortestAngleToBall;
     }
@@ -85,6 +89,26 @@ public class Algorithms {
             shortestAngle = clockWiseAngle - 360;
 
         return shortestAngle;
+    }
+
+    /**
+     * Finds the shortest angle between robot and ball.
+     *
+     * @return angle in degrees. Clockwise with the robot returns positive angle-values, counter-clockwise with the robot returns negative angle-values.
+     */
+    public static double findRobotShortestAngleToBall(Robot robot, Ball ball) {
+        return findRobotShortestAngleToPoint(robot, ball.getCenter());
+    }
+
+    /**
+     * Finds distance between the robots front ball collection mechanism and a point.
+     * @param robot
+     * @param p
+     * @return distance in cm
+     */
+    public static double findRobotsDistanceToPoint(Robot robot, Point p) {
+        int offset = 3;
+        return distanceBetweenTwoPoints(robot.getFront().x, robot.getFront().y, p.x, p.y) - offset;
     }
 
     public static double findRobotsDistanceToBall(Robot robot, Ball ball) {

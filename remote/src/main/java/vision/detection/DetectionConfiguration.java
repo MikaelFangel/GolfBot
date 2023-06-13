@@ -46,8 +46,8 @@ public class DetectionConfiguration {
         this.ballParam2 = 10; // lower values allow more circles to be detected (false positives)
 
         // Robot
-        this.lowerRobotThreshold = new Scalar(130, 80, 0);
-        this.upperRobotThreshold = new Scalar(250, 120, 60);
+        this.lowerRobotThreshold = new Scalar(130, 70, 0);
+        this.upperRobotThreshold = new Scalar(250, 130, 100);
         this.lowerRobotSize = 300;
         this.upperRobotSize = 5000;
 

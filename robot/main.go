@@ -50,14 +50,14 @@ func main() {
 }
 
 // DriveWGyro Rotates the robot given a speed using the gyro. This function has the side effect that it recalibrates the gyro.
-func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
+func (s *motorServer) Drive(stream pBuff.Motors_DriveServer) error {
 	// PID constant, how much we want to correct errors of each term
 	kp := 0.5
 	ki := 0.25
 	kd := 0.1
 
 	// Begin stream from client
-	driveRequest, err := in.Recv()
+	driveRequest, err := stream.Recv()
 	if err != nil {
 		return err
 	}
@@ -81,12 +81,6 @@ func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
 	// Prepare the motors for running
 	distance := int(driveRequest.Distance)
 
-	// Change speed value if distance is negative
-	speed := -int(driveRequest.Speed)
-	if speed > 0 {
-		speed *= -1
-	}
-
 	gyro, err := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
 	if err != nil {
 		return err
@@ -105,7 +99,9 @@ func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
 		// "P term", how much we want to change the motors' power in proportion with the error
 		// "I term", the running sum of errors to correct for
 		// "D term", trying to predict next error
-		turn := (kp * gyroErr) + (ki * integral) + (kd * derivative)
+		correction := (kp * gyroErr) + (ki * integral) + (kd * derivative)
+
+		power := setPowerInDrive(distance, -int(driveRequest.Speed), 3)
 
 		// Slice the array to reuse positions
 		motorRequests = motorRequests[0:0]
@@ -121,9 +117,9 @@ func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
 			motor.SetRampDownSetpoint(3 * time.Second)
 			switch request.GetMotorPort() {
 			case pBuff.OutPort_A:
-				motor.SetSpeedSetpoint(speed + int(turn))
+				motor.SetSpeedSetpoint(power + int(correction))
 			case pBuff.OutPort_D:
-				motor.SetSpeedSetpoint(speed - int(turn))
+				motor.SetSpeedSetpoint(power - int(correction))
 			default:
 				return err
 			}
@@ -143,17 +139,17 @@ func (s *motorServer) DriveWGyro(in pBuff.Motors_DriveWGyroServer) error {
 			return err
 		}
 
-		message, err := in.Recv()
+		driveRequest, err := stream.Recv()
 		if err != nil {
 			break
 		}
-		distance = int(message.Distance)
+		distance = int(driveRequest.Distance)
 	}
 
 	stopAllMotors(motorRequests)
 
 	// Stop streaming connection
-	err = in.SendAndClose(&pBuff.StatusReply{ReplyMessage: true})
+	err = stream.SendAndClose(&pBuff.StatusReply{ReplyMessage: true})
 	if err != nil {
 		return err
 	}
@@ -182,7 +178,7 @@ func (s *motorServer) StopMotors(_ context.Context, in *pBuff.MultipleMotors) (*
 }
 
 // RotateWGyro Rotates the robot given a speed using a gyro. This function has the side effect that it recalibrates the gyro.
-func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*pBuff.StatusReply, error) {
+func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff.StatusReply, error) {
 	// Change the rotation direction
 	var rotateSpeed = int(in.Speed)
 
@@ -193,7 +189,7 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 		direction = -1.0
 	}
 
-	// Set the default PID values
+	// Set the default PD values
 	kp := 0.125
 	kd := 0.5
 
@@ -223,6 +219,9 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 		// Account for errors
 		turn := (kp * target) + (kd * derivative)
 
+		power := rotateSpeed + int(turn)
+		power = setPowerInRotate(target, power, direction, 10)
+
 		// Slice the array to reuse positions
 		motorRequests = motorRequests[0:0]
 
@@ -232,9 +231,6 @@ func (s *motorServer) RotateWGyro(_ context.Context, in *pBuff.RotateRequest) (*
 			if err != nil {
 				return nil, err
 			}
-
-			power := rotateSpeed + int(turn)
-			power = setPowerInRotate(target, power, direction, 4)
 
 			switch request.GetMotorPort() {
 			case pBuff.OutPort_A:
@@ -265,11 +261,37 @@ func setPowerInRotate(target float64, power int, direction float64, powerFactor 
 		power *= -1
 	}
 
-	if math.Abs(target) > 5 {
+	if math.Abs(target) > 10 {
 		power *= powerFactor
+	} else if math.Abs(target) > 5 {
+		power *= powerFactor / 2
 	}
 
-	powerCap := 50
+	powerCap := 180
+	switch {
+	case power > powerCap:
+		power = powerCap
+	case power < -powerCap:
+		power = -powerCap
+	}
+
+	return power
+}
+
+// setPowerInDrive increase power when far from the target and also sets a powercap to avoid drifting from high speeds
+// powerFactor is used to increase the speed when we are more than 15cm from the target
+func setPowerInDrive(distance int, power int, powerFactor int) int {
+	if (float64(distance)) < 0 {
+		power *= -1
+	}
+
+	if math.Abs(float64(distance)) > 25 {
+		power *= powerFactor
+	} else if math.Abs(float64(distance)) > 13 {
+		power *= powerFactor / 2
+	}
+
+	powerCap := 400
 	switch {
 	case power > powerCap:
 		power = powerCap

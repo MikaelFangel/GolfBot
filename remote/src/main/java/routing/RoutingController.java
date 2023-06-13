@@ -59,16 +59,17 @@ public class RoutingController {
 
     public void handleCommand (DriveCommand driveCommand, Point nextPoint) {
         switch (driveCommand) {
-            case DRIVE_STRAIGHT :
+            case DRIVE_STRAIGHT -> {
                 robotController.recalibrateGyro();
-                robotController.driveWGyro(course);
-                break;
-            case ROTATE :
+                robotController.drive(course.getRobot(), nextPoint);
+            }
+            case ROTATE -> {
                 double angle = Algorithms.findShortestAngleToPoint(course.getRobot(), nextPoint);
                 robotController.recalibrateGyro();
-                robotController.rotateWGyro(-angle);
-                break;
-            default : break;
+                robotController.rotate(-angle);
+            }
+            default -> {
+            }
         }
     }
 
