@@ -20,6 +20,8 @@ public class Main {
         DetectionConfiguration.DetectionConfiguration();
         new DetectionController(course, cameraIndex, false);
 
+        Routine.collectAllBallsRoutine(controller, course);
+
         System.out.println("Done");
     }
 }
