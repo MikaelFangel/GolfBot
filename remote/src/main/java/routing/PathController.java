@@ -20,7 +20,7 @@ public class PathController {
      * @param circleRadius the size of the obstacle
      * @return All the Points from possibleSharedPoints, that are reachable without colliding with the obstacle
      */
-    public List<Point> findCommonPoints(
+    public static List<Point> findCommonPoints(
             Point object1,
             Point object2,
             List<Point> possibleSharedPoints,
@@ -43,7 +43,7 @@ public class PathController {
      * @param sharedPoints a list of points that can be reach in a straight line from both points
      * @return A single point from the sharedPoints list, that have the shortest distance.
      */
-    public Point findShortestPath(
+    public static Point findShortestPath(
             Point point1,
             Point point2,
             List<Point> sharedPoints

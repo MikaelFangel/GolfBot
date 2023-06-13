@@ -38,26 +38,63 @@ public class RoutingController {
         if (currentRoute == null) return;
 
         for (int i = 0; i < currentRoute.getDriveCommands().size(); i++) {
-            handleCommand(currentRoute.getDriveCommands().get(i), DRIVE_STRAIGHT.getNextPoint());
+            handleCommand(currentRoute.getDriveCommands().get(i));
         }
     }
 
     /**
      * Plans next sequence of route from point to point
+     * TODO: get values from config
      */
-    public void planRoute(Point from, Point to) {
+    public Route planRoute(Point from, Point to, BallCommand ballCommand) {
+        // Check for and handle obstruction on path
+        if (Geometry.lineIsIntersectingCircle(
+                from,
+                to,
+                course.getCross().getMiddle(),
+                course.getCross().getLongestSide()/2)
+        ) {
+            List<Point> accessiblePoints = PathController.findCommonPoints(
+                    from,
+                    to,
+                    Geometry.generateCircle(course.getCross().getMiddle(),
+                            course.getCross().getLongestSide() + 20,
+                            360),
+                    course.getCross().getMiddle(),
+                    course.getCross().getLongestSide()
+            );
+            Point stopover = PathController.findShortestPath(from, to, accessiblePoints);
 
+            Point dest = to;
+            DRIVE_STRAIGHT.setNextPoint(stopover);
+            addSubroute(nextRoute);
+            DRIVE_STRAIGHT.setNextPoint(dest);
+            addSubroute(nextRoute);
+        }
+
+        /*TODO: add cornercase*/
+
+        /*TODO: add bordercase*/
+
+        addSubroute(nextRoute);
+
+        return currentRoute;
+    }
+
+    private Route addSubroute (Route nextRoute) {
         nextRoute.addDriveCommandToRoute(ROTATE);
 
         if (nextRoute.getEndingCommand() != null) {
             fullRoute.add(nextRoute);
             nextRoute.getDriveCommands().clear();
-            return;
         }
         nextRoute.addDriveCommandToRoute(DRIVE_STRAIGHT);
+
+        return currentRoute;
     }
 
-    public void handleCommand (DriveCommand driveCommand, Point nextPoint) {
+    public void handleCommand (DriveCommand driveCommand) {
+        Point nextPoint = driveCommand.getNextPoint();
         switch (driveCommand) {
             case DRIVE_STRAIGHT -> {
                 robotController.recalibrateGyro();
@@ -68,12 +105,11 @@ public class RoutingController {
                 robotController.recalibrateGyro();
                 robotController.rotate(-angle);
             }
-            default -> {
-            }
+            default -> {}
         }
     }
 
-    // Clear planned routes
+    // Clear planned route
     public void clearFullRoute() {
         fullRoute.clear();
     }

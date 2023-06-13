@@ -19,9 +19,7 @@ public enum DriveCommand {
         return nextPoint;
     }
 
-    public void setNextPoint(Point nextPoint) {
-        this.nextPoint = nextPoint;
-    }
+    public Point setNextPoint(Point nextPoint) { return nextPoint; }
 }
 
 

@@ -56,7 +56,7 @@ public class Geometry {
      * @param points the amount of points to draw the circle with
      * @return the list of points representing the circle
      */
-    public List<Point> generateCircle(@NotNull Point center, double radius, int points) throws ArithmeticException {
+    public static List<Point> generateCircle(@NotNull Point center, double radius, int points) throws ArithmeticException {
         if (points < 1)
             throw new ArithmeticException("A circle must consist of at least one point");
         double angle = 360. / points;
