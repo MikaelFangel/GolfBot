@@ -1,6 +1,7 @@
-package vision.math;
+package math;
 
 import org.jetbrains.annotations.NotNull;
+import org.opencv.core.Mat;
 import org.opencv.core.Point;
 
 import java.util.ArrayList;
@@ -83,5 +84,19 @@ public class Geometry {
         // Calculate the distance from the center of the circle
         double dist = Math.abs(a*circleCenter.x + b - circleCenter.y) / Math.sqrt(Math.pow(a, 2) + 1);
         return dist < circleRadius;
+    }
+
+    public static PolarCoordinate cartesianToPolar(Point cartesian){
+        return new PolarCoordinate(
+                Math.sqrt(Math.pow(cartesian.x, 2) + Math.pow(cartesian.y, 2)),
+                Math.toDegrees(Math.atan2(cartesian.y, cartesian.x))
+        );
+    }
+
+    public static Point polarToCartesian(PolarCoordinate polar){
+        return new Point(
+                polar.getDistance() * Math.cos(Math.toRadians(polar.getAngel())),
+                polar.getDistance() * Math.sin(Math.toRadians(polar.getAngel()))
+        );
     }
 }

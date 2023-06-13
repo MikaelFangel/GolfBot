@@ -4,8 +4,8 @@ import org.opencv.core.Point;
 
 import java.util.List;
 
-import static vision.math.Geometry.distanceBetweenTwoPoints;
-import static vision.math.Geometry.lineIsIntersectingCircle;
+import static math.Geometry.distanceBetweenTwoPoints;
+import static math.Geometry.lineIsIntersectingCircle;
 
 public class PathController {
 

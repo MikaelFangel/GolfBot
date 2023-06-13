@@ -1,7 +1,7 @@
 package courseObjects;
 
 import org.opencv.core.Point;
-import vision.math.Geometry;
+import math.Geometry;
 
 public class Robot {
     private Point center, front;

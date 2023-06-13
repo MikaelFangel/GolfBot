@@ -15,7 +15,7 @@ import vision.detection.RobotDetector;
 import vision.detection.SubDetector;
 import vision.helperClasses.MaskSet;
 
-import static vision.math.Geometry.distanceBetweenTwoPoints;
+import static math.Geometry.distanceBetweenTwoPoints;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -7,13 +7,13 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
-import vision.math.Geometry;
+import math.Geometry;
 
 import java.util.List;
 import java.util.stream.IntStream;
 
-import static vision.math.Geometry.angleBetweenTwoPoints;
-import static vision.math.Geometry.distanceBetweenTwoPoints;
+import static math.Geometry.angleBetweenTwoPoints;
+import static math.Geometry.distanceBetweenTwoPoints;
 
 /**
  * Contains algorithms used to path find, find the nearest ball etc.
