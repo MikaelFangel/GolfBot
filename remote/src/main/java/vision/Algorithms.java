@@ -82,8 +82,7 @@ public class Algorithms {
      * @return distance in cm
      */
     public static double findRobotsDistanceToPoint(Robot robot, Point p) {
-        int offset = 4;
-        System.out.println("Robot " + robot.getFront().y + ", " + robot.getFront().y + " Point " + p.x + ", " + p.y);
+        int offset = 3;
         return distanceBetweenTwoPoints(robot.getFront().x, robot.getFront().y, p.x, p.y) - offset;
     }
 

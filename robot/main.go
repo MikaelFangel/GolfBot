@@ -265,7 +265,7 @@ func setPowerInRotate(target float64, power int, direction float64, powerFactor 
 		power *= powerFactor
 	}
 
-	powerCap := 70
+	powerCap := 80
 	switch {
 	case power > powerCap:
 		power = powerCap
@@ -277,7 +277,7 @@ func setPowerInRotate(target float64, power int, direction float64, powerFactor 
 }
 
 // setPowerInDrive increase power when far from the target and also sets a powercap to avoid drifting from high speeds
-// powerFactor is used to increase the speed when we are more than  5 degrees from the target
+// powerFactor is used to increase the speed when we are more than 15cm from the target
 func setPowerInDrive(distance int, power int, powerFactor int) int {
 	if (float64(distance)) < 0 {
 		power *= -1

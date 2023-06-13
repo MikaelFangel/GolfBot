@@ -10,7 +10,7 @@ public class Main {
         }
 
         int cameraIndex = Integer.parseInt(args[1]);
-        double cameraHeight = 192;  // in cm TODO make into arg at some point
+        double cameraHeight = Double.parseDouble(args[2]);  // in cm
 
         RobotController controller = new RobotController(args[0]); // Args[0] being and IP address
 
