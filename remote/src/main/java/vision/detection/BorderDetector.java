@@ -22,6 +22,8 @@ public class BorderDetector implements SubDetector {
     MatOfPoint2f approx;
     private boolean initial = true;
 
+    private final DetectionConfiguration config = DetectionConfiguration.DetectionConfiguration();
+
     /**
      * Detects the border from the frame and stores the objects in its own objects.
      * @param frame The frame to be detected.
@@ -80,12 +82,12 @@ public class BorderDetector implements SubDetector {
 
             if (i == innerBorderIndex && numOfEndPoints == 4) { // The border
                 // Only proceed if border is of correct size
-                if (contourSize >= 100000)
+                if (contourSize >= config.getLowerBorderSize())
                     innerBorderEndPoints = approx;
 
             } else if (numOfEndPoints == 12) { // The cross
                 // Only proceed if cross is of correct size
-                if (contourSize >= 800 && contourSize <= 4000) {
+                if (contourSize >= config.getLowerCrossSize() && contourSize <= config.getUpperCrossSize()) {
                     crossFound = true;
                     endPointList.add(approx);
                 }
@@ -131,10 +133,6 @@ public class BorderDetector implements SubDetector {
      * @return The red contours of the frame, one for each red 'object'.
      */
     private List<MatOfPoint> getRedContours(Mat frame) {
-        // Remove everything from frame except border (which is red)
-        Scalar lower = new Scalar(0, 0, 150); // Little red
-        Scalar upper = new Scalar(120, 130, 255); // More red
-
         // Blur frame to smooth out color inconsistencies
         Imgproc.GaussianBlur(
                 frame,
@@ -147,7 +145,7 @@ public class BorderDetector implements SubDetector {
         );
 
         // Create a mask to filter in next step
-        Core.inRange(this.frameBlur, lower, upper, this.mask); // Filter all red colors from frame to mask
+        Core.inRange(this.frameBlur, config.getLowerObstacleThreshold(), config.getUpperObstacleThreshold(), this.mask); // Filter all red colors from frame to mask
 
         // Add mask for debugging
         this.maskSets.add(new MaskSet("border", this.mask));

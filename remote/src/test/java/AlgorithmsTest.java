@@ -1,11 +1,19 @@
 import courseObjects.Ball;
 import courseObjects.BallColor;
+import courseObjects.Border;
 import courseObjects.Course;
+import nu.pattern.OpenCV;
 import org.junit.jupiter.api.Assertions;
 import courseObjects.Robot;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.core.Scalar;
+import org.opencv.highgui.HighGui;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.videoio.VideoCapture;
+import org.opencv.videoio.Videoio;
 import vision.Algorithms;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -120,7 +128,7 @@ public class AlgorithmsTest {
 
         double shortestAngleToCalculate = -45;
 
-        Robot robot = new Robot(new Point(robotCenterX,robotCenterY), new Point(robotFrontX, robotFrontY));
+        Robotsmall fixes robot = new Robot(new Point(robotCenterX,robotCenterY), new Point(robotFrontX, robotFrontY));
 
         Ball ball = new Ball(new Point(ballCenterX,ballCenterY), BallColor.WHITE);
 
@@ -171,5 +179,47 @@ public class AlgorithmsTest {
         double calculatedAngle = Algorithms.findRobotShortestAngleToBall(robot, ball);
 
         assertEquals(shortestAngleToCalculate, calculatedAngle);
+    }
+
+    @Test
+    public void transformToRectangleTest1(){
+        //System.out.println("Working Directory = " + System.getProperty("user.dir"));
+        //System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+        //String filename = System.getProperty("user.dir") + "/src/test/java/resources/courseTest.png";
+        //Mat src = Imgcodecs.imread(filename);
+
+        OpenCV.loadLocally();
+
+        VideoCapture vc = new VideoCapture();
+        vc.open(2);
+
+        // Set capture resolution
+        vc.set(Videoio.CAP_PROP_FRAME_WIDTH, course.getResolutionWidth());
+        vc.set(Videoio.CAP_PROP_FRAME_HEIGHT, course.getResolutionHeight());
+
+        if (!vc.isOpened()) System.exit(0);
+
+        Mat src = new Mat();
+        vc.read(src);
+
+
+        Course course = new Course(167);
+        Border border = course.getBorder();
+        border.setTopLeft(new Point(197,42));
+        border.setTopRight(new Point(820,50));
+        border.setBottomLeft(new Point(195,505));
+        border.setBottomRight(new Point(850,525));
+
+        Imgproc.circle(src,border.getBottomRight(),4, new Scalar(255,0,0));
+
+        Mat dst = Algorithms.transformToRectangle(src, course.getBorder());
+
+        HighGui.imshow("original",src);
+        //HighGui.imshow("warp", dst);
+
+
+        HighGui.waitKey();
+
+
     }
 }

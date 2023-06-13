@@ -21,6 +21,8 @@ public class RobotDetector implements SubDetector {
     Mat frameBlur, mask, frameDummy;
     private boolean initial = true;
 
+    private final DetectionConfiguration config = DetectionConfiguration.DetectionConfiguration();
+
     /**
      * Detects the robot from the frame and stores it in the objects
      *
@@ -56,12 +58,8 @@ public class RobotDetector implements SubDetector {
         // Blur frame to smooth out color inconsistencies
         Imgproc.GaussianBlur(frame, frameBlur, new Size(7, 7), 7, 0);
 
-        // Blue markers threshold (BGR)
-        final Scalar lRobot = new Scalar(180, 100, 0);
-        final Scalar uRobot = new Scalar(255, 200, 80);
-
         // Create a mask to filter out unnecessary contours
-        Core.inRange(frameBlur, lRobot, uRobot, mask);
+        Core.inRange(frameBlur, config.getLowerRobotThreshold(), config.getUpperRobotThreshold(), mask);
 
         // Add mask for debugging
         maskSets.add(new MaskSet("robotMask", mask));
@@ -70,15 +68,11 @@ public class RobotDetector implements SubDetector {
         List<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(mask, contours, frameDummy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        // Size of contours (number of pixels in cohesive area)
-        final int areaLowerThreshold = 300;
-        final int areaUpperThreshold = 2600;
-
         // Get useful contour areas
         ArrayList<ContourSet> contourSets = new ArrayList<>();
         for (MatOfPoint contour : contours) {
             double area = Imgproc.contourArea(contour);
-            if (area >= areaLowerThreshold && area <= areaUpperThreshold) {
+            if (area >= config.getLowerRobotSize() && area <= config.getUpperRobotSize()) {
                 contourSets.add(new ContourSet(area, contour));
             }
         }
