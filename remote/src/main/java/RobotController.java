@@ -189,10 +189,15 @@ public class RobotController {
         CLIENT.collectRelease(motorRequests);
     }
 
+    /**
+     * Collect balls located in the corners by shooting the corner ball with another ball and collect balls returning
+     * @throws InterruptedException Can happen when sleeping
+     * TODO! Move to Routine class to made yet
+     */
     public void collectCornerBalls() throws InterruptedException {
         releaseOneBall();
         collectRelease(true);
-        Thread.sleep(1000);
+        Thread.sleep(2000); // Can be adjusted. Hos long we collect
         stopCollectRelease();
     }
 
