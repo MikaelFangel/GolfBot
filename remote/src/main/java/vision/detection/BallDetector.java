@@ -12,12 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BallDetector implements SubDetector {
-    // HoughCircles parameters. These configurations works okay with the current course setup (Most likely pixel values)
-    private final int dp = 1; // Don't question or change
-    private final int minDist = 8; // Minimum distance between balls
-    private final int param1 = 30;  // gradient value used in the edge detection
-    private final int param2 = 10;  // lower values allow more circles to be detected (false positives)
-
     private List<Ball> balls = new ArrayList<>();
     List<MaskSet> maskSets = new ArrayList<>();
 
@@ -67,8 +61,9 @@ public class BallDetector implements SubDetector {
         maskSets.add(new MaskSet("White Ball Mask", maskWhite1));
 
         //Get white balls from frame
-        Imgproc.HoughCircles(maskWhite1, frameBallsW, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, config.getLowerBallSize(),
-            config.getUpperBallSize());
+        Imgproc.HoughCircles(maskWhite1, frameBallsW, Imgproc.HOUGH_GRADIENT,
+                config.getBallDp(), config.getBallMinDist(), config.getBallParam1(), config.getBallParam2(),
+                config.getLowerBallSize(), config.getUpperBallSize());
 
         // Add balls to array
         if (!frameBallsW.empty()) {
@@ -90,8 +85,9 @@ public class BallDetector implements SubDetector {
         maskSets.add(new MaskSet("Orange Ball Mask", maskOrange));
 
         //Get white balls from frame
-        Imgproc.HoughCircles(maskOrange, frameBallsO, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, config.getLowerBallSize(),
-                config.getUpperBallSize());
+        Imgproc.HoughCircles(maskOrange, frameBallsO, Imgproc.HOUGH_GRADIENT,
+                config.getBallDp(), config.getBallMinDist(), config.getBallParam1(), config.getBallParam2(),
+                config.getLowerBallSize(), config.getUpperBallSize());
 
         // Add orange ball to list
         if (!frameBallsO.empty()) {
