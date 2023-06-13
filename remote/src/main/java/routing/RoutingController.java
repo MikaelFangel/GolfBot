@@ -2,6 +2,7 @@ package routing;
 
 import courseObjects.Ball;
 import courseObjects.Course;
+import math.Geometry;
 import org.jetbrains.annotations.NotNull;
 import org.opencv.core.Point;
 import vision.BallPickupStrategy;
@@ -64,10 +65,46 @@ public class RoutingController {
     }
 
     private Point projectPoint(@NotNull final Ball ball, final double distance) {
+        int borderDistance = 20;
         BallPickupStrategy strategy = ball.getStrategy();
         Point projectedPoint;
         switch (strategy) {
             case FREE -> projectedPoint = ball.getCenter();
+            case BORDER_TOP -> {
+                projectedPoint = new Point(
+                        ball.getCenter().x,
+                        course.getBorder().getTopLeft().y + borderDistance
+                );
+            }
+            case BORDER_BOTTOM -> {
+                projectedPoint = new Point(
+                        ball.getCenter().x,
+                        course.getBorder().getBottomLeft().y - borderDistance
+                );
+            }
+            case BORDER_RIGHT -> {
+                projectedPoint = new Point(
+                        course.getBorder().getTopRight().x - borderDistance,
+                        ball.getCenter().y
+                );
+            }
+            case BORDER_LEFT -> {
+                projectedPoint = new Point(
+                        course.getBorder().getTopLeft().x + borderDistance,
+                        ball.getCenter().y
+                );
+            }
+            case CORNER_TOP_RIGHT -> {
+
+            }
+            case CORNER_TOP_LEFT -> {
+            }
+            case CORNER_BOTTOM_RIGHT -> {
+            }
+            case CORNER_BOTTOM_LEFT -> {
+            }
+            case CROSS -> {
+            }
             default -> projectedPoint = ball.getCenter();
         }
 
