@@ -14,15 +14,15 @@ import java.util.List;
 public class BallDetector implements SubDetector {
     // HoughCircles parameters. These configurations works okay with the current course setup (Most likely pixel values)
     private final int dp = 1; // Don't question or change
-    private final int minDist = 5; // Minimum distance between balls
-    private final int param1 = 25;  // gradient value used in the edge detection
-    private final int param2 = 8;  // lower values allow more circles to be detected (false positives)
+    private final int minDist = 7; // Minimum distance between balls
+    private final int param1 = 30;  // gradient value used in the edge detection
+    private final int param2 = 10;  // lower values allow more circles to be detected (false positives)
 
     private List<Ball> balls = new ArrayList<>();
     List<MaskSet> maskSets = new ArrayList<>();
 
     // Initialize all OpenCV objects once to not have memory leaks
-    private Mat frameBlur, maskWhite, maskOrange, frameBallsW, frameBallsO;
+    private Mat frameBlur, maskWhite1, maskOrange, frameBallsW, frameBallsO;
     private boolean initial = true;
 
     private final DetectionConfiguration config = DetectionConfiguration.DetectionConfiguration();
@@ -37,7 +37,7 @@ public class BallDetector implements SubDetector {
         // Initialize all OpenCV objects once to not have memory leaks
         if (initial) {
             frameBlur = new Mat();
-            maskWhite = new Mat();
+            maskWhite1 = new Mat();
             maskOrange = new Mat();
             frameBallsW = new Mat();
             frameBallsO = new Mat();
@@ -47,7 +47,7 @@ public class BallDetector implements SubDetector {
         balls = new ArrayList<>();
 
         // Apply blur for better noise reduction
-        Imgproc.GaussianBlur(frame, frameBlur, new Size(9, 9), 0);
+        Imgproc.GaussianBlur(frame, frameBlur, new Size(7, 7), 0);
 
         findWhiteBalls(balls);
         findOrangeBalls(balls);
@@ -62,11 +62,12 @@ public class BallDetector implements SubDetector {
      */
     private void findWhiteBalls(List<Ball> balls) {
         // Create mask
-        Core.inRange(frameBlur, config.getLowerWhiteBallThreshold(), config.getUpperWhiteBallThreshold(), maskWhite);
-        maskSets.add(new MaskSet("White Ball Mask", maskWhite));
+        Core.inRange(frameBlur, config.getLowerWhiteBallThreshold(), config.getUpperWhiteBallThreshold(), maskWhite1);
+
+        maskSets.add(new MaskSet("White Ball Mask", maskWhite1));
 
         //Get white balls from frame
-        Imgproc.HoughCircles(maskWhite, frameBallsW, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, config.getLowerBallSize(),
+        Imgproc.HoughCircles(maskWhite1, frameBallsW, Imgproc.HOUGH_GRADIENT, dp, minDist, param1, param2, config.getLowerBallSize(),
             config.getUpperBallSize());
 
         // Add balls to array

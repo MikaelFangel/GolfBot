@@ -6,22 +6,22 @@ public class DetectionConfiguration {
     private static DetectionConfiguration single_instance = null;
 
     // Balls
-    private Scalar lowerWhiteBallThreshold = new Scalar(180, 180, 180);
-    private Scalar upperWhiteBallThreshold = new Scalar(255, 255, 255);
-    private Scalar lowerOrangeBallThreshold = new Scalar(0, 100, 220);
+    private Scalar lowerWhiteBallThreshold = new Scalar(105, 105, 105);
+    private Scalar upperWhiteBallThreshold = new Scalar(230, 230, 230);
+    private Scalar lowerOrangeBallThreshold = new Scalar(0, 110, 220);
     private Scalar upperOrangeBallThreshold = new Scalar(170, 255, 255);
-    private int lowerBallSize = 2;
-    private int upperBallSize = 8;
+    private int lowerBallSize = 6;
+    private int upperBallSize = 15;
 
     // Robot (Blue)
-    private Scalar lowerRobotThreshold = new Scalar(150, 90, 20);
-    private Scalar upperRobotThreshold = new Scalar(230, 155, 100);
-    private int lowerRobotSize = 350;
-    private int upperRobotSize = 1300;
+    private Scalar lowerRobotThreshold = new Scalar(130, 80, 0);
+    private Scalar upperRobotThreshold = new Scalar(250, 120, 60);
+    private int lowerRobotSize = 300;
+    private int upperRobotSize = 5000;
 
     // Obstacles (Red)
-    private Scalar lowerObstacleThreshold = new Scalar(0, 0, 160);
-    private Scalar upperObstacleThreshold = new Scalar(130, 50, 255);
+    private Scalar lowerObstacleThreshold = new Scalar(0, 0, 120);
+    private Scalar upperObstacleThreshold = new Scalar(30, 60, 255);
     private double lowerBorderSize = 100000;
     private double lowerCrossSize = 800;
     private double upperCrossSize = 4000;

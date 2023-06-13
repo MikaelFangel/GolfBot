@@ -85,9 +85,6 @@ public class BorderDetector implements SubDetector {
                 if (contourSize >= config.getLowerBorderSize())
                     innerBorderEndPoints = approx;
 
-                // hello there
-                // hello.there
-
             } else if (numOfEndPoints == 12) { // The cross
                 // Only proceed if cross is of correct size
                 if (contourSize >= config.getLowerCrossSize() && contourSize <= config.getUpperCrossSize()) {
