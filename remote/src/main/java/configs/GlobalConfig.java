@@ -11,7 +11,9 @@ public class GlobalConfig {
         var path = Thread.currentThread().getContextClassLoader().getResource("").getPath();
         configProperties = new Properties();
         try {
-            configProperties.loadFromXML(new FileInputStream(path + "config.xml"));
+            FileInputStream read = new FileInputStream(path + "config.xml");
+            configProperties.loadFromXML(read);
+            read.close();
         } catch (Exception e) {
             System.err.println(e.getMessage());
         }
