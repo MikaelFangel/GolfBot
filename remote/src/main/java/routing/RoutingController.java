@@ -83,9 +83,11 @@ public class RoutingController {
     }
 
     private Point projectPoint(@NotNull final Ball ball, final double distance) {
+        //TODO: get margin from config
         int borderDistance = 20;
+
         BallPickupStrategy strategy = ball.getStrategy();
-        Point projectedPoint;
+        Point projectedPoint = null;
         switch (strategy) {
             case FREE -> projectedPoint = ball.getCenter();
             case BORDER_TOP -> {
@@ -112,14 +114,31 @@ public class RoutingController {
                         ball.getCenter().y
                 );
             }
-            case CORNER_TOP_RIGHT -> {
 
+            //TODO: make correction distance generic based on angel
+            case CORNER_TOP_RIGHT -> {
+                projectedPoint = new Point(
+                        ball.getCenter().x - borderDistance,
+                        ball.getCenter().y - borderDistance
+                );
             }
             case CORNER_TOP_LEFT -> {
+                projectedPoint = new Point(
+                        ball.getCenter().x + borderDistance,
+                        ball.getCenter().y + borderDistance
+                );
             }
             case CORNER_BOTTOM_RIGHT -> {
+                projectedPoint = new Point(
+                        ball.getCenter().x - borderDistance,
+                        ball.getCenter().y + borderDistance
+                );
             }
             case CORNER_BOTTOM_LEFT -> {
+                projectedPoint = new Point(
+                        ball.getCenter().x + borderDistance,
+                        ball.getCenter().y - borderDistance
+                );
             }
             case CROSS -> {
             }
