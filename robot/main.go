@@ -352,7 +352,7 @@ func stopAllMotors(motorRequests []motorRequest) {
 		motorRequest.motor.Command(stop)
 	}
 
-	// Busy wait -> Return only when done running
+	// Busy wait -> Return only when all motors have stopped
 	for _, request := range motorRequests {
 		for util.IsRunning(request.motor) {
 			fmt.Println(request.motor)

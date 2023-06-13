@@ -197,7 +197,7 @@ public class RobotController {
     public void collectCornerBalls() throws InterruptedException {
         releaseOneBall();
         collectRelease(true);
-        Thread.sleep(2000); // Can be adjusted. Hos long we collect
+        Thread.sleep(2000); // Can be adjusted. How long we collect
         stopCollectRelease();
     }
 
