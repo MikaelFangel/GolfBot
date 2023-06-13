@@ -34,28 +34,27 @@ public class RoutingController {
         if (nextRoute == null) return;
 
         /*TODO: execute nextRoute*/
+
         nextRoute.getDriveCommands();
 
+
     }
+    int turns = 0;
+    /**
+     * Plans next sequence of route from point to point
+     */
+    public void planRoute(Point from, Point to, boolean isBall) {
 
-    // Plan next route from point to point
-    public void planRoute(Point from, Point to) {
-
-        //if (!fullRoute.isEmpty()) clearFullRoute();
-        int turns = 0;
-
-        if (lineIsIntersectingCircle(from, to, course.getCross().getMiddle(), course.getCross().getLongestSide()/2)) {
-            /*TODO: handle reroute*/
-            return;
-        }
         currentRoute.setTurns(turns+1);
         currentRoute.addDriveCommandToRoute(DriveCommand.ROTATE);
+
+        if (isBall) {
+            currentRoute.setEndingCommand(BallCommand.COLLECT);
+            fullRoute.add(currentRoute);
+            currentRoute.getDriveCommands().clear();
+            return;
+        }
         currentRoute.addDriveCommandToRoute(DriveCommand.DRIVE_STRAIGHT);
-        currentRoute.setEndingCommand(BallCommand.COLLECT);
-
-        fullRoute.add(currentRoute);
-
-        driveRoutes();
     }
 
     // Clear planned routes
