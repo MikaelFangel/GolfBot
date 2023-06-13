@@ -5,6 +5,7 @@ import org.opencv.core.Point;
 public class Border {
     public double height;
     private Point topLeft, topRight, bottomLeft, bottomRight;
+    private SmallGoalPos smallGoalPos;
 
     public Border(Point topLeft, Point topRight, Point bottomLeft, Point bottomRight) {
         this(); // Call default constructor
@@ -53,5 +54,32 @@ public class Border {
 
     public synchronized Point[] getCornersAsArray() {
         return new Point[]{topLeft, topRight, bottomLeft, bottomRight};
+    }
+
+    public void setSmallGoalPos(SmallGoalPos smallGoalPos) {
+        this.smallGoalPos = smallGoalPos;
+    }
+
+    /**
+     * @return The middle point of the small goal
+     */
+    public synchronized Point getSmallGoalPoint() {
+        switch (this.smallGoalPos) {
+            case LEFT -> {
+                return new Point(
+                        (this.topLeft.x + this.bottomLeft.x) / 2,
+                        (this.topLeft.y + this.bottomLeft.y) / 2
+                );
+            }
+            case RIGHT -> {
+                return new Point(
+                        (this.topRight.x + this.bottomRight.x) / 2,
+                        (this.topRight.y + this.bottomRight.y) / 2
+                );
+            }
+            default -> {
+                return null;
+            }
+        }
     }
 }
