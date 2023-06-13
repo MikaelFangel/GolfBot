@@ -33,15 +33,15 @@ public class RoutingController {
 
 
     }
-    int turns = 0;
+
     /**
      * Plans next sequence of route from point to point
      */
     public void planRoute(Point from, Point to) {
 
-        currentRoute.setTurns(turns+1);
-        currentRoute.addDriveCommandToRoute(DriveCommand.ROTATE);
-
+        if (currentRoute.getTurns() > 0) {
+            currentRoute.addDriveCommandToRoute(DriveCommand.ROTATE);
+        }
         if (currentRoute.getEndingCommand() != null) {
             fullRoute.add(currentRoute);
             currentRoute.getDriveCommands().clear();
