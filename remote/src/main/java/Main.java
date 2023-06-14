@@ -12,9 +12,9 @@ public class Main {
 
         int cameraIndex = Integer.parseInt(args[0]);
 
-        RobotController controller = new RobotController();
-
         Course course = new Course();
+
+        RobotController controller = new RobotController(course.getRobot());
         new DetectionController(course, cameraIndex, true); // Runs in the background
 
         DetectionConfiguration.DetectionConfiguration();
