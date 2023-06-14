@@ -43,11 +43,18 @@ public class RoutingController {
     }
 
     /**
-     * Plans next sequence of route from point to point
-     * TODO: get values from config
+     * planRoute plans next sequence of route from point to point,
+     * considering obstruction of path, ball in corner and ball close to border,
+     * which are handled with routines
+     * TODO: get values from config e.g. circle radius
+     *
+     * @param from
+     * @param to
+     * @param ballCommand
+     * @return
      */
     public Route planRoute(Point from, Point to, BallCommand ballCommand) {
-        // Check for and handle obstruction on path
+        // Obstruction on path
         if (Geometry.lineIsIntersectingCircle(
                 from,
                 to,
@@ -72,10 +79,6 @@ public class RoutingController {
             addSubroute(nextRoute);
         }
 
-        /*TODO: add cornercase*/
-
-        /*TODO: add bordercase*/
-
         addSubroute(nextRoute);
 
         return currentRoute;
@@ -85,12 +88,13 @@ public class RoutingController {
         nextRoute.addDriveCommandToRoute(ROTATE);
 
         if (nextRoute.getEndingCommand() != null) {
+
             fullRoute.add(nextRoute);
             nextRoute.getDriveCommands().clear();
         }
         nextRoute.addDriveCommandToRoute(DRIVE_STRAIGHT);
 
-        return currentRoute;
+        return nextRoute;
     }
 
     public void handleCommand (DriveCommand driveCommand) {

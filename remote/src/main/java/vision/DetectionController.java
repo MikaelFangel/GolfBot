@@ -223,7 +223,7 @@ public class DetectionController {
 
             if (position.y <= TL.y + pixelMarginY) closeTo[0] = true;
             else if (position.y >= BL.y - pixelMarginY) closeTo[1] = true;
-            else if (position.x >= TR.x - pixelMarginX) closeTo[2] = true;
+            if (position.x >= TR.x - pixelMarginX) closeTo[2] = true;
             else if (position.x <= TL.x + pixelMarginX) closeTo[3] = true;
 
             int amountCloseTo = 0;
