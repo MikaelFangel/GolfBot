@@ -34,12 +34,19 @@ public class RoutingController {
      */
     public void driveRoutes () {
         if (fullRoute.isEmpty()) return;
-        currentRoute = fullRoute.poll();
-        if (currentRoute == null) return;
 
-        for (int i = 0; i < currentRoute.getDriveCommands().size(); i++) {
-            handleCommand(currentRoute.getDriveCommands().get(i));
+        while (!fullRoute.isEmpty()) {
+            currentRoute = fullRoute.poll();
+            if (currentRoute == null) return;
+
+            for (int i = 0; i < currentRoute.getDriveCommands().size(); i++) {
+                if (currentRoute.getEndingCommand() != null) {
+                    handleEndCommand(currentRoute, currentRoute.getEndingCommand());
+                }
+                else handleCommand(currentRoute.getDriveCommands().get(i));
+            }
         }
+
     }
 
     /**
@@ -48,12 +55,17 @@ public class RoutingController {
      * which are handled with routines
      * TODO: get values from config e.g. circle radius
      *
-     * @param from
-     * @param to
-     * @param ballCommand
-     * @return
+     * @param from current point
+     * @param to destination
+     * @param endingCommand results in collection, release or routine for edge case
+     * @return Route from one point to another
      */
-    public Route planRoute(Point from, Point to, BallCommand ballCommand) {
+    public Route planRoute(Point from, Point to, BallCommand endingCommand) {
+        // If the current route has an endCommand, a routine is called
+        if (currentRoute.getEndingCommand() != null) {
+            handleEndCommand(currentRoute, endingCommand);
+        }
+
         // Obstruction on path
         if (Geometry.lineIsIntersectingCircle(
                 from,
@@ -74,27 +86,36 @@ public class RoutingController {
 
             Point dest = to;
             DRIVE_STRAIGHT.setNextPoint(stopover);
-            addSubroute(nextRoute);
+            addSubroute(nextRoute, endingCommand);
             DRIVE_STRAIGHT.setNextPoint(dest);
-            addSubroute(nextRoute);
+            addSubroute(nextRoute, endingCommand);
         }
 
-        addSubroute(nextRoute);
+        addSubroute(nextRoute, endingCommand);
 
         return currentRoute;
     }
 
-    private Route addSubroute (Route nextRoute) {
-        nextRoute.addDriveCommandToRoute(ROTATE);
+    private Route addSubroute (Route route, BallCommand endingCommand) {
+        route.addDriveCommandToRoute(ROTATE);
 
-        if (nextRoute.getEndingCommand() != null) {
-
-            fullRoute.add(nextRoute);
-            nextRoute.getDriveCommands().clear();
+        if (route.getEndingCommand() != null) {
+            fullRoute.add(route);
+            route.getDriveCommands().clear();
         }
-        nextRoute.addDriveCommandToRoute(DRIVE_STRAIGHT);
+        route.addDriveCommandToRoute(DRIVE_STRAIGHT);
 
-        return nextRoute;
+        return route;
+    }
+
+    //
+    private void handleEndCommand(Route route, BallCommand endingCommand) {
+        switch (endingCommand) {
+            case COLLECT -> {}
+            case RELEASE -> {}
+            case RELEASE_ONE -> {}
+            default -> {}
+        }
     }
 
     public void handleCommand (DriveCommand driveCommand) {
