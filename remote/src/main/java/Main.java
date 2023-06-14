@@ -15,7 +15,7 @@ public class Main {
         Course course = new Course();
 
         RobotController controller = new RobotController(course.getRobot());
-        new DetectionController(course, cameraIndex, true); // Runs in the background
+        new DetectionController(course, cameraIndex, false); // Runs in the background
 
         DetectionConfiguration.DetectionConfiguration();
 

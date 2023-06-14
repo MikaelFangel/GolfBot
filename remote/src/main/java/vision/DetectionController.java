@@ -362,13 +362,12 @@ public class DetectionController {
         courseBalls.clear();
 
         // Convert position from pixel to cm
+        List<Ball> convertedBalls = new ArrayList<>();
         for (Ball ball : balls) {
             Point correctedCenter = convertPixelPointToCmPoint(ball.getCenter(), this.pixelOffset);
-            Ball correctedBall = new Ball(correctedCenter, ball.getColor(), ball.getStrategy());
-
-            // Update Course Balls
-            courseBalls.add(correctedBall);
+            convertedBalls.add(new Ball(correctedCenter, ball.getColor(), ball.getStrategy()));
         }
+        course.addBallListToWindow(convertedBalls);
     }
 
     /**

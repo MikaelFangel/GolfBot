@@ -1,8 +1,7 @@
 package courseObjects;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * The course consists of (1) the dimensions of the course, (2) coordinates of the corners in centimeters,
@@ -16,21 +15,28 @@ public class Course {
     private final int resolutionHeight;
 
     private final Border border = new Border();
+    private final Queue<List<Ball>> ballWindow = new ArrayDeque<>();
+    private final int BALL_WINDOW_SIZE = 10;
     private final List<Ball> balls = Collections.synchronizedList(new ArrayList<>());
     private final Robot robot = new Robot();
     private final Cross cross = new Cross();
 
     private final double cameraHeight;
 
+    private final int maxNumberOfBalls;
+
     public Course() {
-        this.cameraHeight = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("camHeight"));
+        Properties configProp = configs.GlobalConfig.getConfigProperties();
+        this.cameraHeight = Double.parseDouble(configProp.getProperty("camHeight"));
 
         // Measured from the innermost sides
-        this.width = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("courseWidth"));
-        this.height = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("courseHeight"));
+        this.width = Double.parseDouble(configProp.getProperty("courseWidth"));
+        this.height = Double.parseDouble(configProp.getProperty("courseHeight"));
 
-        this.resolutionWidth = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("camResolutionWidth"));
-        this.resolutionHeight = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("camResolutionHeight"));
+        this.resolutionWidth = Integer.parseInt(configProp.getProperty("camResolutionWidth"));
+        this.resolutionHeight = Integer.parseInt(configProp.getProperty("camResolutionHeight"));
+
+        this.maxNumberOfBalls = Integer.parseInt(configProp.getProperty("maxBalls"));
     }
 
     // Getters and setters
@@ -68,5 +74,30 @@ public class Course {
 
     public double getWidth() {
         return width;
+    }
+
+    public int getMaxNumberOfBalls() {
+        return maxNumberOfBalls;
+    }
+
+    public void addBallListToWindow(List<Ball> balls) {
+        // Add list of balls to window
+        if (ballWindow.size() >= BALL_WINDOW_SIZE)
+            ballWindow.poll();
+
+        ballWindow.add(balls);
+
+        // Find median list of balls, using size of list.
+        List<List<Ball>> ballFrames = ballWindow.stream().sorted(Comparator.comparingInt(List::size)).toList();
+        List<Ball> newBalls = ballFrames.get(ballFrames.size() / 2);
+
+        for (List<Ball> list : ballFrames) {
+            System.out.print(list.size() + " ");
+        }
+        System.out.println("");
+
+        // Transfer balls
+        this.balls.clear();
+        this.balls.addAll(newBalls);
     }
 }
