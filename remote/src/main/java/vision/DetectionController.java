@@ -38,6 +38,8 @@ public class DetectionController {
     private final boolean showMasks; // Primarily for debugging
     private final Course course;
 
+    private Border oldBorder; // Used only for creating overlay
+
     /**
      * Start a setup process that requires the different objects to be present in the camera's view.
      * When the setup is over a background thread starts doing background detection.
@@ -322,9 +324,14 @@ public class DetectionController {
      * Updates the Border in the Course object, in centimetres.
      */
     private void updateCourseCorners() {
-        Point[] convertedCorners = this.borderDetector.getBorder().getCornersAsArray();
+        Border border = this.borderDetector.getBorder();
+        if (border == null) return;
+
+        // Set old border for overlay
+        oldBorder = border;
 
         // Convert from pixel to cm.
+        Point[] convertedCorners = border.getCornersAsArray();
         for (int i = 0; i < convertedCorners.length; i++)
             convertedCorners[i] = convertPixelPointToCmPoint(convertedCorners[i], this.pixelOffset);
 
@@ -419,6 +426,10 @@ public class DetectionController {
 
         // Draw Corners
         Border border = this.borderDetector.getBorder();
+
+        // If null use old border that is not null, to still keep drawing old corners.
+        if (border == null) border = oldBorder;
+
         Point[] corners = border != null ? border.getCornersAsArray() : null;
 
         if (corners != null)
