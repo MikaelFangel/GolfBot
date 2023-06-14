@@ -5,7 +5,7 @@ import vision.detection.DetectionConfiguration;
 import vision.DetectionController;
 
 public class Main {
-    public static void main(String[] args) throws MissingArgumentException {
+    public static void main(String[] args) throws MissingArgumentException, InterruptedException {
         if (args.length < 1) {
             throw new MissingArgumentException("Please provide a camera index");
         }
