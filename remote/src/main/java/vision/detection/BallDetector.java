@@ -46,8 +46,8 @@ public class BallDetector implements SubDetector {
      * @param balls list that gets updated with newly added balls
      */
     private void findWhiteBalls(Mat frameBlur, List<Ball> balls) {
-        maskWhite = new Mat();
-        ballsMatW = new Mat();
+        Mat maskWhite = new Mat();
+        Mat ballsMatW = new Mat();
 
         // Create mask
         Core.inRange(frameBlur, config.getLowerWhiteBallThreshold(), config.getUpperWhiteBallThreshold(), maskWhite);
@@ -79,8 +79,8 @@ public class BallDetector implements SubDetector {
      * @param balls list that gets updated with newly added balls
      */
     private void findOrangeBalls(Mat frameBlur, List<Ball> balls) {
-        ballsMatO = new Mat();
-        maskOrange = new Mat();
+        Mat ballsMatO = new Mat();
+        Mat maskOrange = new Mat();
 
         // Create mask
         Core.inRange(frameBlur, config.getLowerOrangeBallThreshold(), config.getUpperOrangeBallThreshold(), maskOrange);
