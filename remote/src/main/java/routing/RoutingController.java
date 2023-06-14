@@ -13,9 +13,9 @@ public class RoutingController {
     private RobotController robotController;
 
 
-    public RoutingController(Course course, String ip) {
+    public RoutingController(Course course) {
         this.course = course;
-        robotController = new RobotController(ip);
+        robotController = new RobotController();
         currentRoute = new Route();
     }
 

@@ -8,6 +8,7 @@
 
     <!-- Border measurements in cm -->
     <entry key="borderHeight">7</entry>
+    <entry key="smallGoalPos">left</entry> <!-- left or right -->
 
     <!-- Course measurements in cm -->
     <entry key="courseWidth">169.0</entry>
