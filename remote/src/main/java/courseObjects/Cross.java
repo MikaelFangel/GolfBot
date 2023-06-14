@@ -14,8 +14,8 @@ public class Cross {
 
     public Cross() {
         // Measurements are in CM
-        this.longestSide = 20.1;
-        this.shortestSide = 3.1;
+        this.longestSide = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("crossSideLong"));
+        this.shortestSide = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("crossSideShort"));
     }
 
     public List<Point> getEndPoints() {

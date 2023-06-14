@@ -38,25 +38,25 @@ public class DetectionConfiguration {
         this.lowerOrangeBallThreshold = new Scalar(0, 40, 130);
         this.upperOrangeBallThreshold = new Scalar(20, 170, 255);
 
-        this.lowerBallSize = 6;
-        this.upperBallSize = 15;
-        this.ballDp = 1; // Don't question or change
-        this.ballMinDist = 8; // Minimum distance between balls
-        this.ballParam1 = 30; // gradient value used in the edge detection
-        this.ballParam2 = 10; // lower values allow more circles to be detected (false positives)
+        this.lowerBallSize = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("ballSizeLower"));
+        this.upperBallSize = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("ballSizeUpper"));
+        this.ballDp = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("ballDp"));
+        this.ballMinDist = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("ballMinDist"));
+        this.ballParam1 = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("ballParam1"));
+        this.ballParam2 = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("ballParam2"));
 
         // Robot
-        this.lowerRobotThreshold = new Scalar(130, 70, 0);
-        this.upperRobotThreshold = new Scalar(250, 130, 100);
-        this.lowerRobotSize = 300;
-        this.upperRobotSize = 5000;
+        this.lowerRobotThreshold = new Scalar(130, 80, 0);
+        this.upperRobotThreshold = new Scalar(250, 120, 60);
+        this.lowerRobotSize = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("robotSizeLower"));
+        this.upperRobotSize = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("robotSizeUpper"));
 
         // Obstacle
         this.lowerObstacleThreshold = new Scalar(0, 0, 100);
         this.upperObstacleThreshold = new Scalar(5, 5, 255);
-        this.lowerBorderSize = 100000;
-        this.lowerCrossSize = 800;
-        this.upperCrossSize = 4000;
+        this.lowerBorderSize = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("borderSizeLower"));
+        this.lowerCrossSize = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("crossSizeLower"));
+        this.upperCrossSize = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("crossSizeUpper"));
     }
 
     public static DetectionConfiguration DetectionConfiguration() {
