@@ -104,7 +104,7 @@ public class RobotController {
                 requestObserver.onNext(drivePIDRequest);
 
                 // Sleep for a bit before sending the next one. TODO: Research timing of the delay with the robot
-                Thread.sleep(600);
+                Thread.sleep(300);
 
                 i++;
 

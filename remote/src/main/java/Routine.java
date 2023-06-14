@@ -25,6 +25,23 @@ public class Routine {
             Thread.sleep(300);
         }
     }
+    public static void driveToBall(RobotController controller, Course course) throws InterruptedException {
+        Ball closestBall = Algorithms.findClosestBall(course.getBalls(), course.getRobot());
+
+        // This check also make sure program won't crash after collecting last ball
+        if (closestBall == null)
+            return;
+
+        double angle = Algorithms.findRobotShortestAngleToBall(course.getRobot(), closestBall);
+
+        // rotate to the ball and collect it
+        controller.recalibrateGyro();
+        controller.rotate(angle);
+        controller.recalibrateGyro();
+        controller.drive(course.getRobot(), closestBall.getCenter());
+        // Previous call is non-blocking, and we have to wait for it to end before sending new instruction
+        Thread.sleep(300);
+    }
     public static void releaseAllBalls(RobotController controller) throws InterruptedException {
         controller.collectRelease(false);
         Thread.sleep(3000);

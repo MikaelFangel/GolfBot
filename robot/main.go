@@ -88,6 +88,8 @@ func (s *motorServer) Drive(stream pBuff.Motors_DriveServer) error {
 
 	var motorRequests []motorRequest
 	for distance > 0 {
+		startTime := time.Now()
+		
 		// Read gyro values, eg. the current error
 		gyroErr, _ := util.GetGyroValue(gyro)
 		integral += gyroErr
@@ -144,6 +146,9 @@ func (s *motorServer) Drive(stream pBuff.Motors_DriveServer) error {
 			break
 		}
 		distance = int(driveRequest.Distance)
+
+		elapsedTime := time.Since(startTime)
+		println("Time elapsed ", elapsedTime.Milliseconds())
 	}
 
 	stopAllMotors(motorRequests)
