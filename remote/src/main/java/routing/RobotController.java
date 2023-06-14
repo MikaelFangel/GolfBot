@@ -18,18 +18,20 @@ public class RobotController {
     private final MotorsGrpc.MotorsBlockingStub CLIENT;
     private final MotorsGrpc.MotorsStub ASYNCCLIENT;
     private final int MAX_ITERATIONS;
+    private final Robot robot;
 
     /**
      * Initializes channel and client to connect with the robot.
      *
      * @param ip_port the ip and port of the robot on the subnet. e.g. 192.168.1.12:50051
      */
-    public RobotController(String ip_port) {
+    public RobotController(String ip_port, Robot robot) {
         this.CHANNEL = Grpc.newChannelBuilder(ip_port, InsecureChannelCredentials.create()).build();
         this.CLIENT = MotorsGrpc.newBlockingStub(CHANNEL);
         this.ASYNCCLIENT = MotorsGrpc.newStub(CHANNEL);
 
         this.MAX_ITERATIONS = 20;
+        this.robot = robot;
     }
 
     /**
@@ -49,7 +51,7 @@ public class RobotController {
      * @throws RuntimeException if the robot was not reached
      * @see <a href="https://github.com/grpc/grpc-java/blob/master/examples/src/main/java/io/grpc/examples/routeguide/RouteGuideClient.java">Example streaming client</a>
      */
-    public void drive(Robot robot, Point target) throws RuntimeException {
+    public void drive(Point target) throws RuntimeException {
         int speed = 100;
         MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
                 new MotorPair(OutPort.D, speed));
@@ -261,5 +263,9 @@ public class RobotController {
      * A record consisting of an outputPort (A, B, C, D) and a speed associated with the port
      */
     private record MotorPair(OutPort outPort, int motorSpeed) {
+    }
+
+    public Robot getRobot() {
+        return robot;
     }
 }
