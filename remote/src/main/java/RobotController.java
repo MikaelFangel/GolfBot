@@ -240,10 +240,18 @@ public class RobotController {
         }
     }
 
+    /**
+     * Needs to be called before starting the routine / starting the collection.
+     * @param courseBalls the List of Balls from Course.
+     */
     public void startMagazineCounting(List<Ball> courseBalls) {
         this.ballsOnCourseBeforeRoutine = courseBalls.size();
     }
 
+    /**
+     * Should be called after the routine / after the collection.
+     * @param courseBalls the List of Balls from Course.
+     */
     public void endMagazineCounting(List<Ball> courseBalls) {
         int ballsOnCourseAfterRoutine = courseBalls.size();
 
