@@ -256,7 +256,7 @@ public class RobotController {
         int ballsOnCourseAfterRoutine = courseBalls.size();
 
         if (ballsOnCourseAfterRoutine < this.ballsOnCourseBeforeRoutine) {
-            int diff = ballsOnCourseAfterRoutine - this.ballsOnCourseBeforeRoutine;
+            int diff = this.ballsOnCourseBeforeRoutine - ballsOnCourseAfterRoutine;
 
             // Add diff to magazine counter
             robot.addBallsInMagazine(diff);

@@ -91,11 +91,6 @@ public class Course {
         List<List<Ball>> ballFrames = ballWindow.stream().sorted(Comparator.comparingInt(List::size)).toList();
         List<Ball> newBalls = ballFrames.get(ballFrames.size() / 2);
 
-        for (List<Ball> list : ballFrames) {
-            System.out.print(list.size() + " ");
-        }
-        System.out.println("");
-
         // Transfer balls
         this.balls.clear();
         this.balls.addAll(newBalls);
