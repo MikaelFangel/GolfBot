@@ -6,7 +6,7 @@ import vision.detection.DetectionConfiguration;
 import vision.DetectionController;
 
 public class Main {
-    public static void main(String[] args) throws MissingArgumentException {
+    public static void main(String[] args) throws MissingArgumentException, InterruptedException {
         if (args.length < 1) {
             throw new MissingArgumentException("Please provide a camera index");
         }
@@ -19,35 +19,13 @@ public class Main {
         new DetectionController(course, cameraIndex, true); // Runs in the background
 
         DetectionConfiguration.DetectionConfiguration();
+        new DetectionController(course, cameraIndex, false);
 
-        while (true) {
-
-            Ball closestBall;
-
-            // Check if there is balls left
-            if(course.getBalls() != null) {
-                closestBall = Algorithms.findClosestBall(course.getBalls(), course.getRobot());
-
-                // Do we need both checks? This check also make sure program won't crash after collecting last ball
-                if (closestBall == null)
-                    break;
-            } else {
-                // No balls left on the course. TODO: Should drive to drop off point
-                break;
-            }
-
-            double angle = Algorithms.findRobotShortestAngleToBall(course.getRobot(), closestBall);
-            double distance = Algorithms.findRobotsDistanceToBall(course.getRobot(), closestBall);
-            System.out.println("Driving distance: " + distance + " with angle: " + angle);
-
-            // Quick integration test, rotate to the ball and collect it
-            controller.recalibrateGyro();
-            controller.rotateWGyro(-angle);
-            controller.collectRelease(true);
-            controller.recalibrateGyro();
-            controller.driveWGyro(course);
-            controller.stopCollectRelease();
-        }
+        Routine.collectAllBallsRoutine(controller, course);
+        //Routine.releaseAllBalls(controller);
+        //Routine.driveToBall(controller, course);
+        //controller.stopMotors();
+        controller.stopCollectRelease();
 
         System.out.println("Done");
     }
