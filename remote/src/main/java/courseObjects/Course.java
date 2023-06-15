@@ -1,7 +1,11 @@
 package courseObjects;
 
 import java.util.*;
-import java.util.stream.Collectors;
+import org.opencv.core.Point;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * The course consists of (1) the dimensions of the course, (2) coordinates of the corners in centimeters,
@@ -94,5 +98,31 @@ public class Course {
         // Transfer balls
         this.balls.clear();
         this.balls.addAll(newBalls);
+    }
+
+    /**
+     * Replace the Course's objects variables with the new Course.
+     * @param newCourse objects to be used for replacing.
+     */
+    public void replaceObjects(Course newCourse) {
+        // Border
+        Point[] newBorderCorners = newCourse.getBorder().getCornersAsArray();
+        this.border.setTopLeft(newBorderCorners[0]);
+        this.border.setTopRight(newBorderCorners[1]);
+        this.border.setBottomLeft(newBorderCorners[2]);
+        this.border.setBottomRight(newBorderCorners[3]);
+
+        // Cross
+        Cross newCross = newCourse.getCross();
+        this.cross.setMiddle(newCross.getMiddle());
+        this.cross.setMeasurePoint(newCross.getMeasurePoint());
+
+        // Robot
+        Robot newRobot = newCourse.getRobot();
+        this.robot.setFrontAndCenter(newRobot.getCenter(), newRobot.getFront());
+
+        // Balls
+        List<Ball> newBalls = newCourse.getBalls();
+        this.addBallListToWindow(newBalls);
     }
 }

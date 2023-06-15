@@ -15,10 +15,6 @@ public class BallDetector implements SubDetector {
     private List<Ball> balls = new ArrayList<>();
     List<MaskSet> maskSets = new ArrayList<>();
 
-    // Initialize all OpenCV objects once to not have memory leaks
-    private Mat frameBlur, maskWhite, maskOrange, frameBallsW, frameBallsO;
-    private boolean initial = true;
-
     private final DetectionConfiguration config = DetectionConfiguration.DetectionConfiguration();
 
     /**
@@ -29,22 +25,17 @@ public class BallDetector implements SubDetector {
      */
     public boolean detectBalls(Mat frame) {
         // Initialize all OpenCV objects once to not have memory leaks
-        if (initial) {
-            frameBlur = new Mat();
-            maskWhite = new Mat();
-            maskOrange = new Mat();
-            frameBallsW = new Mat();
-            frameBallsO = new Mat();
-            initial = false;
-        }
+        Mat frameBlur = new Mat();
 
         balls = new ArrayList<>();
 
         // Apply blur for better noise reduction
         Imgproc.GaussianBlur(frame, frameBlur, new Size(11, 11), 0);
 
-        findWhiteBalls(balls);
-        findOrangeBalls(balls);
+        findWhiteBalls(frameBlur, balls);
+        findOrangeBalls(frameBlur, balls);
+
+        frameBlur.release();
 
         return !balls.isEmpty();
     }
@@ -54,26 +45,32 @@ public class BallDetector implements SubDetector {
      *
      * @param balls list that gets updated with newly added balls
      */
-    private void findWhiteBalls(List<Ball> balls) {
+    private void findWhiteBalls(Mat frameBlur, List<Ball> balls) {
+        Mat maskWhite = new Mat();
+        Mat ballsMatW = new Mat();
+
         // Create mask
         Core.inRange(frameBlur, config.getLowerWhiteBallThreshold(), config.getUpperWhiteBallThreshold(), maskWhite);
 
         maskSets.add(new MaskSet("White Ball Mask", maskWhite));
 
         //Get white balls from frame
-        Imgproc.HoughCircles(maskWhite, frameBallsW, Imgproc.HOUGH_GRADIENT,
+        Imgproc.HoughCircles(maskWhite, ballsMatW, Imgproc.HOUGH_GRADIENT,
                 config.getBallDp(), config.getBallMinDist(), config.getBallParam1(), config.getBallParam2(),
                 config.getLowerBallSize(), config.getUpperBallSize());
 
         // Add balls to array
-        if (!frameBallsW.empty()) {
-            for (int i = 0; i < frameBallsW.width(); i++) {
-                double[] center = frameBallsW.get(0, i);
+        if (!ballsMatW.empty()) {
+            for (int i = 0; i < ballsMatW.width(); i++) {
+                double[] center = ballsMatW.get(0, i);
 
                 // Make balls FREE by default. Will be changed later
                 balls.add(new Ball(new Point(center[0], center[1]), BallColor.WHITE, BallPickupStrategy.FREE));
             }
         }
+
+        maskWhite.release();
+        ballsMatW.release();
     }
 
     /**
@@ -81,25 +78,31 @@ public class BallDetector implements SubDetector {
      *
      * @param balls list that gets updated with newly added balls
      */
-    private void findOrangeBalls(List<Ball> balls) {
+    private void findOrangeBalls(Mat frameBlur, List<Ball> balls) {
+        Mat ballsMatO = new Mat();
+        Mat maskOrange = new Mat();
+
         // Create mask
         Core.inRange(frameBlur, config.getLowerOrangeBallThreshold(), config.getUpperOrangeBallThreshold(), maskOrange);
         maskSets.add(new MaskSet("Orange Ball Mask", maskOrange));
 
         //Get white balls from frame
-        Imgproc.HoughCircles(maskOrange, frameBallsO, Imgproc.HOUGH_GRADIENT,
+        Imgproc.HoughCircles(maskOrange, ballsMatO, Imgproc.HOUGH_GRADIENT,
                 config.getBallDp(), config.getBallMinDist(), config.getBallParam1(), config.getBallParam2(),
                 config.getLowerBallSize(), config.getUpperBallSize());
 
         // Add orange ball to list
-        if (!frameBallsO.empty()) {
-            for (int i = 0; i < frameBallsO.width(); i++) {
-                double[] center = frameBallsO.get(0, i);
+        if (!ballsMatO.empty()) {
+            for (int i = 0; i < ballsMatO.width(); i++) {
+                double[] center = ballsMatO.get(0, i);
 
                 // Make balls FREE by default. Will be changed later
                 balls.add(new Ball(new Point(center[0], center[1]), BallColor.ORANGE, BallPickupStrategy.FREE));
             }
         }
+
+        maskOrange.release();
+        ballsMatO.release();
     }
 
     public List<Ball> getBalls() {

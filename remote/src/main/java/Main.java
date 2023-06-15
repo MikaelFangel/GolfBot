@@ -13,7 +13,6 @@ public class Main {
         int cameraIndex = Integer.parseInt(args[0]);
 
         Course course = new Course();
-
         RobotController controller = new RobotController(course.getRobot());
         new DetectionController(course, cameraIndex, false); // Runs in the background
 
