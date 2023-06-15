@@ -24,7 +24,7 @@ public class AlgorithmsTest {
 
     @BeforeEach
     public void setup(){
-        course = new Course(200);
+        course = new Course();
     }
 
     @Test
@@ -204,7 +204,7 @@ public class AlgorithmsTest {
         vc.read(src);
 
 
-        Course course = new Course(167);
+        Course course = new Course();
         Border border = course.getBorder();
         border.setTopLeft(new Point(197,42));
         border.setTopRight(new Point(820,50));
@@ -218,9 +218,6 @@ public class AlgorithmsTest {
         HighGui.imshow("original",src);
         //HighGui.imshow("warp", dst);
 
-
         HighGui.waitKey();
-
-
     }
 }

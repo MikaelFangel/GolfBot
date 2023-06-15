@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+    <entry key="ipPort">192.168.1.12:5005</entry> <!--the ip and port of the robot on the subnet. e.g. 192.168.1.12:50051-->
+
+    <!-- Ball measurements in cm -->
+    <entry key="ballRadius">4</entry>
+
+    <!-- Border measurements in cm -->
+    <entry key="borderHeight">7</entry>
+
+    <!-- Course measurements in cm -->
+    <entry key="courseWidth">169.0</entry>
+    <entry key="courseHeight">123.7</entry>
+    <entry key="camHeight">168.2</entry>
+    <entry key="camResolutionWidth">1024</entry>
+    <entry key="camResolutionHeight">768</entry>
+
+    <!-- Cross measurements in cm -->
+    <entry key="crossSideLong">20.1</entry>
+    <entry key="crossSideShort">3.1</entry>
+    <entry key="crossHeight">3.2</entry>
+
+    <!-- Robot measurements in cm -->
+    <entry key="robotLength">16.0</entry>
+    <entry key="robotWidth">17.0</entry>
+    <entry key="robotHeight">20.0</entry>
+
+
+
+    <!-- Detection Configurations - Used in vision -->
+    <entry key="ballSizeLower">6</entry>
+    <entry key="ballSizeUpper">15</entry>
+    <entry key="ballDp">1</entry> <!--Don't question or change-->
+    <entry key="ballMinDist">8</entry> <!--Minimum distance between balls-->
+    <entry key="ballParam1">30</entry> <!--Gradient value used in the edge detection-->
+    <entry key="ballParam2">10</entry> <!--Lower values allow more circles to be detected (false positives)-->
+
+    <entry key="robotSizeLower">300</entry>
+    <entry key="robotSizeUpper">5000</entry>
+
+    <entry key="borderSizeLower">100000</entry>
+
+    <entry key="crossSizeLower">800</entry>
+    <entry key="crossSizeUpper">4000</entry>
+
+</properties>

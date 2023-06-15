@@ -8,6 +8,7 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.opencv.core.Point;
 import proto.*;
+import configs.GlobalConfig;
 import vision.Algorithms;
 
 import java.util.ArrayList;
@@ -22,15 +23,17 @@ public class RobotController {
 
     /**
      * Initializes channel and client to connect with the robot.
-     *
-     * @param ip_port the ip and port of the robot on the subnet. e.g. 192.168.1.12:50051
      */
-    public RobotController(String ip_port, Robot robot) {
-        this.CHANNEL = Grpc.newChannelBuilder(ip_port, InsecureChannelCredentials.create()).build();
+    public RobotController(Robot robot) {
+        this.CHANNEL = Grpc.newChannelBuilder(
+                GlobalConfig.getConfigProperties().getProperty("ipPort"),
+                InsecureChannelCredentials.create()
+        ).build();
         this.CLIENT = MotorsGrpc.newBlockingStub(CHANNEL);
         this.ASYNCCLIENT = MotorsGrpc.newStub(CHANNEL);
 
         this.MAX_ITERATIONS = 20;
+
         this.robot = robot;
     }
 
@@ -108,7 +111,7 @@ public class RobotController {
                 requestObserver.onNext(drivePIDRequest);
 
                 // Sleep for a bit before sending the next one. TODO: Research timing of the delay with the robot
-                Thread.sleep(600);
+                Thread.sleep(300);
 
                 i++;
 

@@ -17,8 +17,6 @@ public class Course {
     private final int resolutionWidth;
     private final int resolutionHeight;
 
-    private Point cameraPosition;
-
     private final Border border = new Border();
     private final List<Ball> balls = Collections.synchronizedList(new ArrayList<>());
     private final Robot robot = new Robot();
@@ -26,15 +24,15 @@ public class Course {
 
     private final double cameraHeight;
 
-    public Course(double cameraHeight) {
-        this.cameraHeight = cameraHeight;
+    public Course() {
+        this.cameraHeight = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("camHeight"));
 
         // Measured from the innermost sides
-        this.width = 169.0;
-        this.height = 123.7;
+        this.width = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("courseWidth"));
+        this.height = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("courseHeight"));
 
-        this.resolutionWidth = 1024;
-        this.resolutionHeight = 768;
+        this.resolutionWidth = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("camResolutionWidth"));
+        this.resolutionHeight = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("camResolutionHeight"));
     }
 
     // Getters and setters
@@ -58,14 +56,6 @@ public class Course {
         return this.cameraHeight;
     }
 
-    public Point getCameraPosition() {
-        return this.cameraPosition;
-    }
-
-    public void setCameraPosition(Point cameraPosition) {
-        this.cameraPosition = cameraPosition;
-    }
-
     public int getResolutionHeight() {
         return this.resolutionHeight;
     }
@@ -80,5 +70,32 @@ public class Course {
 
     public double getWidth() {
         return width;
+    }
+
+    /**
+     * Replace the Course's objects variables with the new Course.
+     * @param newCourse objects to be used for replacing.
+     */
+    public void replaceObjects(Course newCourse) {
+        // Border
+        Point[] newBorderCorners = newCourse.getBorder().getCornersAsArray();
+        this.border.setTopLeft(newBorderCorners[0]);
+        this.border.setTopRight(newBorderCorners[1]);
+        this.border.setBottomLeft(newBorderCorners[2]);
+        this.border.setBottomRight(newBorderCorners[3]);
+
+        // Cross
+        Cross newCross = newCourse.getCross();
+        this.cross.setMiddle(newCross.getMiddle());
+        this.cross.setMeasurePoint(newCross.getMeasurePoint());
+
+        // Robot
+        Robot newRobot = newCourse.getRobot();
+        this.robot.setFrontAndCenter(newRobot.getCenter(), newRobot.getFront());
+
+        // Balls TODO change when Magazine PR is merged
+        List<Ball> newBalls = newCourse.getBalls();
+        this.balls.clear();
+        this.balls.addAll(newBalls);
     }
 }
