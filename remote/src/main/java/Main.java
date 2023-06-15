@@ -21,13 +21,12 @@ public class Main {
         RobotController controller = new RobotController(course.getRobot());
 
         DetectionConfiguration.DetectionConfiguration();
-        new DetectionController(course, cameraIndex, false);
 
         RoutingController routingController = new RoutingController(course, args[0]);
 
         routingController.stopCurrentRoute();
 
-        Thread.sleep(2000);
+        Thread.sleep(4000);
         while (!course.getBalls().isEmpty()) {
             Ball closestBall = Algorithms.findClosestBall(course.getBalls(), course.getRobot());
 

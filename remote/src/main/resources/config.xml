@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
 <properties>
-    <entry key="ipPort">192.168.1.12:5005</entry> <!--the ip and port of the robot on the subnet. e.g. 192.168.1.12:50051-->
+    <entry key="ipPort">192.168.1.12:50051</entry> <!--the ip and port of the robot on the subnet. e.g. 192.168.1.12:50051-->
 
     <!-- Ball measurements in cm -->
     <entry key="ballRadius">4</entry>
