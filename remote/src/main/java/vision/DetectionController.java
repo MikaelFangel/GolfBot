@@ -323,12 +323,13 @@ public class DetectionController {
     /**
      * Updates the Border in the Course object, in centimetres.
      */
+
     private void updateCourseCorners() {
         Border border = this.borderDetector.getBorder();
         if (border == null) return;
 
         // Set old border for overlay
-        oldBorder = border;
+        this.oldBorder = border;
 
         // Convert from pixel to cm.
         Point[] convertedCorners = border.getCornersAsArray();
@@ -425,26 +426,21 @@ public class DetectionController {
         this.overlayFrame = this.frame;
 
         // Draw Corners
-        Border border = this.borderDetector.getBorder();
-
-        // If null use old border that is not null, to still keep drawing old corners.
-        if (border == null) border = oldBorder;
-
-        Point[] corners = border != null ? border.getCornersAsArray() : null;
+        Point[] corners = oldBorder != null ? oldBorder.getCornersAsArray() : null;
 
         if (corners != null)
             for (Point corner : corners)
                 Imgproc.circle(this.overlayFrame, corner, 2, cornerColor, 3);
 
         // Draw the middle of the cross
-        Cross cross = borderDetector.getCross();
+        Cross cross = this.borderDetector.getCross();
         if (cross != null) {
             Point middle = cross.getMiddle();
             if (middle != null)
-                Imgproc.circle(overlayFrame, middle, 2, crossColor, 3);
+                Imgproc.circle(this.overlayFrame, middle, 2, crossColor, 3);
             Point measurePoint = cross.getMeasurePoint();
             if (measurePoint != null)
-                Imgproc.circle(overlayFrame, measurePoint, 2, crossColor, 3);
+                Imgproc.circle(this.overlayFrame, measurePoint, 2, crossColor, 3);
         }
 
         // Draw Robot Markers
