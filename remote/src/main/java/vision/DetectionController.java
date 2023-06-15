@@ -38,6 +38,8 @@ public class DetectionController {
     private final boolean showMasks; // Primarily for debugging
     private final Course course;
 
+    private Border oldBorder; // Used only for creating overlay
+
     /**
      * Start a setup process that requires the different objects to be present in the camera's view.
      * When the setup is over a background thread starts doing background detection.
@@ -321,10 +323,16 @@ public class DetectionController {
     /**
      * Updates the Border in the Course object, in centimetres.
      */
+
     private void updateCourseCorners() {
-        Point[] convertedCorners = this.borderDetector.getBorder().getCornersAsArray();
+        Border border = this.borderDetector.getBorder();
+        if (border == null) return;
+
+        // Set old border for overlay
+        this.oldBorder = border;
 
         // Convert from pixel to cm.
+        Point[] convertedCorners = border.getCornersAsArray();
         for (int i = 0; i < convertedCorners.length; i++)
             convertedCorners[i] = convertPixelPointToCmPoint(convertedCorners[i], this.pixelOffset);
 
@@ -418,22 +426,21 @@ public class DetectionController {
         this.overlayFrame = this.frame;
 
         // Draw Corners
-        Border border = this.borderDetector.getBorder();
-        Point[] corners = border != null ? border.getCornersAsArray() : null;
+        Point[] corners = oldBorder != null ? oldBorder.getCornersAsArray() : null;
 
         if (corners != null)
             for (Point corner : corners)
                 Imgproc.circle(this.overlayFrame, corner, 2, cornerColor, 3);
 
         // Draw the middle of the cross
-        Cross cross = borderDetector.getCross();
+        Cross cross = this.borderDetector.getCross();
         if (cross != null) {
             Point middle = cross.getMiddle();
             if (middle != null)
-                Imgproc.circle(overlayFrame, middle, 2, crossColor, 3);
+                Imgproc.circle(this.overlayFrame, middle, 2, crossColor, 3);
             Point measurePoint = cross.getMeasurePoint();
             if (measurePoint != null)
-                Imgproc.circle(overlayFrame, measurePoint, 2, crossColor, 3);
+                Imgproc.circle(this.overlayFrame, measurePoint, 2, crossColor, 3);
         }
 
         // Draw Robot Markers
