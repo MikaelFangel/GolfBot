@@ -20,7 +20,7 @@ public class Routine {
             controller.rotate(angle);
             controller.recalibrateGyro();
             controller.collectRelease(true);
-            controller.drive(course.getRobot(), closestBall.getCenter());
+            controller.drive(closestBall.getCenter());
             controller.stopCollectRelease();
             // Previous call is non-blocking, and we have to wait for it to end before sending new instruction
             Thread.sleep(300);

@@ -1,5 +1,6 @@
 package routing;
 
+import courseObjects.Ball;
 import courseObjects.Cross;
 import math.Geometry;
 import org.opencv.core.Point;
@@ -9,16 +10,20 @@ import java.util.List;
 
 public abstract class Routine {
     final Point start, dest;
+    Point projectedPoint;
     final Cross cross;
+
+    final Ball ballToCollect;
     final RobotController robotController;
     final RoutingController routingController;
 
-    public Routine (Point start, Point dest, Cross cross, RobotController robotController, RoutingController routingController) {
+    public Routine (Point start, Point dest,Ball ballToCollect, Cross cross, RobotController robotController, RoutingController routingController) {
         this.start = start;
         this.dest = dest;
         this.cross = cross;
         this.robotController = robotController;
         this.routingController = routingController;
+        this.ballToCollect = ballToCollect;
     }
     public abstract void run();
     public boolean isRouteObstructed (Point point1, Point point2) {
@@ -45,6 +50,27 @@ public abstract class Routine {
         );
 
         return PathController.findShortestPath(point1, point2, accessiblePoints);
+    }
+
+    /**
+     *
+     * @param projectionDistance the distance to project the point if a projection is relevant
+     */
+    public void avoidObstacle(int projectionDistance) {
+        if (this.ballToCollect != null)
+            this.projectedPoint = routingController.projectPoint(ballToCollect, projectionDistance);
+        else
+            this.projectedPoint = dest;
+
+        // Avoid obstacles
+        if (isRouteObstructed(start, this.projectedPoint)) {
+            Point intermediate = getIntermediatePointForObstructedRoute(start, this.projectedPoint);
+
+            robotController.recalibrateGyro();
+            robotController.rotate(getDegreesToTurn(intermediate));
+            robotController.recalibrateGyro();
+            robotController.drive(intermediate);
+        }
     }
 
     // TODO: Responsibility should be moved...

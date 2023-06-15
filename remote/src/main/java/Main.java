@@ -14,9 +14,9 @@ public class Main {
         int cameraIndex = Integer.parseInt(args[1]);
         double cameraHeight = Double.parseDouble(args[2]);  // in cm
 
-        RobotController controller = new RobotController(args[0]); // Args[0] being and IP address
 
         Course course = new Course(cameraHeight);
+        RobotController controller = new RobotController(args[0], course.getRobot()); // Args[0] being and IP address
 
         DetectionConfiguration.DetectionConfiguration();
         new DetectionController(course, cameraIndex, false);
