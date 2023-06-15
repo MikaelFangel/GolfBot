@@ -302,16 +302,21 @@ public class DetectionController {
     private void updateNewCourseBorder(Border newBorder) {
         Border pixelBorder = this.borderDetector.getBorder();
         Point[] pixelCorners = pixelBorder.getCornersAsArray(); // From pixel Border
-        Point[] newCorners = newBorder.getCornersAsArray();
+        Point[] correctedCorners = new Point[4];
 
         // Save border to use for overlay
         oldBorder = pixelBorder;
 
         // Convert from pixel to cm.
         for (int i = 0; i < pixelCorners.length; i++) {
-            newCorners[i] = convertPixelPointToCmPoint(pixelCorners[i], this.pixelOffset);
-            newCorners[i] = Algorithms.correctedCoordinatesOfObject(pixelCorners[i], courseCenter, newBorder.height, camHeight);
+            correctedCorners[i] = convertPixelPointToCmPoint(pixelCorners[i], this.pixelOffset);
+            correctedCorners[i] = Algorithms.correctedCoordinatesOfObject(correctedCorners[i], courseCenter, newBorder.height, camHeight);
         }
+
+        newBorder.setTopLeft(correctedCorners[0]);
+        newBorder.setTopRight(correctedCorners[1]);
+        newBorder.setBottomLeft(correctedCorners[2]);
+        newBorder.setBottomRight(correctedCorners[3]);
     }
 
     /**
@@ -352,9 +357,9 @@ public class DetectionController {
      * Updates the Course's Cross object, by converting to centimeters and correction coordinates using height.
      */
     private void updateNewCourseCross(Cross newCross) {
-        if (newCross.getMiddle() != null && newCross.getMeasurePoint() != null) {
+        Cross pixelCross = this.borderDetector.getCross();
+        if (pixelCross.getMiddle() != null && pixelCross.getMeasurePoint() != null) {
             // Convert to CM
-            Cross pixelCross = this.borderDetector.getCross();
             Point correctedMiddle = convertPixelPointToCmPoint(pixelCross.getMiddle(), this.pixelOffset);
             Point correctedMeasurePoint = convertPixelPointToCmPoint(pixelCross.getMeasurePoint(), this.pixelOffset);
 
