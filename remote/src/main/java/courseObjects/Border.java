@@ -98,7 +98,9 @@ public class Border {
      * @return The point to which 'the rear end of the robot' should arrive before turning toward the goal with an angle
      */
     public synchronized Point getSmalGoalDestPoint() {
-        updateSmallGoalPoint();
+        if (!updateSmallGoalPoint())
+            return null;
+
         // The distance between the goal and the point where the rear end of the robot should stop
         int offset = 25;
 
