@@ -19,13 +19,8 @@ public class Main {
         new DetectionController(course, cameraIndex, false); // Runs in the background
 
         DetectionConfiguration.DetectionConfiguration();
-        new DetectionController(course, cameraIndex, false);
 
         Routine.collectAllBallsRoutine(controller, course);
-        //Routine.releaseAllBalls(controller);
-        //Routine.driveToBall(controller, course);
-        //controller.stopMotors();
-        controller.stopCollectRelease();
 
         System.out.println("Done");
     }
