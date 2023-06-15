@@ -12,7 +12,7 @@ public abstract class Routine {
     final Point start, dest;
     Point projectedPoint;
     final Cross cross;
-
+    private final int ROBOT_PADDING = 10;
     final Ball ballToCollect;
     final RobotController robotController;
     final RoutingController routingController;
@@ -34,19 +34,20 @@ public abstract class Routine {
                     point1,
                     point2,
                     cross.getMiddle(),
-                    cross.getLongestSide() / 2);
+                    cross.getLongestSide() / 2 + ROBOT_PADDING);
         } else
             return false;
     }
     public Point getIntermediatePointForObstructedRoute (Point point1, Point point2) {
+        final int SAFE_CIRCLE_PADDING = 20;
         List<Point> accessiblePoints = PathController.findCommonPoints(
                 point1,
                 point2,
                 Geometry.generateCircle(cross.getMiddle(),
-                        cross.getLongestSide() + 20,
+                        cross.getLongestSide() + SAFE_CIRCLE_PADDING,
                         360),
                 cross.getMiddle(),
-                cross.getLongestSide()
+                cross.getLongestSide() + ROBOT_PADDING
         );
 
         return PathController.findShortestPath(point1, point2, accessiblePoints);

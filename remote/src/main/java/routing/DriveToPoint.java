@@ -13,7 +13,7 @@ public class DriveToPoint extends Routine {
 
     @Override
     public void run() {
-        avoidObstacle(14);
+        avoidObstacle(0);
 
         super.robotController.recalibrateGyro();
         super.robotController.rotate(super.getDegreesToTurn(dest));

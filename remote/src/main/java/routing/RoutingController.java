@@ -36,7 +36,7 @@ public class RoutingController {
         }
     }
 
-    private void addSubRoute(Routine routine) {
+    public void addSubRoute(Routine routine) {
         fullRoute.add(routine);
     }
 
@@ -52,7 +52,7 @@ public class RoutingController {
 
     public Point projectPoint(@NotNull final Ball ball, final double distance) {
         //TODO: get margin from config
-        int borderDistance = 20;
+        int borderDistance = 10;
 
         BallPickupStrategy strategy = ball.getStrategy();
         Point projectedPoint = null;

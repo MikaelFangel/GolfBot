@@ -12,7 +12,7 @@ public class CollectCorner extends Routine {
 
     @Override
     public void run() {
-        avoidObstacle(14);
+        avoidObstacle(0);
 
         // Drive to a projected spot
         super.robotController.recalibrateGyro();
