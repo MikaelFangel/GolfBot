@@ -5,8 +5,9 @@ import org.opencv.core.Point;
 public class Border {
     public double height;
     private Point topLeft, topRight, bottomLeft, bottomRight;
-    private String smallGoalPos = null;
+    private String smallGoalPos;
     private final Point smallGoalMiddlePoint = new Point();
+    private final Point smallGoalDestPoint = new Point();
 
     public Border(Point topLeft, Point topRight, Point bottomLeft, Point bottomRight) {
         this(); // Call default constructor
@@ -58,11 +59,12 @@ public class Border {
     }
 
     /**
-     * @return The point to which 'the rear end of the robot' should arrive before turning toward the goal with an angle
+     * Update the small goal point before using it
      */
-    public synchronized Point getSmallGoalPoint() {
+    private synchronized boolean updateSmallGoalPoint() {
+        // Can't calculate point without these
         if (this.topLeft == null || this.topRight == null || this.bottomLeft == null || this.bottomRight == null)
-            return null;
+            return false;
 
         // Set smallGoalPos only once (left or right)
         if (this.smallGoalPos == null)
@@ -79,7 +81,35 @@ public class Border {
             }
         }
 
-        return new Point(this.smallGoalMiddlePoint.x + 50.0, this.smallGoalMiddlePoint.y); //23.0
-//        return this.smallGoalMiddlePoint;
+        return true;
+    }
+
+    /**
+     * @return The middle point of the small goal
+     */
+    public synchronized Point getSmallGoalMiddlePoint() {
+        if (!updateSmallGoalPoint())
+            return null;
+        return this.smallGoalMiddlePoint;
+    }
+
+    /**
+     * NB! Always call getSmallGoalPoint before this one to makes sure x and y of smallGoalMiddlePoint is set correctly
+     * @return The point to which 'the rear end of the robot' should arrive before turning toward the goal with an angle
+     */
+    public synchronized Point getSmalGoalDestPoint() {
+        updateSmallGoalPoint();
+        // The distance between the goal and the point where the rear end of the robot should stop
+        int offset = 27;
+
+        this.smallGoalDestPoint.x = switch (this.smallGoalPos) {
+            case "left" -> this.smallGoalMiddlePoint.x + offset;
+            case "right" -> this.smallGoalMiddlePoint.x - offset;
+            default -> this.smallGoalMiddlePoint.x;
+        };
+
+        this.smallGoalDestPoint.y = this.smallGoalMiddlePoint.y;
+
+        return this.smallGoalDestPoint;
     }
 }

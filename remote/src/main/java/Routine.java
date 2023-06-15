@@ -1,5 +1,8 @@
 import courseObjects.Ball;
+import courseObjects.Border;
 import courseObjects.Course;
+import courseObjects.Robot;
+import routing.RobotController;
 import vision.Algorithms;
 
 public class Routine {
@@ -46,5 +49,29 @@ public class Routine {
         controller.collectRelease(false);
         Thread.sleep(3000);
         controller.stopCollectRelease();
+    }
+
+    /**
+     * Routine for driving to goal and releasing balls
+     * @param controller Controlling the robot
+     * @param course Holding the robot and border
+     * @throws InterruptedException Needed for releaseAllBalls
+     */
+    public static void goal(RobotController controller, Course course) throws InterruptedException {
+        Robot robot = course.getRobot();
+        Border border = course.getBorder();
+
+        var angleToStopover = Algorithms.findRobotShortestAngleToPoint(robot, border.getSmalGoalDestPoint());
+        controller.recalibrateGyro();
+        controller.rotate(angleToStopover);
+
+        controller.recalibrateGyro();
+        controller.drive(robot, border.getSmalGoalDestPoint());
+
+        var angleToGoal = Algorithms.findRobotShortestAngleToPoint(robot, border.getSmallGoalMiddlePoint());
+        controller.recalibrateGyro();
+        controller.rotate(angleToGoal);
+
+        releaseAllBalls(controller);
     }
 }
