@@ -54,6 +54,11 @@ public class Robot {
         return angle;
     }
 
+    /**
+     * Positive numbers to add, and negative to remove.
+     * Does not allow number below 0 or above magazine size.
+     * @param ballsToAdd number of balls to modify magazine count.
+     */
     public synchronized void addOrRemoveNumberOfBallsInMagazine(int ballsToAdd) {
         // Not allow below 0
         if (this.ballsInMagazine + ballsToAdd < 0)
@@ -67,6 +72,11 @@ public class Robot {
             this.ballsInMagazine += ballsToAdd;
     }
 
+    /**
+     * Sets number of balls in the magazine.
+     * Does not allow number below 0 or above magazine size.
+     * @param numberOfBalls number of balls to modify magazine count.
+     */
     public synchronized void setNumberOfBallsInMagazine(int numberOfBalls) {
         if (numberOfBalls > this.magazineSize)
             this.ballsInMagazine = this.magazineSize;
