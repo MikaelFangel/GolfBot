@@ -1,5 +1,6 @@
 package routing;
 
+import configs.GlobalConfig;
 import courseObjects.Robot;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
@@ -8,11 +9,11 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.opencv.core.Point;
 import proto.*;
-import configs.GlobalConfig;
 import vision.Algorithms;
 
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
+
 
 public class RobotController {
     private final ManagedChannel CHANNEL;

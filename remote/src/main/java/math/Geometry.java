@@ -12,6 +12,10 @@ public class Geometry {
         return Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2));
     }
 
+    public static double distanceBetweenTwoPoints(Point src, Point dst){
+        return distanceBetweenTwoPoints(src.x, src.y, dst.x, dst.y);
+    }
+
     public static double angleBetweenTwoPoints(double x1, double y1, double x2, double y2) {
         double xDiff = x2 - x1;
         double yDiff = y2 - y1;

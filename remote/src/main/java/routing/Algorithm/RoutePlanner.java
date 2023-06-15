@@ -1,5 +1,6 @@
 package routing.Algorithm;
 
+import courseObjects.Ball;
 import courseObjects.BallColor;
 import courseObjects.Course;
 import helperClasses.Pair;
@@ -11,7 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class RoutePlanner implements IRoutePlanner {
-    List<Routine> path;
+    List<Ball> path;
     Course course;
 
     @Override
@@ -59,7 +60,7 @@ public class RoutePlanner implements IRoutePlanner {
     }
 
     @Override
-    public List<Routine> getComputedRoute() {
+    public List<Ball> getComputedRoute() {
         return path;
     }
 
