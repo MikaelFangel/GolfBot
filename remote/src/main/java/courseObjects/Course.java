@@ -88,7 +88,6 @@ public class Course {
         Cross newCross = newCourse.getCross();
         this.cross.setMiddle(newCross.getMiddle());
         this.cross.setMeasurePoint(newCross.getMeasurePoint());
-        this.cross.setEndPoints(newCross.getEndPoints());
 
         // Robot
         Robot newRobot = newCourse.getRobot();

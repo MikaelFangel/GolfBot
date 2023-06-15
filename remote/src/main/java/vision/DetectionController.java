@@ -292,6 +292,11 @@ public class DetectionController {
 
             // Update Real Course
             course.replaceObjects(newCourse);
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -324,8 +329,8 @@ public class DetectionController {
         Point correctedCenter = convertPixelPointToCmPoint(pixelRobot.getCenter(), this.pixelOffset);
         Point correctedFront = convertPixelPointToCmPoint(pixelRobot.getFront(), this.pixelOffset);
 
-        Algorithms.correctedCoordinatesOfObject(correctedCenter, courseCenter, newRobot.height, camHeight);
-        Algorithms.correctedCoordinatesOfObject(correctedFront, courseCenter, newRobot.height, camHeight);
+        correctedCenter = Algorithms.correctedCoordinatesOfObject(correctedCenter, courseCenter, newRobot.height, camHeight);
+        correctedFront = Algorithms.correctedCoordinatesOfObject(correctedFront, courseCenter, newRobot.height, camHeight);
 
         // Update new Robot
         newRobot.setFrontAndCenter(correctedCenter, correctedFront);
