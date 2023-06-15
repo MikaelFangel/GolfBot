@@ -100,7 +100,7 @@ public class Border {
     public synchronized Point getSmalGoalDestPoint() {
         updateSmallGoalPoint();
         // The distance between the goal and the point where the rear end of the robot should stop
-        int offset = 27;
+        int offset = 25;
 
         this.smallGoalDestPoint.x = switch (this.smallGoalPos) {
             case "left" -> this.smallGoalMiddlePoint.x + offset;

@@ -72,6 +72,11 @@ public class Routine {
         controller.recalibrateGyro();
         controller.rotate(angleToGoal);
 
+        // To get a more precise angle we rotate twice
+        angleToGoal = Algorithms.findRobotShortestAngleToPoint(robot, border.getSmallGoalMiddlePoint());
+        controller.recalibrateGyro();
+        controller.rotate(angleToGoal);
+
         releaseAllBalls(controller);
     }
 }

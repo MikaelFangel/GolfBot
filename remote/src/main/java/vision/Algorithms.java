@@ -89,11 +89,11 @@ public class Algorithms {
      */
     public static double findRobotsDistanceToPoint(Robot robot, Point p, boolean calculateFromFront) {
         // Distance from middle of front marker to middle of collecting front wheel in CM
-        int offset = 3;
+        int offset = 4;
         if (calculateFromFront)
             return distanceBetweenTwoPoints(robot.getFront().x, robot.getFront().y, p.x, p.y) - offset;
 
-        return distanceBetweenTwoPoints(robot.getCenter().x, robot.getCenter().y, p.x, p.y);
+        return distanceBetweenTwoPoints(robot.getCenter().x, robot.getCenter().y, p.x, p.y) - offset;
     }
 
     public static double findRobotsDistanceToBall(Robot robot, Ball ball) {

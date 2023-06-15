@@ -1,8 +1,7 @@
 package routing;
 
+import configs.GlobalConfig;
 import courseObjects.Robot;
-import courseObjects.Ball;
-import courseObjects.Course;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
@@ -10,7 +9,6 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.opencv.core.Point;
 import proto.*;
-import configs.GlobalConfig;
 import vision.Algorithms;
 
 import java.util.ArrayList;
@@ -33,7 +31,8 @@ public class RobotController {
         this.CLIENT = MotorsGrpc.newBlockingStub(CHANNEL);
         this.ASYNCCLIENT = MotorsGrpc.newStub(CHANNEL);
 
-        this.MAX_ITERATIONS = 20;
+        // To make sure the robot don't go bananas
+        this.MAX_ITERATIONS = 100;
     }
 
     /**
@@ -76,30 +75,20 @@ public class RobotController {
             }
         });
 
-        // double distance = isCollecting ? Algorithms.findRobotsDistanceToPoint(robot, target) : Algorithms.findRobotsDistanceToPointFromCenter(robot, target);
-        double distance = Algorithms.findRobotsDistanceToPoint(robot, target, calculateFromFront);
-        double angle = Algorithms.findRobotShortestAngleToPoint(robot, target);
-        double last_distance = distance;
-
-        // Iterator used as a failsafe
-        int i = 0;
-
         try {
-            // Continue to stream messages until reaching target
-            while (distance > 0 && i < MAX_ITERATIONS && Math.abs(angle) < 10) {
-                // Update distance
-                distance = Algorithms.findRobotsDistanceToPoint(robot, target, calculateFromFront);
 
-                // Check if robot are still on target
+            // Iterator used as a failsafe
+            int i = 0;
+            double distance;
+            double angle;
+            double lastDist = 10000;
+
+            // Continue to stream messages until reaching target
+            do {
+                distance = Algorithms.findRobotsDistanceToPoint(robot, target, calculateFromFront);
                 angle = Algorithms.findRobotShortestAngleToPoint(robot, target);
 
-                // If we drive past the target
-                if ((distance - last_distance) > 0.5) {
-                    System.out.println("Drove past the target");
-                    break;
-                }
-
-                last_distance = distance;
+                System.out.println("Distance " + distance + " Angle " + angle);
 
                 DrivePIDRequest drivePIDRequest = DrivePIDRequest.newBuilder()
                         .setMotors(motorsRequest)
@@ -110,13 +99,23 @@ public class RobotController {
                 // Send request
                 requestObserver.onNext(drivePIDRequest);
 
+                // If we drive past the target
+//                if ((distance - lastDist) > 0.1) {
+//                    System.out.println("Drove past the target");
+//                    break;
+//                }
+
                 // Sleep for a bit before sending the next one. TODO: Research timing of the delay with the robot
                 Thread.sleep(300);
 
                 i++;
 
-                System.out.println("Distance " + distance + " Angle " + angle);
+
+
+                lastDist = distance;
             }
+            while (distance > 0 && i < MAX_ITERATIONS);
+
         } catch (RuntimeException e) {
             // Cancel RPC
             requestObserver.onError(e);
