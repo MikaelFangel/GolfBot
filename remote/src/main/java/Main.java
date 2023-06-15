@@ -1,11 +1,14 @@
+import courseObjects.Ball;
+import courseObjects.Course;
 import exceptions.MissingArgumentException;
-import courseObjects.*;
+import routing.RobotController;
+import routing.RoutingController;
 import vision.Algorithms;
-import vision.detection.DetectionConfiguration;
 import vision.DetectionController;
+import vision.detection.DetectionConfiguration;
 
 public class Main {
-    public static void main(String[] args) throws MissingArgumentException {
+    public static void main(String[] args) throws MissingArgumentException, InterruptedException {
         if (args.length < 1) {
             throw new MissingArgumentException("Please provide a camera index");
         }
@@ -13,38 +16,26 @@ public class Main {
         int cameraIndex = Integer.parseInt(args[0]);
 
         Course course = new Course();
-        RobotController controller = new RobotController(course.getRobot());
         new DetectionController(course, cameraIndex, false); // Runs in the background
+        RobotController controller = new RobotController(course.getRobot());
 
         DetectionConfiguration.DetectionConfiguration();
 
-        while (true) {
+        RoutingController routingController = new RoutingController(course, args[0]);
 
-            Ball closestBall;
+        routingController.stopCurrentRoute();
 
-            // Check if there is balls left
-            if(course.getBalls() != null) {
-                closestBall = Algorithms.findClosestBall(course.getBalls(), course.getRobot());
+        Thread.sleep(4000);
+        while (!course.getBalls().isEmpty()) {
+            Ball closestBall = Algorithms.findClosestBall(course.getBalls(), course.getRobot());
 
-                // Do we need both checks? This check also make sure program won't crash after collecting last ball
-                if (closestBall == null)
-                    break;
-            } else {
-                // No balls left on the course. TODO: Should drive to drop off point
+            // This check also make sure program won't crash after collecting last ball
+            if (closestBall == null)
                 break;
-            }
 
-            double angle = Algorithms.findRobotShortestAngleToBall(course.getRobot(), closestBall);
-            double distance = Algorithms.findRobotsDistanceToBall(course.getRobot(), closestBall);
-            System.out.println("Driving distance: " + distance + " with angle: " + angle);
-
-            // Quick integration test, rotate to the ball and collect it
-            controller.recalibrateGyro();
-            controller.rotateWGyro(-angle);
-            controller.collectRelease(true);
-            controller.recalibrateGyro();
-            controller.driveWGyro(course);
-            controller.stopCollectRelease();
+            System.out.println("Chosen collection strat: " + closestBall.getStrategy().toString());
+            routingController.addRoutine(closestBall);
+            routingController.driveRoutes();
         }
 
         System.out.println("Done");

@@ -7,13 +7,13 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
-import vision.math.Geometry;
+import math.Geometry;
 
 import java.util.List;
 import java.util.stream.IntStream;
 
-import static vision.math.Geometry.angleBetweenTwoPoints;
-import static vision.math.Geometry.distanceBetweenTwoPoints;
+import static math.Geometry.angleBetweenTwoPoints;
+import static math.Geometry.distanceBetweenTwoPoints;
 
 /**
  * Contains algorithms used to path find, find the nearest ball etc.
@@ -51,20 +51,45 @@ public class Algorithms {
     }
 
     /**
-     * Finds the shortest angle between robot and ball.
-     *
-     * @return angle in degrees. Clockwise with the robot returns positive angle-values, counter-clockwise with the robot returns negative angle-values.
+     * Finds the shortest angle between robot and point.
+     * @param robot current Point position
+     * @param p next Point
+     * @return shortest angle for rotation toward next point
      */
-    public static double findRobotShortestAngleToBall(Robot robot, Ball ball) {
-        double clockWiseAngleToBall = angleBetweenTwoPoints(robot.getCenter().x, robot.getCenter().y, ball.getCenter().x, ball.getCenter().y);
+    public static double findRobotShortestAngleToPoint(Robot robot, Point p) {
+        double clockWiseAngleToBall = angleBetweenTwoPoints(robot.getCenter().x, robot.getCenter().y, p.x, p.y);
+        clockWiseAngleToBall -= robot.getAngle();
 
         double shortestAngleToBall = clockWiseAngleToBall;
 
         // Check if there is a shorter angle
         if (clockWiseAngleToBall > 180)
             shortestAngleToBall = clockWiseAngleToBall - 360;
+        else if (clockWiseAngleToBall < -180) {
+            shortestAngleToBall = clockWiseAngleToBall + 360;
+        }
 
         return shortestAngleToBall;
+    }
+
+    /**
+     * Finds the shortest angle between robot and ball.
+     *
+     * @return angle in degrees. Clockwise with the robot returns positive angle-values, counter-clockwise with the robot returns negative angle-values.
+     */
+    public static double findRobotShortestAngleToBall(Robot robot, Ball ball) {
+        return findRobotShortestAngleToPoint(robot, ball.getCenter());
+    }
+
+    /**
+     * Finds distance between the robots front ball collection mechanism and a point.
+     * @param robot
+     * @param p
+     * @return distance in cm
+     */
+    public static double findRobotsDistanceToPoint(Robot robot, Point p) {
+        int offset = 3;
+        return distanceBetweenTwoPoints(robot.getFront().x, robot.getFront().y, p.x, p.y) - offset;
     }
 
     public static double findRobotsDistanceToBall(Robot robot, Ball ball) {

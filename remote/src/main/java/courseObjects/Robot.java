@@ -1,13 +1,15 @@
 package courseObjects;
 
 import org.opencv.core.Point;
-import vision.math.Geometry;
+import math.Geometry;
 
 import java.util.Properties;
 
 public class Robot {
     private Point center, front;
     private double angle;
+    // length is distance between markers, width is distance between wheels, height is height of the biggest marker (CM)
+    //public final double length = 16.0, width = 17.0, height = 21.5;
     public final double length, width, height;
 
     private int ballsInMagazine = 0;
@@ -29,8 +31,6 @@ public class Robot {
         this.height = Double.parseDouble(configProp.getProperty("robotHeight"));
         this.magazineSize = Integer.parseInt(configProp.getProperty("magazineSize"));
     }
-
-    ;
 
     public synchronized Point getCenter() {
         return center;
