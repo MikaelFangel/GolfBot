@@ -52,8 +52,9 @@ public class Algorithms {
 
     /**
      * Finds the shortest angle between robot and point.
-     *
-     * @return angle in degrees. Clockwise with the robot returns positive angle-values, counter-clockwise with the robot returns negative angle-values.
+     * @param robot current Point position
+     * @param p next Point
+     * @return shortest angle for rotation toward next point
      */
     public static double findRobotShortestAngleToPoint(Robot robot, Point p) {
         double clockWiseAngleToBall = angleBetweenTwoPoints(robot.getCenter().x, robot.getCenter().y, p.x, p.y);
@@ -69,26 +70,6 @@ public class Algorithms {
         }
 
         return shortestAngleToBall;
-    }
-
-    /**
-     * OBS! findShortestAngleToPoint is a copy of findRobotShortestAngleToBall,
-     * with changes for Points instead of balls.
-     * TODO: Optimize for general purposes from point to point
-     * @param robot current Point position
-     * @param point next Point
-     * @return shortest angle for rotation toward next point
-     */
-    public static double findShortestAngleToPoint(Robot robot, Point point) {
-        double clockWiseAngle = angleBetweenTwoPoints(robot.getCenter().x, robot.getCenter().y, point.x, point.y);
-
-        double shortestAngle = clockWiseAngle;
-
-        // Check if there is a shorter angle
-        if (clockWiseAngle > 180)
-            shortestAngle = clockWiseAngle - 360;
-
-        return shortestAngle;
     }
 
     /**
