@@ -136,6 +136,7 @@ public class DetectionController {
             }
 
             updateCourse();
+            correctCourseObjects();
 
             // Exit when all objects are found
             System.out.println("Exiting Setup");

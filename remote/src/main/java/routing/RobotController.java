@@ -53,7 +53,7 @@ public class RobotController {
      * @throws RuntimeException if the robot was not reached
      * @see <a href="https://github.com/grpc/grpc-java/blob/master/examples/src/main/java/io/grpc/examples/routeguide/RouteGuideClient.java">Example streaming client</a>
      */
-    public void drive(Robot robot, Point target) throws RuntimeException {
+    public void drive(Robot robot, Point target, boolean calculateFromFront) throws RuntimeException {
         int speed = 100;
         MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
                 new MotorPair(OutPort.D, speed));
@@ -76,7 +76,8 @@ public class RobotController {
             }
         });
 
-        double distance = Algorithms.findRobotsDistanceToPoint(robot, target);
+        // double distance = isCollecting ? Algorithms.findRobotsDistanceToPoint(robot, target) : Algorithms.findRobotsDistanceToPointFromCenter(robot, target);
+        double distance = Algorithms.findRobotsDistanceToPoint(robot, target, calculateFromFront);
         double angle = Algorithms.findRobotShortestAngleToPoint(robot, target);
         double last_distance = distance;
 
@@ -87,7 +88,7 @@ public class RobotController {
             // Continue to stream messages until reaching target
             while (distance > 0 && i < MAX_ITERATIONS && Math.abs(angle) < 10) {
                 // Update distance
-                distance = Algorithms.findRobotsDistanceToPoint(robot, target);
+                distance = Algorithms.findRobotsDistanceToPoint(robot, target, calculateFromFront);
 
                 // Check if robot are still on target
                 angle = Algorithms.findRobotShortestAngleToPoint(robot, target);
