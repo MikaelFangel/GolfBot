@@ -20,6 +20,7 @@
     <!-- Cross measurements in cm -->
     <entry key="crossSideLong">20.1</entry>
     <entry key="crossSideShort">3.1</entry>
+    <entry key="crossHeight">3.2</entry>
 
     <!-- Robot measurements in cm -->
     <entry key="robotLength">16.0</entry>
