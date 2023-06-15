@@ -7,6 +7,6 @@ import routing.Routine;
 import java.util.List;
 
 public interface IRoutePlanner {
-    void computeFullRoute(int numberOfBallsInStorage);
+    void computeFullRoute(Course course, int numberOfBallsInStorage);
     List<Routine> getComputedRoute();
 }

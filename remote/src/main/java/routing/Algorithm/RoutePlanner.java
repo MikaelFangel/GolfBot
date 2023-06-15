@@ -14,12 +14,9 @@ public class RoutePlanner implements IRoutePlanner {
     List<Routine> path;
     Course course;
 
-    public RoutePlanner(Course course){
-        this.course = course;
-    }
-
     @Override
-    public void computeFullRoute(int numberOfBallsInStorage) {
+    public void computeFullRoute(Course course, int numberOfBallsInStorage) {
+        this.course = course;
         //TODO: variable that should come from the config file
         int storageSize = 7;
         Point goalPosition = new Point(200,200);
