@@ -4,14 +4,14 @@ import courseObjects.BallColor;
 import courseObjects.Course;
 import helperClasses.Pair;
 import org.opencv.core.Point;
-import routing.Route;
+import routing.Routine;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 public class RoutePlanner implements IRoutePlanner {
-    List<Route> path;
+    List<Routine> path;
     Course course;
 
     public RoutePlanner(Course course){
@@ -62,7 +62,7 @@ public class RoutePlanner implements IRoutePlanner {
     }
 
     @Override
-    public List<Route> getComputedRoute() {
+    public List<Routine> getComputedRoute() {
         return path;
     }
 
