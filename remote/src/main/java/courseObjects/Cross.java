@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Cross {
-    private List<Point> endPoints = new ArrayList<>();
+    private final double height = 3.2; // CM
     private Point middle;
     private Point measurePoint;
     private final double longestSide;
@@ -16,22 +16,6 @@ public class Cross {
         // Measurements are in CM
         this.longestSide = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("crossSideLong"));
         this.shortestSide = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("crossSideShort"));
-    }
-
-    public List<Point> getEndPoints() {
-        return endPoints;
-    }
-
-    public synchronized void setEndPoints(List<Point> endPoints) {
-        if (endPoints.size() != 12) return;
-        this.endPoints = endPoints;
-    }
-
-    @Override
-    public String toString() {
-        return "Cross{" +
-                "endPoints=" + endPoints +
-                '}';
     }
 
     public synchronized Point getMiddle() {
@@ -64,5 +48,9 @@ public class Cross {
 
     public synchronized double getShortestSide() {
         return shortestSide;
+    }
+
+    public double getHeight() {
+        return height;
     }
 }
