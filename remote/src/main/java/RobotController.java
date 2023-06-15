@@ -20,7 +20,7 @@ public class RobotController {
     private final MotorsGrpc.MotorsStub ASYNCCLIENT;
     private final int MAX_ITERATIONS;
 
-    private int ballsOnCourseBeforeRoutine;
+    private int numberOfBallsOnCourseBeforeRoutine;
     private final Robot robot;
 
     /**
@@ -28,7 +28,7 @@ public class RobotController {
      */
     public RobotController(Robot robot) {
         this.robot = robot;
-        this.ballsOnCourseBeforeRoutine = 0;
+        this.numberOfBallsOnCourseBeforeRoutine = 0;
 
         this.CHANNEL = Grpc.newChannelBuilder(
                 GlobalConfig.getConfigProperties().getProperty("ipPort"),
@@ -186,7 +186,7 @@ public class RobotController {
         }
         else {
             // Empty robot magazine counter
-            robot.setBallsInMagazine(0);
+            robot.setNumberOfBallsInMagazine(0);
 
             /* If the front motor is slow, the balls will hit each other and will thereby deviate from expected course.
              * This is because they won't be able to leave the space between the motors before the next ball is
@@ -222,7 +222,7 @@ public class RobotController {
         CLIENT.releaseOneBall(motorRequests);
 
         // Remove one ball from magazine
-        robot.addBallsInMagazine(-1);
+        robot.addOrRemoveNumberOfBallsInMagazine(-1);
     }
 
     /**
@@ -241,25 +241,25 @@ public class RobotController {
     }
 
     /**
-     * Needs to be called before starting the routine / starting the collection.
-     * @param courseBalls the List of Balls from Course.
+     * Needs to be called before starting the collection routine.
+     * @param courseBalls The List of Balls from Course.
      */
     public void startMagazineCounting(List<Ball> courseBalls) {
-        this.ballsOnCourseBeforeRoutine = courseBalls.size();
+        this.numberOfBallsOnCourseBeforeRoutine = courseBalls.size();
     }
 
     /**
-     * Should be called after the routine / after the collection.
-     * @param courseBalls the List of Balls from Course.
+     * Should be called after the collection routine.
+     * @param courseBalls The List of Balls from Course.
      */
     public void endMagazineCounting(List<Ball> courseBalls) {
-        int ballsOnCourseAfterRoutine = courseBalls.size();
+        int numberOfBallsOnCourseAfterRoutine = courseBalls.size();
 
-        if (ballsOnCourseAfterRoutine < this.ballsOnCourseBeforeRoutine) {
-            int diff = this.ballsOnCourseBeforeRoutine - ballsOnCourseAfterRoutine;
+        if (numberOfBallsOnCourseAfterRoutine < this.numberOfBallsOnCourseBeforeRoutine) {
+            int diff = this.numberOfBallsOnCourseBeforeRoutine - numberOfBallsOnCourseAfterRoutine;
 
             // Add diff to magazine counter
-            robot.addBallsInMagazine(diff);
+            this.robot.addOrRemoveNumberOfBallsInMagazine(diff);
         }
     }
 

@@ -19,8 +19,7 @@ public class Course {
     private final int resolutionHeight;
 
     private final Border border = new Border();
-    private final Queue<List<Ball>> ballWindow = new ArrayDeque<>();
-    private final int BALL_WINDOW_SIZE = 10;
+    private final Queue<List<Ball>> ballWindow = new ArrayDeque<>(); // To stabilize the List of Balls
     private final List<Ball> balls = Collections.synchronizedList(new ArrayList<>());
     private final Robot robot = new Robot();
     private final Cross cross = new Cross();
@@ -77,22 +76,27 @@ public class Course {
     }
 
     public double getWidth() {
-        return width;
+        return this.width;
     }
 
     public int getMaxNumberOfBalls() {
-        return maxNumberOfBalls;
+        return this.maxNumberOfBalls;
     }
 
+    /**
+     * Add List<Ball> to Window. This window is used to average the list of ball to increase stability.
+     * @param balls
+     */
     public void addBallListToWindow(List<Ball> balls) {
         // Add list of balls to window
-        if (ballWindow.size() >= BALL_WINDOW_SIZE)
-            ballWindow.poll();
+        int BALL_WINDOW_SIZE = 10;
+        if (this.ballWindow.size() >= BALL_WINDOW_SIZE)
+            this.ballWindow.poll();
 
-        ballWindow.add(balls);
+        this.ballWindow.add(balls);
 
         // Find median list of balls, using size of list.
-        List<List<Ball>> ballFrames = ballWindow.stream().sorted(Comparator.comparingInt(List::size)).toList();
+        List<List<Ball>> ballFrames = this.ballWindow.stream().sorted(Comparator.comparingInt(List::size)).toList();
         List<Ball> newBalls = ballFrames.get(ballFrames.size() / 2);
 
         // Transfer balls

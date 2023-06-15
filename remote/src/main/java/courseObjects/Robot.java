@@ -54,30 +54,32 @@ public class Robot {
         return angle;
     }
 
-    public synchronized void addBallsInMagazine(int ballsToAdd) {
+    public synchronized void addOrRemoveNumberOfBallsInMagazine(int ballsToAdd) {
+        // Not allow below 0
         if (this.ballsInMagazine + ballsToAdd < 0)
             this.ballsInMagazine = 0;
 
-        else if (this.ballsInMagazine + ballsToAdd > magazineSize)
-            this.ballsInMagazine = magazineSize;
+        // Not allow over magazine size
+        else if (this.ballsInMagazine + ballsToAdd > this.magazineSize)
+            this.ballsInMagazine = this.magazineSize;
 
         else
             this.ballsInMagazine += ballsToAdd;
     }
 
-    public synchronized void setBallsInMagazine(int numberOfBalls) {
-        if (numberOfBalls > magazineSize)
-            this.ballsInMagazine = magazineSize;
+    public synchronized void setNumberOfBallsInMagazine(int numberOfBalls) {
+        if (numberOfBalls > this.magazineSize)
+            this.ballsInMagazine = this.magazineSize;
 
         else
             this.ballsInMagazine = Math.max(numberOfBalls, 0);
     }
 
-    public synchronized int getBallsInMagazine() {
+    public synchronized int getNumberOfBallsInMagazine() {
         return this.ballsInMagazine;
     }
 
     public int getMagazineSize() {
-        return magazineSize;
+        return this.magazineSize;
     }
 }
