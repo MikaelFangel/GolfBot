@@ -302,7 +302,7 @@ public class DetectionController {
     private void updateNewCourseBorder(Border newBorder) {
         Border pixelBorder = this.borderDetector.getBorder();
         Point[] pixelCorners = pixelBorder.getCornersAsArray(); // From pixel Border
-        Point[] correctedCorners = newBorder.getCornersAsArray();
+        Point[] correctedCorners = new Point[4];
 
         // Save border to use for overlay
         oldBorder = pixelBorder;
@@ -357,9 +357,9 @@ public class DetectionController {
      * Updates the Course's Cross object, by converting to centimeters and correction coordinates using height.
      */
     private void updateNewCourseCross(Cross newCross) {
-        if (newCross.getMiddle() != null && newCross.getMeasurePoint() != null) {
+        Cross pixelCross = this.borderDetector.getCross();
+        if (pixelCross.getMiddle() != null && pixelCross.getMeasurePoint() != null) {
             // Convert to CM
-            Cross pixelCross = this.borderDetector.getCross();
             Point correctedMiddle = convertPixelPointToCmPoint(pixelCross.getMiddle(), this.pixelOffset);
             Point correctedMeasurePoint = convertPixelPointToCmPoint(pixelCross.getMeasurePoint(), this.pixelOffset);
 
