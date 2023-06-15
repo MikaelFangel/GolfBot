@@ -61,12 +61,12 @@ public class Routine {
         Robot robot = course.getRobot();
         Border border = course.getBorder();
 
-        var angleToStopover = Algorithms.findRobotShortestAngleToPoint(robot, border.getSmalGoalDestPoint());
+        var angleToStopover = Algorithms.findRobotShortestAngleToPoint(robot, border.getSmallGoalDestPoint());
         controller.recalibrateGyro();
         controller.rotate(angleToStopover);
 
         controller.recalibrateGyro();
-        controller.drive(robot, border.getSmalGoalDestPoint(), false);
+        controller.drive(robot, border.getSmallGoalDestPoint(), false);
 
         var angleToGoal = Algorithms.findRobotShortestAngleToPoint(robot, border.getSmallGoalMiddlePoint());
         controller.recalibrateGyro();

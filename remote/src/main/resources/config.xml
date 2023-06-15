@@ -9,6 +9,8 @@
     <!-- Border measurements in cm -->
     <entry key="borderHeight">7</entry>
     <entry key="smallGoalPos">left</entry> <!-- left or right -->
+    <entry key="offsetFromBorderToRobot">25</entry> <!-- The distance in CM between the border and the point of the
+    center of the rear marker of the robot, so the robot and the border don't collide -->
 
     <!-- Course measurements in cm -->
     <entry key="courseWidth">169.0</entry>

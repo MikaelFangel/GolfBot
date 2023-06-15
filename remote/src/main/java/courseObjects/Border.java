@@ -5,7 +5,7 @@ import org.opencv.core.Point;
 public class Border {
     public double height;
     private Point topLeft, topRight, bottomLeft, bottomRight;
-    private String smallGoalPos;
+    private String smallGoalDirection;
     private final Point smallGoalMiddlePoint = new Point();
     private final Point smallGoalDestPoint = new Point();
 
@@ -67,10 +67,10 @@ public class Border {
             return false;
 
         // Set smallGoalPos only once (left or right)
-        if (this.smallGoalPos == null)
-            this.smallGoalPos = configs.GlobalConfig.getConfigProperties().getProperty("smallGoalPos");
+        if (this.smallGoalDirection == null)
+            this.smallGoalDirection = configs.GlobalConfig.getConfigProperties().getProperty("smallGoalPos");
 
-        switch (this.smallGoalPos) {
+        switch (this.smallGoalDirection) {
             case "left" -> {
                 this.smallGoalMiddlePoint.x = (this.topLeft.x + this.bottomLeft.x) / 2;
                 this.smallGoalMiddlePoint.y = (this.topLeft.y + this.bottomLeft.y) / 2;
@@ -97,14 +97,14 @@ public class Border {
      * NB! Always call getSmallGoalPoint before this one to makes sure x and y of smallGoalMiddlePoint is set correctly
      * @return The point to which 'the rear end of the robot' should arrive before turning toward the goal with an angle
      */
-    public synchronized Point getSmalGoalDestPoint() {
+    public synchronized Point getSmallGoalDestPoint() {
         if (!updateSmallGoalPoint())
             return null;
 
         // The distance between the goal and the point where the rear end of the robot should stop
-        int offset = 25;
+        int offset = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("offsetFromBorderToRobot"));
 
-        this.smallGoalDestPoint.x = switch (this.smallGoalPos) {
+        this.smallGoalDestPoint.x = switch (this.smallGoalDirection) {
             case "left" -> this.smallGoalMiddlePoint.x + offset;
             case "right" -> this.smallGoalMiddlePoint.x - offset;
             default -> this.smallGoalMiddlePoint.x;
