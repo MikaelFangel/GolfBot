@@ -1,5 +1,6 @@
 import courseObjects.Ball;
 import courseObjects.Course;
+import courseObjects.Robot;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
@@ -10,6 +11,7 @@ import configs.GlobalConfig;
 import vision.Algorithms;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class RobotController {
@@ -18,10 +20,16 @@ public class RobotController {
     private final MotorsGrpc.MotorsStub ASYNCCLIENT;
     private final int MAX_ITERATIONS;
 
+    private int numberOfBallsOnCourseBeforeRoutine;
+    private final Robot robot;
+
     /**
      * Initializes channel and client to connect with the robot.
      */
-    public RobotController() {
+    public RobotController(Robot robot) {
+        this.robot = robot;
+        this.numberOfBallsOnCourseBeforeRoutine = 0;
+
         this.CHANNEL = Grpc.newChannelBuilder(
                 GlobalConfig.getConfigProperties().getProperty("ipPort"),
                 InsecureChannelCredentials.create()
@@ -177,6 +185,9 @@ public class RobotController {
             motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, motorSpeed), new MotorPair(OutPort.C, motorSpeed));
         }
         else {
+            // Empty robot magazine counter
+            robot.setNumberOfBallsInMagazine(0);
+
             /* If the front motor is slow, the balls will hit each other and will thereby deviate from expected course.
              * This is because they won't be able to leave the space between the motors before the next ball is
              * released from storage
@@ -209,6 +220,9 @@ public class RobotController {
         MultipleMotors motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, speed), new MotorPair(OutPort.C, speed));
 
         CLIENT.releaseOneBall(motorRequests);
+
+        // Remove one ball from magazine
+        robot.addOrRemoveNumberOfBallsInMagazine(-1);
     }
 
     /**
@@ -223,6 +237,29 @@ public class RobotController {
                 System.out.println("An error occurred");
         } catch (RuntimeException e) {
             System.err.println(e.getMessage());
+        }
+    }
+
+    /**
+     * Needs to be called before starting the collection routine.
+     * @param courseBalls The List of Balls from Course.
+     */
+    public void startMagazineCounting(List<Ball> courseBalls) {
+        this.numberOfBallsOnCourseBeforeRoutine = courseBalls.size();
+    }
+
+    /**
+     * Should be called after the collection routine.
+     * @param courseBalls The List of Balls from Course.
+     */
+    public void endMagazineCounting(List<Ball> courseBalls) {
+        int numberOfBallsOnCourseAfterRoutine = courseBalls.size();
+
+        if (numberOfBallsOnCourseAfterRoutine < this.numberOfBallsOnCourseBeforeRoutine) {
+            int diff = this.numberOfBallsOnCourseBeforeRoutine - numberOfBallsOnCourseAfterRoutine;
+
+            // Add diff to magazine counter
+            this.robot.addOrRemoveNumberOfBallsInMagazine(diff);
         }
     }
 

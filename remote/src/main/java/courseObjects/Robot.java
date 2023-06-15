@@ -3,10 +3,15 @@ package courseObjects;
 import org.opencv.core.Point;
 import vision.math.Geometry;
 
+import java.util.Properties;
+
 public class Robot {
     private Point center, front;
     private double angle;
     public final double length, width, height;
+
+    private int ballsInMagazine = 0;
+    private final int magazineSize;
 
     public Robot(Point center, Point front) {
         this(); // Call default constructor
@@ -18,9 +23,11 @@ public class Robot {
 
     public Robot() {
         // Measurements are in CM
-        this.length = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("robotLength"));
-        this.width = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("robotWidth"));
-        this.height = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("robotHeight"));
+        Properties configProp = configs.GlobalConfig.getConfigProperties();
+        this.length = Double.parseDouble(configProp.getProperty("robotLength"));
+        this.width = Double.parseDouble(configProp.getProperty("robotWidth"));
+        this.height = Double.parseDouble(configProp.getProperty("robotHeight"));
+        this.magazineSize = Integer.parseInt(configProp.getProperty("magazineSize"));
     }
 
     ;
@@ -45,5 +52,44 @@ public class Robot {
 
     public synchronized double getAngle() {
         return angle;
+    }
+
+    /**
+     * Positive numbers to add, and negative to remove.
+     * Does not allow number below 0 or above magazine size.
+     * @param ballsToAdd number of balls to modify magazine count.
+     */
+    public synchronized void addOrRemoveNumberOfBallsInMagazine(int ballsToAdd) {
+        // Not allow below 0
+        if (this.ballsInMagazine + ballsToAdd < 0)
+            this.ballsInMagazine = 0;
+
+        // Not allow over magazine size
+        else if (this.ballsInMagazine + ballsToAdd > this.magazineSize)
+            this.ballsInMagazine = this.magazineSize;
+
+        else
+            this.ballsInMagazine += ballsToAdd;
+    }
+
+    /**
+     * Sets number of balls in the magazine.
+     * Does not allow number below 0 or above magazine size.
+     * @param numberOfBalls number of balls to modify magazine count.
+     */
+    public synchronized void setNumberOfBallsInMagazine(int numberOfBalls) {
+        if (numberOfBalls > this.magazineSize)
+            this.ballsInMagazine = this.magazineSize;
+
+        else
+            this.ballsInMagazine = Math.max(numberOfBalls, 0);
+    }
+
+    public synchronized int getNumberOfBallsInMagazine() {
+        return this.ballsInMagazine;
+    }
+
+    public int getMagazineSize() {
+        return this.magazineSize;
     }
 }
