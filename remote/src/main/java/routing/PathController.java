@@ -36,14 +36,14 @@ public class PathController {
 
     /**
      * Given 2 objects position, and a list of points that both can reach in a straight line,
-     * it finds the point for which the sum of movement required is the lowest.
+     * it finds the point for which the sum of movement required is the highest.
      *
      * @param point1 first objects position
      * @param point2 second objects position
      * @param sharedPoints a list of points that can be reach in a straight line from both points
-     * @return A single point from the sharedPoints list, that have the shortest distance.
+     * @return A single point from the sharedPoints list, that have the longest distance.
      */
-    public static Point findShortestPath(
+    public static Point findLongestPath(
             Point point1,
             Point point2,
             List<Point> sharedPoints
@@ -51,7 +51,7 @@ public class PathController {
         if (sharedPoints.isEmpty()) return null;
         return sharedPoints.stream()
                 .parallel()
-                .min((p1,p2) -> { //returns the value based on the sorting that has the lowest value
+                .max((p1,p2) -> { //returns the value based on the sorting that has the lowest value
                     double point1Distance1 = distanceBetweenTwoPoints(p1.x, p1.y, point1.x, point1.y);
                     double point1Distance2 = distanceBetweenTwoPoints(p1.x, p1.y, point2.x, point2.y);
                     double point2Distance1 = distanceBetweenTwoPoints(p2.x, p2.y, point1.x, point1.y);

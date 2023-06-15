@@ -74,9 +74,9 @@ public abstract class Routine {
                         cross.getLongestSide() + SAFE_CIRCLE_PADDING,
                         360),
                 cross.getMiddle(),
-                cross.getLongestSide() + ROBOT_PADDING
+                cross.getLongestSide() / 2 + ROBOT_PADDING
         );
 
-        return PathController.findShortestPath(point1, point2, accessiblePoints);
+        return PathController.findLongestPath(point1, point2, accessiblePoints);
     }
 }
