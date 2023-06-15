@@ -1,5 +1,7 @@
 package courseObjects;
 
+import org.opencv.core.Point;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -68,5 +70,33 @@ public class Course {
 
     public double getWidth() {
         return width;
+    }
+
+    /**
+     * Replace the Course's objects variables with the new Course.
+     * @param newCourse objects to be used for replacing.
+     */
+    public void replaceObjects(Course newCourse) {
+        // Border
+        Point[] newBorderCorners = newCourse.getBorder().getCornersAsArray();
+        this.border.setTopLeft(newBorderCorners[0]);
+        this.border.setTopRight(newBorderCorners[1]);
+        this.border.setBottomLeft(newBorderCorners[2]);
+        this.border.setBottomRight(newBorderCorners[3]);
+
+        // Cross
+        Cross newCross = newCourse.getCross();
+        this.cross.setMiddle(newCross.getMiddle());
+        this.cross.setMeasurePoint(newCross.getMeasurePoint());
+        this.cross.setEndPoints(newCross.getEndPoints());
+
+        // Robot
+        Robot newRobot = newCourse.getRobot();
+        this.robot.setFrontAndCenter(newRobot.getCenter(), newRobot.getFront());
+
+        // Balls TODO change when Magazine PR is merged
+        List<Ball> newBalls = newCourse.getBalls();
+        this.balls.clear();
+        this.balls.addAll(newBalls);
     }
 }
