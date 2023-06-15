@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.opencv.core.Point;
 import vision.BallPickupStrategy;
 
+import java.sql.SQLOutput;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
@@ -88,64 +89,49 @@ public class RoutingController {
      */
     public Point projectPoint(@NotNull final Ball ball, final double distance) {
         //TODO: get margin from config
-        int borderDistance = 10;
+        double borderDistance = 10 + distance;
 
         BallPickupStrategy strategy = ball.getStrategy();
         Point projectedPoint = null;
         switch (strategy) {
             case FREE -> projectedPoint = ball.getCenter();
-            case BORDER_TOP -> {
-                projectedPoint = new Point(
-                        ball.getCenter().x,
-                        course.getBorder().getTopLeft().y + borderDistance
-                );
-            }
-            case BORDER_BOTTOM -> {
-                projectedPoint = new Point(
-                        ball.getCenter().x,
-                        course.getBorder().getBottomLeft().y - borderDistance
-                );
-            }
-            case BORDER_RIGHT -> {
-                projectedPoint = new Point(
-                        course.getBorder().getTopRight().x - borderDistance,
-                        ball.getCenter().y
-                );
-            }
-            case BORDER_LEFT -> {
-                projectedPoint = new Point(
-                        course.getBorder().getTopLeft().x + borderDistance,
-                        ball.getCenter().y
-                );
-            }
+            case BORDER_TOP -> projectedPoint = new Point(
+                    ball.getCenter().x,
+                    course.getBorder().getTopLeft().y + borderDistance
+            );
+            case BORDER_BOTTOM -> projectedPoint = new Point(
+                    ball.getCenter().x,
+                    course.getBorder().getBottomLeft().y - borderDistance
+            );
+            case BORDER_RIGHT -> projectedPoint = new Point(
+                    course.getBorder().getTopRight().x - borderDistance,
+                    ball.getCenter().y
+            );
+            case BORDER_LEFT -> projectedPoint = new Point(
+                    course.getBorder().getTopLeft().x + borderDistance,
+                    ball.getCenter().y
+            );
 
             //TODO: make correction distance generic based on angel
-            case CORNER_TOP_RIGHT -> {
-                projectedPoint = new Point(
-                        ball.getCenter().x - borderDistance,
-                        ball.getCenter().y - borderDistance
-                );
-            }
-            case CORNER_TOP_LEFT -> {
-                projectedPoint = new Point(
-                        ball.getCenter().x + borderDistance,
-                        ball.getCenter().y + borderDistance
-                );
-            }
-            case CORNER_BOTTOM_RIGHT -> {
-                projectedPoint = new Point(
-                        ball.getCenter().x - borderDistance,
-                        ball.getCenter().y + borderDistance
-                );
-            }
-            case CORNER_BOTTOM_LEFT -> {
-                projectedPoint = new Point(
-                        ball.getCenter().x + borderDistance,
-                        ball.getCenter().y - borderDistance
-                );
-            }
+            case CORNER_TOP_RIGHT -> projectedPoint = new Point(
+                    ball.getCenter().x - borderDistance,
+                    ball.getCenter().y - borderDistance
+            );
+            case CORNER_TOP_LEFT -> projectedPoint = new Point(
+                    ball.getCenter().x + borderDistance,
+                    ball.getCenter().y + borderDistance
+            );
+            case CORNER_BOTTOM_RIGHT -> projectedPoint = new Point(
+                    ball.getCenter().x - borderDistance,
+                    ball.getCenter().y + borderDistance
+            );
+            case CORNER_BOTTOM_LEFT -> projectedPoint = new Point(
+                    ball.getCenter().x + borderDistance,
+                    ball.getCenter().y - borderDistance
+            );
             case CROSS -> {
                 // TODO: Implement
+                System.out.println("HIT UNIMPLEMENTED STRATEGY");
             }
             default -> projectedPoint = ball.getCenter();
         }

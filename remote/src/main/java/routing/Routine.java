@@ -12,7 +12,7 @@ public abstract class Routine {
     final Point start, dest;
     Point projectedPoint;
     final Cross cross;
-    private final int ROBOT_PADDING = 10;
+    private final int ROBOT_PADDING = 5;
     final Ball ballToCollect;
     final RobotController robotController;
     final RoutingController routingController;

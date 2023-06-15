@@ -1,10 +1,11 @@
+import courseObjects.Ball;
+import courseObjects.Course;
 import exceptions.MissingArgumentException;
-import courseObjects.*;
-import routing.*;
-import routing.Routine;
+import routing.RobotController;
+import routing.RoutingController;
 import vision.Algorithms;
-import vision.detection.DetectionConfiguration;
 import vision.DetectionController;
+import vision.detection.DetectionConfiguration;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException, MissingArgumentException {
@@ -34,6 +35,7 @@ public class Main {
             if (closestBall == null)
                 break;
 
+            System.out.println("Chosen collection strat: " + closestBall.getStrategy().toString());
             routingController.addRoutine(closestBall);
             routingController.driveRoutes();
         }
