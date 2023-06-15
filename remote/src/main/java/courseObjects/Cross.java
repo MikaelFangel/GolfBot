@@ -6,16 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Cross {
-    private final double height = 3.2; // CM
     private Point middle;
     private Point measurePoint;
-    private final double longestSide;
-    private final double shortestSide;
 
     public Cross() {
-        // Measurements are in CM
-        this.longestSide = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("crossSideLong"));
-        this.shortestSide = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("crossSideShort"));
     }
 
     public synchronized Point getMiddle() {
@@ -43,14 +37,14 @@ public class Cross {
     }
 
     public synchronized double getLongestSide() {
-        return longestSide;
+        return Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("crossSideLong"));
     }
 
     public synchronized double getShortestSide() {
-        return shortestSide;
+        return Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("crossSideShort"));
     }
 
     public double getHeight() {
-        return height;
+        return Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("crossHeight"));
     }
 }

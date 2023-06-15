@@ -54,8 +54,8 @@ public class DetectionController {
         this.showMasks = showMasks;
         this.course = course;
 
-        camHeight = course.getCameraHeight();
-        courseCenter = new Point(course.getWidth() / 2, course.getHeight() / 2);
+        this.camHeight = course.getCameraHeight();
+        this.courseCenter = new Point(course.getWidth() / 2, course.getHeight() / 2);
 
         // Initialize OpenCV
         OpenCV.loadLocally();
@@ -292,32 +292,21 @@ public class DetectionController {
 
             // Update Real Course
             course.replaceObjects(newCourse);
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
         }
     }
 
     /**
-     * Updates the Border in the Course object, in centimetres.
-     * The border is not corrected. This is intentional.
+     * Updates the Border in the Course object, by converting to centimeters and correction coordinates using height.
      */
     private void updateNewCourseBorder(Border newBorder) {
-        Point[] convertedCorners = this.borderDetector.getBorder().getCornersAsArray(); // From pixel Border
+        Point[] pixelCorners = this.borderDetector.getBorder().getCornersAsArray(); // From pixel Border
+        Point[] newCorners = newBorder.getCornersAsArray();
 
         // Convert from pixel to cm.
-        for (int i = 0; i < convertedCorners.length; i++) {
-            convertedCorners[i] = convertPixelPointToCmPoint(convertedCorners[i], this.pixelOffset);
-            convertedCorners[i] = Algorithms.correctedCoordinatesOfObject(convertedCorners[i], courseCenter, newBorder.height, camHeight);
+        for (int i = 0; i < pixelCorners.length; i++) {
+            newCorners[i] = convertPixelPointToCmPoint(pixelCorners[i], this.pixelOffset);
+            newCorners[i] = Algorithms.correctedCoordinatesOfObject(pixelCorners[i], courseCenter, newBorder.height, camHeight);
         }
-
-        // Update Course Border
-        newBorder.setTopLeft(convertedCorners[0]);
-        newBorder.setTopRight(convertedCorners[1]);
-        newBorder.setBottomLeft(convertedCorners[2]);
-        newBorder.setBottomRight(convertedCorners[3]);
     }
 
     /**
