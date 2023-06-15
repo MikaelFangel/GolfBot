@@ -1,6 +1,7 @@
 import exceptions.MissingArgumentException;
 import courseObjects.*;
-import routing.RobotController;
+import routing.*;
+import routing.Routine;
 import vision.Algorithms;
 import vision.detection.DetectionConfiguration;
 import vision.DetectionController;
@@ -21,7 +22,21 @@ public class Main {
         DetectionConfiguration.DetectionConfiguration();
         new DetectionController(course, cameraIndex, false);
 
-        Routine.collectAllBallsRoutine(controller, course);
+        RoutingController routingController = new RoutingController(course, args[0]);
+
+        routingController.stopCurrentRoute();
+
+        Thread.sleep(2000);
+        while (!course.getBalls().isEmpty()) {
+            Ball closestBall = Algorithms.findClosestBall(course.getBalls(), course.getRobot());
+
+            // This check also make sure program won't crash after collecting last ball
+            if (closestBall == null)
+                break;
+
+            routingController.addRoutine(closestBall);
+            routingController.driveRoutes();
+        }
 
         System.out.println("Done");
     }
