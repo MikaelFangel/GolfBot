@@ -46,14 +46,14 @@ public class DetectionConfiguration {
         this.ballParam2 = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("ballParam2"));
 
         // Robot
-        this.lowerRobotThreshold = new Scalar(130, 80, 0);
-        this.upperRobotThreshold = new Scalar(250, 120, 60);
+        this.lowerRobotThreshold = new Scalar(130, 70, 0);
+        this.upperRobotThreshold = new Scalar(250, 120, 100);
         this.lowerRobotSize = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("robotSizeLower"));
         this.upperRobotSize = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("robotSizeUpper"));
 
         // Obstacle
         this.lowerObstacleThreshold = new Scalar(0, 0, 100);
-        this.upperObstacleThreshold = new Scalar(5, 5, 255);
+        this.upperObstacleThreshold = new Scalar(60, 60, 255);
         this.lowerBorderSize = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("borderSizeLower"));
         this.lowerCrossSize = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("crossSizeLower"));
         this.upperCrossSize = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("crossSizeUpper"));
