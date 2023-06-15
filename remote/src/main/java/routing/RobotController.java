@@ -1,5 +1,7 @@
 package routing;
 
+import configs.GlobalConfig;
+import courseObjects.Ball;
 import courseObjects.Robot;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
@@ -8,10 +10,10 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.opencv.core.Point;
 import proto.*;
-import configs.GlobalConfig;
 import vision.Algorithms;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class RobotController {
@@ -21,6 +23,7 @@ public class RobotController {
     private final int MAX_ITERATIONS;
     private final Robot robot;
 
+    private int numberOfBallsOnCourseBeforeRoutine;
     /**
      * Initializes channel and client to connect with the robot.
      */
@@ -34,6 +37,7 @@ public class RobotController {
 
         this.MAX_ITERATIONS = 20;
 
+        this.numberOfBallsOnCourseBeforeRoutine = 0;
         this.robot = robot;
     }
 
@@ -49,7 +53,6 @@ public class RobotController {
     /**
      * Drive robot straight either forward or backwards by using the gyro and streaming distance to the robot
      *
-     * @param robot  current position and orientation
      * @param target destination
      * @throws RuntimeException if the robot was not reached
      * @see <a href="https://github.com/grpc/grpc-java/blob/master/examples/src/main/java/io/grpc/examples/routeguide/RouteGuideClient.java">Example streaming client</a>
@@ -189,6 +192,9 @@ public class RobotController {
             int motorSpeed = -1200;
             motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, motorSpeed), new MotorPair(OutPort.C, motorSpeed));
         } else {
+            // Empty robot magazine counter
+            robot.setNumberOfBallsInMagazine(0);
+
             /* If the front motor is slow, the balls will hit each other and will thereby deviate from expected course.
              * This is because they won't be able to leave the space between the motors before the next ball is
              * released from storage
@@ -222,6 +228,9 @@ public class RobotController {
         MultipleMotors motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, speed), new MotorPair(OutPort.C, speed));
 
         CLIENT.releaseOneBall(motorRequests);
+
+        // Remove one ball from magazine
+        robot.addOrRemoveNumberOfBallsInMagazine(-1);
     }
 
     /**
@@ -236,6 +245,29 @@ public class RobotController {
                 System.out.println("An error occurred");
         } catch (RuntimeException e) {
             System.err.println(e.getMessage());
+        }
+    }
+
+    /**
+     * Needs to be called before starting the collection routine.
+     * @param courseBalls The List of Balls from Course.
+     */
+    public void startMagazineCounting(List<Ball> courseBalls) {
+        this.numberOfBallsOnCourseBeforeRoutine = courseBalls.size();
+    }
+
+    /**
+     * Should be called after the collection routine.
+     * @param courseBalls The List of Balls from Course.
+     */
+    public void endMagazineCounting(List<Ball> courseBalls) {
+        int numberOfBallsOnCourseAfterRoutine = courseBalls.size();
+
+        if (numberOfBallsOnCourseAfterRoutine < this.numberOfBallsOnCourseBeforeRoutine) {
+            int diff = this.numberOfBallsOnCourseBeforeRoutine - numberOfBallsOnCourseAfterRoutine;
+
+            // Add diff to magazine counter
+            this.robot.addOrRemoveNumberOfBallsInMagazine(diff);
         }
     }
 
