@@ -28,6 +28,6 @@ public class CollectWallCross extends Routine {
         super.robotController.drive(dest, true);
         super.robotController.stopCollectRelease();
 
-        // TODO: Reverse away from wall
+        super.robotController.reverse();
     }
 }

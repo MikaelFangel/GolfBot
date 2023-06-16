@@ -28,6 +28,8 @@ public class DeliverBallsToGoal extends Routine {
         super.robotController.rotate(super.getDegreesToTurn(dest));
 
         releaseAllBalls();
+
+        super.robotController.reverse();
     }
 
     private void releaseAllBalls() {
