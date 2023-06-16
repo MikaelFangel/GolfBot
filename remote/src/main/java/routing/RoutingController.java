@@ -2,19 +2,20 @@ package routing;
 
 import courseObjects.Ball;
 import courseObjects.Course;
+import courseObjects.Cross;
+import math.Geometry;
 import org.jetbrains.annotations.NotNull;
 import org.opencv.core.Point;
 import vision.BallPickupStrategy;
 
-import java.sql.SQLOutput;
 import java.util.ArrayDeque;
-import java.util.Queue;
+import java.util.Deque;
 
 public class RoutingController {
 
     private final RobotController robotController;
     private final Course course;
-    private final Queue<Routine> fullRoute = new ArrayDeque<>();
+    private final Deque<Routine> fullRoute = new ArrayDeque<>();
     private Routine currentRoute;
 
 
@@ -30,7 +31,7 @@ public class RoutingController {
         if (fullRoute.isEmpty()) return;
 
         while (!fullRoute.isEmpty()) {
-            currentRoute = fullRoute.poll();
+            currentRoute = fullRoute.pop();
             if (currentRoute == null) return;
 
             currentRoute.run();
@@ -44,9 +45,9 @@ public class RoutingController {
     public void addRoutine(Ball ball) {
         Routine routine;
         switch (ball.getStrategy()) {
-            case CORNER_TOP_LEFT, CORNER_BOTTOM_LEFT, CORNER_BOTTOM_RIGHT, CORNER_TOP_RIGHT ->
+            case CORNER_TOP_LEFT, CORNER_BOTTOM_LEFT, CORNER_BOTTOM_RIGHT, CORNER_TOP_RIGHT, CROSS ->
                     routine = new CollectCorner(course.getRobot().getCenter(), ball.getCenter(), ball, course.getCross(), this.robotController, this);
-            case BORDER_BOTTOM, BORDER_LEFT, BORDER_RIGHT, BORDER_TOP, CROSS ->
+            case BORDER_BOTTOM, BORDER_LEFT, BORDER_RIGHT, BORDER_TOP ->
                     routine = new CollectWallCross(course.getRobot().getCenter(), ball.getCenter(), ball, course.getCross(), this.robotController, this);
             case FREE ->
                     routine = new DriveAndCollect(course.getRobot().getCenter(), ball.getCenter(), ball, course.getCross(), this.robotController, this);
@@ -61,9 +62,11 @@ public class RoutingController {
      * Add a routine for driving to a specific destination
      * @param point the point to drive to
      */
-    public void addRoutine(Point point) {
-        fullRoute.add(new DriveToPoint(course.getRobot().getCenter(), point, null, course.getCross(), this.robotController, this));
-
+    public void addRoutine(Point point, boolean deliverBalls) {
+        if(deliverBalls)
+            fullRoute.add(new DeliverBallsToGoal(course.getRobot().getCenter(), point, null, course.getCross(), this.robotController, this));
+        else
+            fullRoute.add(new DriveToPoint(course.getRobot().getCenter(), point, null, course.getCross(), this.robotController, this));
     }
 
     /**
@@ -88,11 +91,15 @@ public class RoutingController {
      * @return the projected point
      */
     public Point projectPoint(@NotNull final Ball ball, final double distance) {
-        //TODO: get margin from config
-        double borderDistance = 10 + distance;
+        double crossProjectionMargin = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("crossProjectionMargin"));
+        double borderProjectionMargin = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("borderProjectionMargin"));
+
+        double borderDistance = borderProjectionMargin + distance;
+        double crossDistance = crossProjectionMargin + course.getCross().getLongestSide() / 2 + distance;
 
         BallPickupStrategy strategy = ball.getStrategy();
-        Point projectedPoint = null;
+        Point projectedPoint;
+
         switch (strategy) {
             case FREE -> projectedPoint = ball.getCenter();
             case BORDER_TOP -> projectedPoint = new Point(
@@ -130,12 +137,51 @@ public class RoutingController {
                     ball.getCenter().y - borderDistance
             );
             case CROSS -> {
-                // TODO: Implement
-                System.out.println("HIT UNIMPLEMENTED STRATEGY");
+                Point ballCenter = ball.getCenter();
+                Cross cross = course.getCross();
+                Point crossCenter = cross.getMiddle(), crossMeasurePoint = cross.getMeasurePoint();
+
+                // Prepare angles and distances
+                double angleToBall = Geometry.angleBetweenTwoPoints(crossCenter.x, crossCenter.y, ballCenter.x, ballCenter.y);
+                double angleToMeasurePoint = Geometry.angleBetweenTwoPoints(crossCenter.x, crossCenter.y, crossMeasurePoint.x, crossMeasurePoint.y);
+                double distanceToBall = Geometry.distanceBetweenTwoPoints(crossCenter.x, crossCenter.y, ballCenter.x, ballCenter.y);
+
+                // If ball is NOT between two "legs"
+                if (distanceToBall > cross.getLongestSide() / 2) {
+                    projectedPoint = new Point(
+                            crossCenter.x + Math.cos(angleToBall) * crossDistance,
+                            crossCenter.y + Math.sin(angleToBall) * crossDistance
+                    );
+                } else { //  if ball IS between two "legs"
+
+                    // Calculate number of times to rotate 90 degrees.
+                    double diffAngle = angleToBall - angleToMeasurePoint;
+                    double numRotations = (int) (diffAngle / 90); // To remove decimals.
+                    int direction = (diffAngle >= 0) ? 1 : -1;
+
+                    double projectionAngle = angleToMeasurePoint + (direction * 45) + (90 * numRotations);
+                    // Convert to radians
+                    projectionAngle = projectionAngle * Math.PI / 180;
+
+                    projectedPoint = new Point(
+                            crossCenter.x + Math.cos(projectionAngle) * crossDistance,
+                            crossCenter.y + Math.sin(projectionAngle) * crossDistance
+                    );
+                }
+
+
             }
             default -> projectedPoint = ball.getCenter();
         }
 
         return projectedPoint;
+    }
+
+    public Point getSmallGoalMiddlePoint() {
+        return course.getBorder().getSmallGoalMiddlePoint();
+    }
+
+    public Point getSmallGoalProjectedPoint() {
+        return course.getBorder().getSmallGoalDestPoint();
     }
 }
