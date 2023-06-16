@@ -63,22 +63,7 @@ public class RobotController {
                 new MotorPair(OutPort.D, speed));
 
         // Use gRPCs StreamObserver interface
-        StreamObserver<DrivePIDRequest> requestObserver = ASYNCCLIENT.drive(new StreamObserver<>() {
-            @Override
-            public void onNext(StatusReply statusReply) {
-                System.out.println("Ok " + statusReply.getReplyMessage());
-            }
-
-            @Override
-            public void onError(Throwable t) {
-                System.out.println("Something failed...!" + Status.fromThrowable(t));
-            }
-
-            @Override
-            public void onCompleted() {
-                System.out.println("Finished");
-            }
-        });
+        StreamObserver<DrivePIDRequest> requestObserver = initStreamObserver();
 
         double distance = Algorithms.findRobotsDistanceToPoint(robot, target);
         double angle = Algorithms.findRobotShortestAngleToPoint(robot, target);
@@ -130,6 +115,57 @@ public class RobotController {
 
         // Mark the end of requests
         requestObserver.onCompleted();
+    }
+
+    /**
+     * Reverse robot for 1 second, applicable for corner, wall, and cross collection cases
+     * Method is based on drive()
+     * @throws InterruptedException
+     */
+    public void reverse() throws InterruptedException {
+        int speed = -100;
+        double distance = 2;
+        MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
+                new MotorPair(OutPort.D, speed));
+        StreamObserver<DrivePIDRequest> requestObserver = initStreamObserver();
+
+        recalibrateGyro();
+        do { DrivePIDRequest drivePIDRequest = DrivePIDRequest.newBuilder()
+                    .setMotors(motorsRequest)
+                    .setDistance((float) distance)
+                    .setSpeed(speed)
+                    .build();
+
+            // Send request
+            requestObserver.onNext(drivePIDRequest);
+            Thread.sleep(1000);
+            distance--;
+        } while (distance != 0);
+
+        // End of requests
+        requestObserver.onCompleted();
+    }
+
+    /**
+     * Uses gRPCs StreamObserver interface
+     * @return requestObserver for sending requests
+     */
+    private StreamObserver<DrivePIDRequest> initStreamObserver() {
+        StreamObserver<DrivePIDRequest> requestObserver = ASYNCCLIENT.drive(new StreamObserver<>() {
+            @Override
+            public void onNext(StatusReply statusReply) {
+                System.out.println("Ok " + statusReply.getReplyMessage());
+            }
+            @Override
+            public void onError(Throwable t) {
+                System.out.println("Something failed...!" + Status.fromThrowable(t));
+            }
+            @Override
+            public void onCompleted() {
+                System.out.println("Finished");
+            }
+        });
+        return requestObserver;
     }
 
     /**
