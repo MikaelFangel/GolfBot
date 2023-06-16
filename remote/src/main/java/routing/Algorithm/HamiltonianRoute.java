@@ -1,8 +1,8 @@
 package routing.Algorithm;
 
 import courseObjects.Ball;
-import courseObjects.Border;
 import courseObjects.Course;
+import helperClasses.Pair;
 import math.Geometry;
 import org.jetbrains.annotations.NotNull;
 import org.opencv.core.Point;
@@ -12,8 +12,6 @@ import routing.RoutingController;
 import vision.BallPickupStrategy;
 
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class HamiltonianRoute implements IRoutePlanner {
   //TODO: get these from the right place...
@@ -24,6 +22,8 @@ public class HamiltonianRoute implements IRoutePlanner {
   @Override
   public void computeFullRoute(Course course, int numberOfBallsInStorage) {
     this.goal = course.getBorder().getSmallGoalMiddlePoint();
+
+    System.out.println("TEST: started");
 
     //initialization, but not pushing to the actual one, as it might be used while recomputing route
     //List<Routine> planning = new ArrayList<>();
@@ -65,12 +65,18 @@ public class HamiltonianRoute implements IRoutePlanner {
 
     //finally update the actual plan
     plan = new ArrayDeque<>(vertices);
+    plan.pop();
+
+    plan.forEach(v -> System.out.println(v.type));
+
+    System.out.println("TEST: ended");
 
 
   }
 
   @Override
   public void getComputedRoute(RoutingController rc) throws IllegalStateException{
+    System.out.println("TEST: POP");
     if (plan.isEmpty()){
       throw new IllegalStateException("Queue is empty, run recompute");
     }
@@ -89,7 +95,7 @@ public class HamiltonianRoute implements IRoutePlanner {
     vertices.add(new Vertex(goal, Type.GOAL));
 
     //placing all balls
-    List<Ball> balls = course.getBalls();
+    List<Ball> balls = new ArrayList<>(course.getBalls());
     //if there is no balls, the robot should go to the goal
     if (balls.isEmpty()) {
       //TODO: write this shit!
@@ -123,19 +129,25 @@ public class HamiltonianRoute implements IRoutePlanner {
   }
 
   private List<Edge> findEdgesInShortestPath(List<Vertex> vertices, List<Edge> edges) {
+    if (edges.size() == vertices.size() - 1){
+      return edges;
+    }
+
     //Setup union find containing
     IUnionFind<Vertex> unionFind = new QuickFind<>();
     unionFind.init(vertices);
 
     //we make a fake connection between the robot and the goal
-    unionFind.union(vertices.get(0), vertices.get(1));
+    //unionFind.union(vertices.get(0), vertices.get(1));
 
     //list of how many vertex each at max can have.
     //balls can have 2, robot and goal have 1
-    int[] remainingVertices = new int[vertices.size()];
-    Arrays.fill(remainingVertices, 2);
-    remainingVertices[0] = 1;
-    remainingVertices[1] = 1;
+    Pair<Vertex, Integer>[] remainingVertices = new Pair[vertices.size()];
+    remainingVertices[0] = new Pair<>(vertices.get(0),1);
+    remainingVertices[1] = new Pair<>(vertices.get(1),1);
+    for (int i = 2; i < remainingVertices.length; i++){
+      remainingVertices[i] = new Pair<>(vertices.get(i), 2);
+    }
 
     //sorting my edges by travel cost, and pushing it onto a queue instead
     Collections.sort(edges);
@@ -157,13 +169,16 @@ public class HamiltonianRoute implements IRoutePlanner {
         edgesInShortestPath.add(current);
         remainingElements--;
         int position = vertices.indexOf(current.start);
-        if (--remainingVertices[position] == 0)
+        remainingVertices[position].setSecond(remainingVertices[position].getSecond() - 1);
+        if (remainingVertices[position].getSecond() == 0)
           queueOfEdges.removeIf(e ->
                   e.start.equals(current.start) || e.end.equals(current.start));
         position = vertices.indexOf(current.end);
-        if (--remainingVertices[position] == 0)
+        remainingVertices[position].setSecond(remainingVertices[position].getSecond() - 1);
+        if (remainingVertices[position].getSecond() == 0)
           queueOfEdges.removeIf(e ->
                   e.start.equals(current.end) || e.end.equals(current.end));
+
       }
     }
 
@@ -181,7 +196,7 @@ public class HamiltonianRoute implements IRoutePlanner {
     Vertex from = vertices.get(0);
     updatedOrder.add(from);
 
-    while (updatedOrder.size() != vertices.size()) {
+    while (updatedOrder.size() != vertices.size() - 1) {
       Edge toRemove = null;
       for (Edge e : myEdges) {
         if (from.equals(e.start)) {

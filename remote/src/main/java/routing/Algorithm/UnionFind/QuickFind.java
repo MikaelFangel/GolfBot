@@ -18,7 +18,7 @@ public class QuickFind<T> implements IUnionFind<T>{
     @Override
     public boolean union(T i, T j) {
         if (find(i).equals(find(j))) return false;
-        parent.set(data.indexOf(j), i);
+        parent.set(data.indexOf(find(j)), i);
         return true;
     }
 

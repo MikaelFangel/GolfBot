@@ -1,6 +1,8 @@
 import courseObjects.Ball;
 import courseObjects.Course;
 import exceptions.MissingArgumentException;
+import routing.Algorithm.HamiltonianRoute;
+import routing.Algorithm.IRoutePlanner;
 import routing.RobotController;
 import routing.RoutingController;
 import vision.Algorithms;
@@ -27,15 +29,12 @@ public class Main {
         JOptionPane.showMessageDialog(null, "Continue when vision setup is done");
 
         RoutingController routingController = new RoutingController(course);
+        IRoutePlanner routePlanner = new HamiltonianRoute();
+        //routingController.addRoutine(course.getRobot().getCenter(), true);
+        //routingController.driveRoutes();
         while (!course.getBalls().isEmpty()) {
-            Ball closestBall = Algorithms.findClosestBall(course.getBalls(), course.getRobot());
-
-            // This check also make sure program won't crash after collecting last ball
-            if (closestBall == null)
-                break;
-
-            System.out.println("Chosen collection strategy: " + closestBall.getStrategy().toString());
-            routingController.addRoutine(closestBall);
+            routePlanner.computeFullRoute(course,1);
+            routePlanner.getComputedRoute(routingController);
             routingController.driveRoutes();
         }
 
