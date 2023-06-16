@@ -24,7 +24,7 @@
     <entry key="robotLength">16.0</entry>
     <entry key="robotWidth">17.0</entry>
     <entry key="robotHeight">20.0</entry>
-
+    <entry key="magazineSize">7</entry>
 
 
     <!-- Detection Configurations - Used in vision -->

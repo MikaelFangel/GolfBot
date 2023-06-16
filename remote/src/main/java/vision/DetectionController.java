@@ -39,6 +39,10 @@ public class DetectionController {
     private final boolean showMasks; // Primarily for debugging
     private final Course course;
 
+    private Border oldBorder; // Used only for creating overlay
+    private final double camHeight;
+    private final Point courseCenter;
+
     /**
      * Start a setup process that requires the different objects to be present in the camera's view.
      * When the setup is over a background thread starts doing background detection.
@@ -51,6 +55,9 @@ public class DetectionController {
     public DetectionController(Course course, int cameraIndex, boolean showMasks) {
         this.showMasks = showMasks;
         this.course = course;
+
+        this.camHeight = course.getCameraHeight();
+        this.courseCenter = new Point(course.getWidth() / 2, course.getHeight() / 2);
 
         // Initialize OpenCV
         OpenCV.loadLocally();
@@ -176,14 +183,12 @@ public class DetectionController {
         this.robotDetector.detectRobot(this.frame);
         this.ballDetector.detectBalls(this.frame);
 
-        // TODO mark balls with category.
         categorizeBallsPickupStrategy(
                 this.ballDetector.getBalls(),
                 this.borderDetector.getCross()
         );
 
         updateCourse();
-        correctCourseObjects();
         showOverlay();
 
         // Display masks for debugging
@@ -287,109 +292,102 @@ public class DetectionController {
 
             this.pixelOffset = this.borderDetector.getCameraOffset();
 
-            updateCourseCorners();
-            updateCourseRobot();
-            updateCourseBalls();
-            updateCourseCross();
+            // Update new Course's objects
+            Course newCourse = new Course();
+            updateNewCourseBorder(newCourse.getBorder());
+            updateNewCourseRobot(newCourse.getRobot());
+            updateNewCourseBalls(newCourse.getBalls());
+            updateNewCourseCross(newCourse.getCross());
+
+            // Update Real Course
+            course.replaceObjects(newCourse);
         }
     }
 
     /**
-     * Perform correction on the course objects.
+     * Updates the Border in the Course object, by converting to centimeters and correction coordinates using height.
      */
-    private void correctCourseObjects() {
-        // Correct Position using object height.
-        double camHeight = course.getCameraHeight();
-        Point courseCenter = new Point(course.getWidth() / 2, course.getHeight() / 2);
+    private void updateNewCourseBorder(Border newBorder) {
+        Border pixelBorder = this.borderDetector.getBorder();
+        Point[] pixelCorners = pixelBorder.getCornersAsArray(); // From pixel Border
+        Point[] correctedCorners = new Point[4];
 
-        // Balls
-        List<Ball> courseBalls = course.getBalls();
-
-        for (Ball courseBall : courseBalls) {
-            Point correctedCenter = Algorithms.correctedCoordinatesOfObject(
-                    courseBall.getCenter(),
-                    courseCenter,
-                    courseBall.getRadius(),
-                    camHeight);
-
-            courseBall.setCenter(correctedCenter);
-        }
-
-        // Robot
-        Robot courseRobot = course.getRobot();
-
-        Point correctedFront = Algorithms.correctedCoordinatesOfObject(courseRobot.getFront(),courseCenter,
-                courseRobot.height, camHeight);
-        Point correctedCenter = Algorithms.correctedCoordinatesOfObject(courseRobot.getCenter(),courseCenter,
-                courseRobot.height, camHeight);
-
-        courseRobot.setFrontAndCenter(correctedCenter, correctedFront);
-    }
-
-    /**
-     * Updates the Border in the Course object, in centimetres.
-     */
-    private void updateCourseCorners() {
-        Point[] convertedCorners = this.borderDetector.getBorder().getCornersAsArray();
+        // Save border to use for overlay
+        oldBorder = pixelBorder;
 
         // Convert from pixel to cm.
-        for (int i = 0; i < convertedCorners.length; i++)
-            convertedCorners[i] = convertPixelPointToCmPoint(convertedCorners[i], this.pixelOffset);
+        for (int i = 0; i < pixelCorners.length; i++) {
+            correctedCorners[i] = convertPixelPointToCmPoint(pixelCorners[i], this.pixelOffset);
+            correctedCorners[i] = Algorithms.correctedCoordinatesOfObject(correctedCorners[i], courseCenter, newBorder.height, camHeight);
+        }
 
-        // Update Course Border
-        Border courseBorder = this.course.getBorder();
-
-        courseBorder.setTopLeft(convertedCorners[0]);
-        courseBorder.setTopRight(convertedCorners[1]);
-        courseBorder.setBottomLeft(convertedCorners[2]);
-        courseBorder.setBottomRight(convertedCorners[3]);
+        newBorder.setTopLeft(correctedCorners[0]);
+        newBorder.setTopRight(correctedCorners[1]);
+        newBorder.setBottomLeft(correctedCorners[2]);
+        newBorder.setBottomRight(correctedCorners[3]);
     }
 
     /**
-     * Updates the Course robot's position, in centimetres.
+     * Updates the Course robot's position, by converting to centimeters and correction coordinates using height.
      */
-    private void updateCourseRobot() {
-        Robot robot = this.robotDetector.getRobot();
-
+    private void updateNewCourseRobot(Robot newRobot) {
         // Convert from pixel to centimetres
-        Point correctedCenter = convertPixelPointToCmPoint(robot.getCenter(), this.pixelOffset);
-        Point correctedFront = convertPixelPointToCmPoint(robot.getFront(), this.pixelOffset);
+        Robot pixelRobot = this.robotDetector.getRobot();
+        Point correctedCenter = convertPixelPointToCmPoint(pixelRobot.getCenter(), this.pixelOffset);
+        Point correctedFront = convertPixelPointToCmPoint(pixelRobot.getFront(), this.pixelOffset);
 
-        // Update Course Robot
-        Robot courseRobot = this.course.getRobot();
-        courseRobot.setFrontAndCenter(correctedCenter, correctedFront);
+        correctedCenter = Algorithms.correctedCoordinatesOfObject(correctedCenter, courseCenter, newRobot.height, camHeight);
+        correctedFront = Algorithms.correctedCoordinatesOfObject(correctedFront, courseCenter, newRobot.height, camHeight);
+
+        // Update new Robot
+        newRobot.setFrontAndCenter(correctedCenter, correctedFront);
     }
 
     /**
-     * Updates the Course's balls positions
+     * Updates the Course's balls positions, by converting to centimeters and correction coordinates using height.
      */
-    private void updateCourseBalls() {
-        List<Ball> balls = this.ballDetector.getBalls();
-
-        List<Ball> courseBalls = this.course.getBalls();
-        courseBalls.clear();
-
-        // Convert position from pixel to cm
-        for (Ball ball : balls) {
+    private void updateNewCourseBalls(List<Ball> newBalls) {
+        List<Ball> pixelBalls = this.ballDetector.getBalls();
+        for (Ball ball : pixelBalls) {
+            // Convert position from pixel to cm
             Point correctedCenter = convertPixelPointToCmPoint(ball.getCenter(), this.pixelOffset);
-            Ball correctedBall = new Ball(correctedCenter, ball.getColor(), ball.getStrategy());
 
-            // Update Course Balls
-            courseBalls.add(correctedBall);
+            // Correct by height
+            correctedCenter = Algorithms.correctedCoordinatesOfObject(correctedCenter, courseCenter, ball.getRadius(), camHeight);
+
+            // Update New Balls
+            Ball correctedBall = new Ball(correctedCenter, ball.getColor(), ball.getStrategy());
+            newBalls.add(correctedBall);
         }
     }
 
     /**
-     * Updates the Course's Cross object
+     * Updates the Course's Cross object, by converting to centimeters and correction coordinates using height.
      */
-    private void updateCourseCross() {
-        Cross cross = this.borderDetector.getCross();
-        Cross courseCross = this.course.getCross();
+    private void updateNewCourseCross(Cross newCross) {
+        Cross pixelCross = this.borderDetector.getCross();
 
-        // Update Course Cross
-        if (cross.getMiddle() != null && cross.getMeasurePoint() != null) {
-            courseCross.setMiddle(convertPixelPointToCmPoint(cross.getMiddle(), this.pixelOffset));
-            courseCross.setMeasurePoint(convertPixelPointToCmPoint(cross.getMeasurePoint(), this.pixelOffset));
+        if (pixelCross.getEndPoints() != null) {
+            List<Point> correctedEndPointList = new ArrayList<>();
+            for (Point endPoint : pixelCross.getEndPoints()) {
+                Point correctedEndPoint = convertPixelPointToCmPoint(endPoint, this.pixelOffset);
+                correctedEndPoint = Algorithms.correctedCoordinatesOfObject(correctedEndPoint, this.courseCenter, newCross.getHeight(), this.camHeight);
+                correctedEndPointList.add(correctedEndPoint);
+            }
+            newCross.setEndPoints(correctedEndPointList);
+        }
+
+        if (pixelCross.getMiddle() != null && pixelCross.getMeasurePoint() != null) {
+            // Convert to CM
+            Point correctedMiddle = convertPixelPointToCmPoint(pixelCross.getMiddle(), this.pixelOffset);
+            Point correctedMeasurePoint = convertPixelPointToCmPoint(pixelCross.getMeasurePoint(), this.pixelOffset);
+
+            // Correct using height
+            correctedMiddle = Algorithms.correctedCoordinatesOfObject(correctedMiddle, this.courseCenter, newCross.getHeight(), this.camHeight);
+            correctedMeasurePoint = Algorithms.correctedCoordinatesOfObject(correctedMeasurePoint, this.courseCenter, newCross.getHeight(), this.camHeight);
+
+            newCross.setMiddle(correctedMiddle);
+            newCross.setMeasurePoint(correctedMeasurePoint);
         }
     }
 
@@ -426,22 +424,21 @@ public class DetectionController {
         this.overlayFrame = this.frame;
 
         // Draw Corners
-        Border border = this.borderDetector.getBorder();
-        Point[] corners = border != null ? border.getCornersAsArray() : null;
+        Point[] corners = oldBorder != null ? oldBorder.getCornersAsArray() : null;
 
         if (corners != null)
             for (Point corner : corners)
                 Imgproc.circle(this.overlayFrame, corner, 2, cornerColor, 3);
 
         // Draw the middle of the cross
-        Cross cross = borderDetector.getCross();
+        Cross cross = this.borderDetector.getCross();
         if (cross != null) {
             Point middle = cross.getMiddle();
             if (middle != null)
-                Imgproc.circle(overlayFrame, middle, 2, crossColor, 3);
+                Imgproc.circle(this.overlayFrame, middle, 2, crossColor, 3);
             Point measurePoint = cross.getMeasurePoint();
             if (measurePoint != null)
-                Imgproc.circle(overlayFrame, measurePoint, 2, crossColor, 3);
+                Imgproc.circle(this.overlayFrame, measurePoint, 2, crossColor, 3);
         }
 
         // Draw Robot Markers

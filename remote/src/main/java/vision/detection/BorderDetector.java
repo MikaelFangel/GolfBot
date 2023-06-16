@@ -168,7 +168,7 @@ public class BorderDetector implements SubDetector {
         List<Point> endPoints = new ArrayList<>();
         for (MatOfPoint2f endPoint : endPointList) {
             endPoints.addAll(endPoint.toList());
-            cross.setEndPoints(endPoints);
+            this.cross.setEndPoints(endPoints);
         }
 
         Point firstPoint = endPoints.get(0);

@@ -1,13 +1,14 @@
+import courseObjects.Ball;
+import courseObjects.Course;
 import exceptions.MissingArgumentException;
-import courseObjects.*;
 import routing.RobotController;
-import routing.Routine;
+import routing.RoutingController;
 import vision.Algorithms;
-import vision.detection.DetectionConfiguration;
 import vision.DetectionController;
+import vision.detection.DetectionConfiguration;
 
 public class Main {
-    public static void main(String[] args) throws MissingArgumentException {
+    public static void main(String[] args) throws MissingArgumentException, InterruptedException {
         if (args.length < 1) {
             throw new MissingArgumentException("Please provide a camera index");
         }
@@ -15,14 +16,27 @@ public class Main {
         int cameraIndex = Integer.parseInt(args[0]);
 
         Course course = new Course();
-        DetectionController detectionController = new DetectionController(course, cameraIndex, true);
-
-        RobotController controller = new RobotController(course.getRobot()); // Args[0] being and IP address
+        new DetectionController(course, cameraIndex, false); // Runs in the background
+        RobotController controller = new RobotController(course.getRobot());
 
         DetectionConfiguration.DetectionConfiguration();
-        new DetectionController(course, cameraIndex, false);
 
-        //Routine.collectAllBallsRoutine(controller, course);
+        RoutingController routingController = new RoutingController(course);
+
+        routingController.stopCurrentRoute();
+
+        Thread.sleep(4000);
+        while (!course.getBalls().isEmpty()) {
+            Ball closestBall = Algorithms.findClosestBall(course.getBalls(), course.getRobot());
+
+            // This check also make sure program won't crash after collecting last ball
+            if (closestBall == null)
+                break;
+
+            System.out.println("Chosen collection strat: " + closestBall.getStrategy().toString());
+            routingController.addRoutine(closestBall);
+            routingController.driveRoutes();
+        }
 
         System.out.println("Done");
     }

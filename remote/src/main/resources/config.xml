@@ -1,29 +1,35 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
 <properties>
-    <entry key="ipPort">192.168.1.12:5005</entry> <!--the ip and port of the robot on the subnet. e.g. 192.168.1.12:50051-->
+    <entry key="ipPort">192.168.1.12:50051</entry> <!--the ip and port of the robot on the subnet. e.g. 192.168.1.12:50051-->
 
     <!-- Ball measurements in cm -->
     <entry key="ballRadius">4</entry>
 
     <!-- Border measurements in cm -->
     <entry key="borderHeight">7</entry>
+    <entry key="smallGoalPos">left</entry> <!-- left or right -->
+    <entry key="offsetFromBorderToRobot">25</entry> <!-- The distance in CM between the border and the point of the
+    center of the rear marker of the robot, so the robot and the border don't collide -->
 
     <!-- Course measurements in cm -->
     <entry key="courseWidth">169.0</entry>
     <entry key="courseHeight">123.7</entry>
-    <entry key="camHeight">168.2</entry>
+    <entry key="camHeight">184</entry>
     <entry key="camResolutionWidth">1024</entry>
     <entry key="camResolutionHeight">768</entry>
+    <entry key="maxBalls">11</entry>
 
     <!-- Cross measurements in cm -->
     <entry key="crossSideLong">20.1</entry>
     <entry key="crossSideShort">3.1</entry>
+    <entry key="crossHeight">3.2</entry>
 
     <!-- Robot measurements in cm -->
     <entry key="robotLength">16.0</entry>
     <entry key="robotWidth">17.0</entry>
     <entry key="robotHeight">20.0</entry>
+    <entry key="magazineSize">7</entry>
 
 
 

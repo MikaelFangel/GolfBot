@@ -12,7 +12,7 @@ public abstract class Routine {
     final Point start, dest;
     Point projectedPoint;
     final Cross cross;
-
+    private final int ROBOT_PADDING = 5;
     final Ball ballToCollect;
     final RobotController robotController;
     final RoutingController routingController;
@@ -26,34 +26,9 @@ public abstract class Routine {
         this.ballToCollect = ballToCollect;
     }
     public abstract void run();
-    public boolean isRouteObstructed (Point point1, Point point2) {
-        // Check if the distance between the two points is greater than the distance to the cross
-        if(Geometry.distanceBetweenTwoPoints(point1.x, point1.y, point2.x, point2.y) >
-                Geometry.distanceBetweenTwoPoints(point1.x, point1.y, cross.getMiddle().x, cross.getMiddle().y)) {
-            return Geometry.lineIsIntersectingCircle(
-                    point1,
-                    point2,
-                    cross.getMiddle(),
-                    cross.getLongestSide() / 2);
-        } else
-            return false;
-    }
-    public Point getIntermediatePointForObstructedRoute (Point point1, Point point2) {
-        List<Point> accessiblePoints = PathController.findCommonPoints(
-                point1,
-                point2,
-                Geometry.generateCircle(cross.getMiddle(),
-                        cross.getLongestSide() + 20,
-                        360),
-                cross.getMiddle(),
-                cross.getLongestSide()
-        );
-
-        return PathController.findShortestPath(point1, point2, accessiblePoints);
-    }
 
     /**
-     *
+     * Avoid the cross in the middle of the course and generate the projected point
      * @param projectionDistance the distance to project the point if a projection is relevant
      */
     public void avoidObstacle(int projectionDistance) {
@@ -69,12 +44,39 @@ public abstract class Routine {
             robotController.recalibrateGyro();
             robotController.rotate(getDegreesToTurn(intermediate));
             robotController.recalibrateGyro();
-            robotController.drive(intermediate);
+            robotController.drive(intermediate, false);
         }
     }
 
     // TODO: Responsibility should be moved...
     public Double getDegreesToTurn(Point rotateTowards) {
         return Algorithms.findRobotShortestAngleToPoint(robotController.getRobot(), rotateTowards);
+    }
+
+    private boolean isRouteObstructed (Point point1, Point point2) {
+        // Check if the distance between the two points is greater than the distance to the cross
+        if(Geometry.distanceBetweenTwoPoints(point1.x, point1.y, point2.x, point2.y) >
+                Geometry.distanceBetweenTwoPoints(point1.x, point1.y, cross.getMiddle().x, cross.getMiddle().y)) {
+            return Geometry.lineIsIntersectingCircle(
+                    point1,
+                    point2,
+                    cross.getMiddle(),
+                    cross.getLongestSide() / 2 + ROBOT_PADDING);
+        } else
+            return false;
+    }
+    private Point getIntermediatePointForObstructedRoute (Point point1, Point point2) {
+        final int SAFE_CIRCLE_PADDING = 20;
+        List<Point> accessiblePoints = PathController.findCommonPoints(
+                point1,
+                point2,
+                Geometry.generateCircle(cross.getMiddle(),
+                        cross.getLongestSide() + SAFE_CIRCLE_PADDING,
+                        360),
+                cross.getMiddle(),
+                cross.getLongestSide() / 2 + ROBOT_PADDING
+        );
+
+        return PathController.findLongestPath(point1, point2, accessiblePoints);
     }
 }
