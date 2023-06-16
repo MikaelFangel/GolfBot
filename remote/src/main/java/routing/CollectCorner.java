@@ -18,7 +18,7 @@ public class CollectCorner extends Routine {
         super.robotController.recalibrateGyro();
         super.robotController.rotate(super.getDegreesToTurn(super.projectedPoint));
         super.robotController.recalibrateGyro();
-        super.robotController.drive(super.projectedPoint);
+        super.robotController.drive(super.projectedPoint, false);
 
 
         // Run shooting routine

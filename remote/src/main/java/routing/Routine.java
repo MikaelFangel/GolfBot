@@ -44,7 +44,7 @@ public abstract class Routine {
             robotController.recalibrateGyro();
             robotController.rotate(getDegreesToTurn(intermediate));
             robotController.recalibrateGyro();
-            robotController.drive(intermediate);
+            robotController.drive(intermediate, false);
         }
     }
 

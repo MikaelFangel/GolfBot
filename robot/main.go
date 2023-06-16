@@ -59,7 +59,7 @@ func (s *motorServer) Drive(stream pBuff.Motors_DriveServer) error {
 	// Begin stream from client
 	driveRequest, err := stream.Recv()
 	if err != nil {
-		return err
+		return errors.New("error when receiving stream")
 	}
 
 	// Change the values to the user input if provided
@@ -285,9 +285,9 @@ func setPowerInDrive(distance int, power int, powerFactor int) int {
 		power *= -1
 	}
 
-	if math.Abs(float64(distance)) > 25 {
+	if math.Abs(float64(distance)) > 30 {
 		power *= powerFactor
-	} else if math.Abs(float64(distance)) > 13 {
+	} else if math.Abs(float64(distance)) > 15 {
 		power *= powerFactor / 2
 	}
 

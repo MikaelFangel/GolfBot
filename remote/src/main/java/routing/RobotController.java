@@ -35,7 +35,7 @@ public class RobotController {
         this.CLIENT = MotorsGrpc.newBlockingStub(CHANNEL);
         this.ASYNCCLIENT = MotorsGrpc.newStub(CHANNEL);
 
-        this.MAX_ITERATIONS = 20;
+        this.MAX_ITERATIONS = 100;
 
         this.numberOfBallsOnCourseBeforeRoutine = 0;
         this.robot = robot;
@@ -57,7 +57,7 @@ public class RobotController {
      * @throws RuntimeException if the robot was not reached
      * @see <a href="https://github.com/grpc/grpc-java/blob/master/examples/src/main/java/io/grpc/examples/routeguide/RouteGuideClient.java">Example streaming client</a>
      */
-    public void drive(Point target) throws RuntimeException {
+    public void drive(Point target, boolean calculateFromFront) throws RuntimeException {
         int speed = 100;
         MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
                 new MotorPair(OutPort.D, speed));
@@ -80,29 +80,20 @@ public class RobotController {
             }
         });
 
-        double distance = Algorithms.findRobotsDistanceToPoint(robot, target);
-        double angle = Algorithms.findRobotShortestAngleToPoint(robot, target);
-        double last_distance = distance;
-
-        // Iterator used as a failsafe
-        int i = 0;
-
         try {
-            // Continue to stream messages until reaching target
-            while (distance > 0 && i < MAX_ITERATIONS && Math.abs(angle) < 10) {
-                // Update distance
-                distance = Algorithms.findRobotsDistanceToPoint(robot, target);
 
-                // Check if robot are still on target
+            // Iterator used as a failsafe
+            int i = 0;
+            double distance;
+            double angle;
+            double lastDist = 10000;
+
+            // Continue to stream messages until reaching target
+            do {
+                distance = Algorithms.findRobotsDistanceToPoint(robot, target, calculateFromFront);
                 angle = Algorithms.findRobotShortestAngleToPoint(robot, target);
 
-                // If we drive past the target
-                if ((distance - last_distance) > 0.5) {
-                    System.out.println("Drove past the target");
-                    break;
-                }
-
-                last_distance = distance;
+                System.out.println("Distance " + distance + " Angle " + angle);
 
                 DrivePIDRequest drivePIDRequest = DrivePIDRequest.newBuilder()
                         .setMotors(motorsRequest)
@@ -118,8 +109,12 @@ public class RobotController {
 
                 i++;
 
-                System.out.println("Distance " + distance + " Angle " + angle);
+
+
+                lastDist = distance;
             }
+            while (distance > 0 && i < MAX_ITERATIONS);
+
         } catch (RuntimeException e) {
             // Cancel RPC
             requestObserver.onError(e);
@@ -214,7 +209,7 @@ public class RobotController {
      * Collect balls located in the corners by shooting the corner ball with another ball and collect balls returning
      *
      * @throws InterruptedException Can happen when sleeping
-     *                              TODO! Move to Routine class to made yet
+     * TODO! Move to Routine class to made yet
      */
     public void collectCornerBalls() throws InterruptedException {
         releaseOneBall();

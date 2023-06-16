@@ -21,7 +21,7 @@ public class Main {
 
         DetectionConfiguration.DetectionConfiguration();
 
-        RoutingController routingController = new RoutingController(course, args[0]);
+        RoutingController routingController = new RoutingController(course);
 
         routingController.stopCurrentRoute();
 
