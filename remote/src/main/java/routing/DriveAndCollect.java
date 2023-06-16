@@ -20,5 +20,7 @@ public class DriveAndCollect extends Routine{
         super.robotController.collectRelease(true);
         super.robotController.drive(dest, true);
         super.robotController.stopCollectRelease();
+
+        super.robotController.reverse();
     }
 }
