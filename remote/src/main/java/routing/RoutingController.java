@@ -2,6 +2,8 @@ package routing;
 
 import courseObjects.Ball;
 import courseObjects.Course;
+import courseObjects.Cross;
+import math.Geometry;
 import org.jetbrains.annotations.NotNull;
 import org.opencv.core.Point;
 import vision.BallPickupStrategy;
@@ -88,11 +90,15 @@ public class RoutingController {
      * @return the projected point
      */
     public Point projectPoint(@NotNull final Ball ball, final double distance) {
-        //TODO: get margin from config
-        double borderDistance = 10 + distance;
+        double crossProjectionMargin = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("crossProjectionMargin"));
+        double borderProjectionMargin = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("borderProjectionMargin"));
+
+        double borderDistance = borderProjectionMargin + distance;
+        double crossDistance = crossProjectionMargin + course.getCross().getLongestSide() / 2;
 
         BallPickupStrategy strategy = ball.getStrategy();
         Point projectedPoint = null;
+
         switch (strategy) {
             case FREE -> projectedPoint = ball.getCenter();
             case BORDER_TOP -> projectedPoint = new Point(
@@ -130,8 +136,16 @@ public class RoutingController {
                     ball.getCenter().y - borderDistance
             );
             case CROSS -> {
-                // TODO: Implement
-                System.out.println("HIT UNIMPLEMENTED STRATEGY");
+                // Get angle of center of cross to ball
+                Point ballCenter = ball.getCenter();
+                Point crossCenter = course.getCross().getMiddle();
+
+                double angleToBall = Geometry.angleBetweenTwoPoints(crossCenter.x, crossCenter.y, ballCenter.x, ballCenter.y);
+                projectedPoint = new Point(
+                        crossCenter.x + Math.cos(angleToBall) * crossDistance,
+                        crossCenter.y + Math.sin(angleToBall) * crossDistance
+                );
+
             }
             default -> projectedPoint = ball.getCenter();
         }
