@@ -36,6 +36,6 @@ public class CollectCorner extends Routine {
 
         super.robotController.stopCollectRelease();
 
-        // TODO: Reverse out of corner
+        super.robotController.reverse();
     }
 }

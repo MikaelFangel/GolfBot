@@ -115,9 +115,8 @@ public class RobotController {
     /**
      * Reverse robot for 1 second, applicable for corner, wall, and cross collection cases
      * Method is based on drive()
-     * @throws InterruptedException
      */
-    public void reverse() throws InterruptedException {
+    public void reverse() {
         int speed = -100;
         double distance = 2;
         MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
@@ -125,17 +124,22 @@ public class RobotController {
         StreamObserver<DrivePIDRequest> requestObserver = initStreamObserver();
 
         recalibrateGyro();
-        do { DrivePIDRequest drivePIDRequest = DrivePIDRequest.newBuilder()
+        try {
+            do { DrivePIDRequest drivePIDRequest = DrivePIDRequest.newBuilder()
                     .setMotors(motorsRequest)
                     .setDistance((float) distance)
                     .setSpeed(speed)
                     .build();
 
-            // Send request
-            requestObserver.onNext(drivePIDRequest);
-            Thread.sleep(1000);
-            distance--;
-        } while (distance != 0);
+                // Send request
+                requestObserver.onNext(drivePIDRequest);
+                Thread.sleep(1000);
+                distance--;
+            } while (distance != 0);
+        } catch (InterruptedException e) {
+            System.err.println(e.getMessage());
+        }
+
 
         // End of requests
         requestObserver.onCompleted();
