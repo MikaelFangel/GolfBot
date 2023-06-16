@@ -76,7 +76,7 @@ public class HamiltonianRoute implements IRoutePlanner {
     }
     Vertex next = plan.pop();
     if (next.ball == null){
-      rc.addRoutine(goal);
+      rc.addRoutine(goal, true);
     } else
       rc.addRoutine(next.ball);
   }
