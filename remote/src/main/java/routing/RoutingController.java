@@ -136,15 +136,34 @@ public class RoutingController {
                     ball.getCenter().y - borderDistance
             );
             case CROSS -> {
-                // Get angle of center of cross to ball
                 Point ballCenter = ball.getCenter();
-                Point crossCenter = course.getCross().getMiddle();
+                Cross cross = course.getCross();
+                Point crossCenter = cross.getMiddle(), crossMeasurePoint = cross.getMeasurePoint();
 
+                // Prepare angles and distances
                 double angleToBall = Geometry.angleBetweenTwoPoints(crossCenter.x, crossCenter.y, ballCenter.x, ballCenter.y);
-                projectedPoint = new Point(
-                        crossCenter.x + Math.cos(angleToBall) * crossDistance,
-                        crossCenter.y + Math.sin(angleToBall) * crossDistance
-                );
+                double angleToMeasurePoint = Geometry.angleBetweenTwoPoints(crossCenter.x, cross.y, crossMeasurePoint.x, crossMeasurePoint.y);
+                double distanceToBall = Geometry.distanceBetweenTwoPoints(crossCenter.x, crossCenter.y, ballCenter.x, ballCenter.y);
+
+                // If ball is NOT between two "legs"
+                if (distanceToBall > cross.getLongestSide() / 2) {
+                    projectedPoint = new Point(
+                            crossCenter.x + Math.cos(angleToBall) * crossDistance,
+                            crossCenter.y + Math.sin(angleToBall) * crossDistance
+                    );
+                } else { //  if ball IS between two "legs"
+
+                    // Calculate number of times to rotate 90 degrees.
+                    double x = Math.floor((angleToBall - angleToMeasurePoint) / 90);
+                    int direction = (x < 0) ? 1 : -1;
+
+                    double projectionAngle = angleToMeasurePoint + (direction * 45) + (90 / x);
+                    projectedPoint = new Point(
+                            crossCenter.x + Math.cos(projectionAngle) * crossDistance,
+                            crossCenter.y + Math.sin(projectionAngle) * crossDistance
+                    );
+                }
+
 
             }
             default -> projectedPoint = ball.getCenter();
