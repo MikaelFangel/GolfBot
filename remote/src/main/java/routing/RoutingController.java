@@ -18,7 +18,7 @@ public class RoutingController {
     private Routine currentRoute;
 
 
-    public RoutingController(Course course, String ip) {
+    public RoutingController(Course course) {
         this.course = course;
         this.robotController = new RobotController(course.getRobot());
     }

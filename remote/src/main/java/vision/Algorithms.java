@@ -83,13 +83,18 @@ public class Algorithms {
 
     /**
      * Finds distance between the robots front ball collection mechanism and a point.
-     * @param robot
-     * @param p
+     * @param robot Using the position of the robot
+     * @param p The point to drive to
+     * @param calculateFromFront False if calculating from the rear marker. True if calculating from the front marker
      * @return distance in cm
      */
-    public static double findRobotsDistanceToPoint(Robot robot, Point p) {
-        int offset = 3;
-        return distanceBetweenTwoPoints(robot.getFront().x, robot.getFront().y, p.x, p.y) - offset;
+    public static double findRobotsDistanceToPoint(Robot robot, Point p, boolean calculateFromFront) {
+        // Distance from middle of front marker to middle of collecting front wheel in CM
+        int offset = 4;
+        if (calculateFromFront)
+            return distanceBetweenTwoPoints(robot.getFront().x, robot.getFront().y, p.x, p.y) - offset;
+
+        return distanceBetweenTwoPoints(robot.getCenter().x, robot.getCenter().y, p.x, p.y) - offset;
     }
 
     public static double findRobotsDistanceToBall(Robot robot, Ball ball) {

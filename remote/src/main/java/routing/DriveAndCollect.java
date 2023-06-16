@@ -18,7 +18,7 @@ public class DriveAndCollect extends Routine{
         super.robotController.rotate(super.getDegreesToTurn(dest));
         super.robotController.recalibrateGyro();
         super.robotController.collectRelease(true);
-        super.robotController.drive(dest);
+        super.robotController.drive(dest, true);
         super.robotController.stopCollectRelease();
     }
 }
