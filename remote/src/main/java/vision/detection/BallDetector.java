@@ -20,10 +20,9 @@ public class BallDetector implements SubDetector {
     /**
      * Detects the balls on the frame
      *
-     * @param frame the frame to evaluated
-     * @return A boolean symbolizing if balls were found or not
+     * @param frame The frame to evaluated
      */
-    public boolean detectBalls(Mat frame) {
+    public void detectBalls(Mat frame) {
         // Initialize all OpenCV objects once to not have memory leaks
         Mat frameBlur = new Mat();
 
@@ -36,14 +35,12 @@ public class BallDetector implements SubDetector {
         findOrangeBalls(frameBlur, balls);
 
         frameBlur.release();
-
-        return !balls.isEmpty();
     }
 
     /**
      * Updates the balls argument with the white balls found on the frame.
      *
-     * @param balls list that gets updated with newly added balls
+     * @param balls List that gets updated with newly added balls
      */
     private void findWhiteBalls(Mat frameBlur, List<Ball> balls) {
         Mat maskWhite = new Mat();
