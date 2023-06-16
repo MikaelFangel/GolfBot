@@ -53,7 +53,7 @@ public class DetectionConfiguration {
 
         // Obstacle
         this.lowerObstacleThreshold = new Scalar(0, 0, 100);
-        this.upperObstacleThreshold = new Scalar(5, 5, 255);
+        this.upperObstacleThreshold = new Scalar(60, 60, 255);
         this.lowerBorderSize = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("borderSizeLower"));
         this.lowerCrossSize = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("crossSizeLower"));
         this.upperCrossSize = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("crossSizeUpper"));

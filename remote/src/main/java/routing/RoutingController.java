@@ -6,19 +6,18 @@ import org.jetbrains.annotations.NotNull;
 import org.opencv.core.Point;
 import vision.BallPickupStrategy;
 
-import java.sql.SQLOutput;
 import java.util.ArrayDeque;
-import java.util.Queue;
+import java.util.Deque;
 
 public class RoutingController {
 
     private final RobotController robotController;
     private final Course course;
-    private final Queue<Routine> fullRoute = new ArrayDeque<>();
+    private final Deque<Routine> fullRoute = new ArrayDeque<>();
     private Routine currentRoute;
 
 
-    public RoutingController(Course course, String ip) {
+    public RoutingController(Course course) {
         this.course = course;
         this.robotController = new RobotController(course.getRobot());
     }
@@ -30,7 +29,7 @@ public class RoutingController {
         if (fullRoute.isEmpty()) return;
 
         while (!fullRoute.isEmpty()) {
-            currentRoute = fullRoute.poll();
+            currentRoute = fullRoute.pop();
             if (currentRoute == null) return;
 
             currentRoute.run();
@@ -61,9 +60,11 @@ public class RoutingController {
      * Add a routine for driving to a specific destination
      * @param point the point to drive to
      */
-    public void addRoutine(Point point) {
-        fullRoute.add(new DriveToPoint(course.getRobot().getCenter(), point, null, course.getCross(), this.robotController, this));
-
+    public void addRoutine(Point point, boolean deliverBalls) {
+        if(deliverBalls)
+            fullRoute.add(new DeliverBallsToGoal(course.getRobot().getCenter(), point, null, course.getCross(), this.robotController, this));
+        else
+            fullRoute.add(new DriveToPoint(course.getRobot().getCenter(), point, null, course.getCross(), this.robotController, this));
     }
 
     /**
@@ -137,5 +138,13 @@ public class RoutingController {
         }
 
         return projectedPoint;
+    }
+
+    public Point getSmallGoalMiddlePoint() {
+        return course.getBorder().getSmallGoalMiddlePoint();
+    }
+
+    public Point getSmallGoalProjectedPoint() {
+        return course.getBorder().getSmallGoalDestPoint();
     }
 }

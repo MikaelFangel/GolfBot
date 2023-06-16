@@ -118,6 +118,7 @@ public class Course {
 
         // Cross
         Cross newCross = newCourse.getCross();
+        this.cross.setEndPoints(newCross.getEndPoints());
         this.cross.setMiddle(newCross.getMiddle());
         this.cross.setMeasurePoint(newCross.getMeasurePoint());
 
