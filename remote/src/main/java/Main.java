@@ -20,7 +20,7 @@ public class Main {
         new DetectionController(course, cameraIndex, false); // Runs in the background
         DetectionConfiguration.DetectionConfiguration();
 
-        RobotController controller = new RobotController(course.getRobot());
+        RobotController controller = new RobotController(course);
         reset(controller);
         controller.recalibrateGyro();
 

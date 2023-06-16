@@ -21,7 +21,7 @@ public class RoutingController {
 
     public RoutingController(Course course) {
         this.course = course;
-        this.robotController = new RobotController(course.getRobot());
+        this.robotController = new RobotController(course);
     }
 
     /**
