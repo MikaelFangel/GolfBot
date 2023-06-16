@@ -34,7 +34,9 @@ public abstract class Routine {
     public void avoidObstacle(int projectionDistance) {
         if (this.ballToCollect != null)
             this.projectedPoint = routingController.projectPoint(ballToCollect, projectionDistance);
-        else
+        else if (dest == routingController.getSmallGoalMiddlePoint()) {
+            this.projectedPoint = routingController.getSmallGoalProjectedPoint();
+        } else
             this.projectedPoint = dest;
 
         // Avoid obstacles
