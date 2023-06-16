@@ -60,9 +60,11 @@ public class RoutingController {
      * Add a routine for driving to a specific destination
      * @param point the point to drive to
      */
-    public void addRoutine(Point point) {
-        fullRoute.add(new DriveToPoint(course.getRobot().getCenter(), point, null, course.getCross(), this.robotController, this));
-
+    public void addRoutine(Point point, boolean deliverBalls) {
+        if(deliverBalls)
+            fullRoute.add(new DeliverBallsToGoal(course.getRobot().getCenter(), point, null, course.getCross(), this.robotController, this));
+        else
+            fullRoute.add(new DriveToPoint(course.getRobot().getCenter(), point, null, course.getCross(), this.robotController, this));
     }
 
     /**
@@ -136,5 +138,13 @@ public class RoutingController {
         }
 
         return projectedPoint;
+    }
+
+    public Point getSmallGoalMiddlePoint() {
+        return course.getBorder().getSmallGoalMiddlePoint();
+    }
+
+    public Point getSmallGoalProjectedPoint() {
+        return course.getBorder().getSmallGoalDestPoint();
     }
 }
