@@ -6,6 +6,7 @@ import courseObjects.Course;
 import helperClasses.Pair;
 import org.opencv.core.Point;
 import routing.Routine;
+import routing.RoutingController;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -60,8 +61,8 @@ public class RoutePlanner implements IRoutePlanner {
     }
 
     @Override
-    public List<Ball> getComputedRoute() {
-        return path;
+    public void getComputedRoute(RoutingController rc) {
+
     }
 
     private void addWhiteBallToIncidentList(

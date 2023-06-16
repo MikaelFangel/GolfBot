@@ -3,9 +3,11 @@ package routing.Algorithm;
 import courseObjects.Ball;
 import courseObjects.BallColor;
 import courseObjects.Course;
+import courseObjects.Robot;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opencv.core.Point;
+import routing.RoutingController;
 import vision.BallPickupStrategy;
 
 import java.util.ArrayList;
@@ -24,7 +26,8 @@ class HamiltonianRouteTest {
     @Test
     void getComputedRoute() {
         Course course = new Course();
-        course.getRobot().getCenter().set(new double[]{0,0});
+        Robot r =course.getRobot();
+        r.setFrontAndCenter(new Point(0,0), new Point(1,1));
         course.getBalls().add(new Ball(new Point(10,10), BallColor.WHITE, BallPickupStrategy.FREE));
         course.getBalls().add(new Ball(new Point(11,10), BallColor.WHITE, BallPickupStrategy.FREE));
         course.getBalls().add(new Ball(new Point(10,18), BallColor.WHITE, BallPickupStrategy.FREE));

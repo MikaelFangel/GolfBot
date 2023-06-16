@@ -4,10 +4,11 @@ import courseObjects.Ball;
 import courseObjects.Course;
 import org.opencv.core.Point;
 import routing.Routine;
+import routing.RoutingController;
 
 import java.util.List;
 
 public interface IRoutePlanner {
     void computeFullRoute(Course course, int numberOfBallsInStorage);
-    List<Ball> getComputedRoute();
+    void getComputedRoute(RoutingController rc);
 }

@@ -1,5 +1,8 @@
 package routing.Algorithm.UnionFind;
 
+import org.checkerframework.checker.units.qual.A;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class QuickFind<T> implements IUnionFind<T>{
@@ -8,8 +11,8 @@ public class QuickFind<T> implements IUnionFind<T>{
     List<T> parent;
     @Override
     public void init(List<T> pointers) {
-        data = pointers;
-        parent = pointers;
+        data = new ArrayList<>(pointers);
+        parent = new ArrayList<>(pointers);
     }
 
     @Override
