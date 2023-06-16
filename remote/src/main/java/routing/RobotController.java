@@ -2,6 +2,7 @@ package routing;
 
 import configs.GlobalConfig;
 import courseObjects.Ball;
+import courseObjects.Course;
 import courseObjects.Robot;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
@@ -21,13 +22,14 @@ public class RobotController {
     private final MotorsGrpc.MotorsBlockingStub CLIENT;
     private final MotorsGrpc.MotorsStub ASYNCCLIENT;
     private final int MAX_ITERATIONS;
+    private final Course course;
     private final Robot robot;
 
     private int numberOfBallsOnCourseBeforeRoutine;
     /**
      * Initializes channel and client to connect with the robot.
      */
-    public RobotController(Robot robot) {
+    public RobotController(Course course) {
         this.CHANNEL = Grpc.newChannelBuilder(
                 GlobalConfig.getConfigProperties().getProperty("ipPort"),
                 InsecureChannelCredentials.create()
@@ -38,7 +40,8 @@ public class RobotController {
         this.MAX_ITERATIONS = 100; // TODO: Make local if only used in drive?
 
         this.numberOfBallsOnCourseBeforeRoutine = 0;
-        this.robot = robot;
+        this.course = course;
+        this.robot = course.getRobot();
     }
 
     /**
@@ -66,15 +69,33 @@ public class RobotController {
         StreamObserver<DrivePIDRequest> requestObserver = initStreamObserver();
 
         try {
+            // Margin from the border in CM, that always should stop the robot from hitting the border
+            int borderMargin = 5; // TODO: Might need to be adjusted
+            // Get corners, TopLeft, BottomRight
+            Point[] corners = this.course.getBorder().getCornersAsArray();
+            Point TL = corners[0];
+            Point BR = corners[3];
+
 
             double distanceToTarget = Algorithms.findRobotsDistanceToPoint(this.robot, target, calculateFromFront);
             System.out.println("Distance to drive: " + distanceToTarget); // TODO: Delete
             Point robotStartPos = calculateFromFront ? this.robot.getFront() : this.robot.getCenter();
+            Point robotNewPos;
             double drivenDistance = 0.0;
+
 
             /* Continue to stream messages until reaching target
              * Iterator used as a failsafe */
             for (int i = 0; i < MAX_ITERATIONS || distanceToTarget >= drivenDistance; i++) {
+                robotNewPos = calculateFromFront ? this.robot.getFront() : this.robot.getCenter();
+                // Stop before top border or left border
+                if (robotNewPos.y <= TL.y + borderMargin || robotNewPos.x <= TL.x + borderMargin)
+                    break;
+                // Stop before bottom border or right border
+                if (robotNewPos.y >= BR.y - borderMargin || robotNewPos.x >= BR.x - borderMargin)
+                    break;
+
+
                 // Distance from starting point of the robot and where the robot currently is
                 drivenDistance = Algorithms.findRobotsDistanceToPoint(this.robot, robotStartPos, calculateFromFront);
                 System.out.println("Distance driven so far: " + drivenDistance); // TODO: Delete

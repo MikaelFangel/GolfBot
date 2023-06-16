@@ -218,7 +218,7 @@ public class DetectionController {
         balls.forEach(ball -> {
             Point position = ball.getCenter();
 
-            //order: top, Bottom, Right, Left
+            // Order: Top, Bottom, Right, Left
             boolean[] closeTo = new boolean[4];
 
             if (position.y <= TL.y + pixelMarginY) closeTo[0] = true;

@@ -54,6 +54,9 @@ public class Border {
         this.topLeft = topLeft;
     }
 
+    /**
+     * @return TopLeft, TopRight, BottomLeft, BottomRight
+     */
     public synchronized Point[] getCornersAsArray() {
         return new Point[]{topLeft, topRight, bottomLeft, bottomRight};
     }
