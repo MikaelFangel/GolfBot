@@ -7,6 +7,8 @@ import vision.Algorithms;
 import vision.DetectionController;
 import vision.detection.DetectionConfiguration;
 
+import javax.swing.*;
+
 public class Main {
     public static void main(String[] args) throws MissingArgumentException, InterruptedException {
         if (args.length < 1) {
@@ -14,15 +16,14 @@ public class Main {
         }
 
         int cameraIndex = Integer.parseInt(args[0]);
-
         Course course = new Course();
         new DetectionController(course, cameraIndex, false); // Runs in the background
-        RobotController controller = new RobotController(course.getRobot());
-
         DetectionConfiguration.DetectionConfiguration();
 
-        RoutingController routingController = new RoutingController(course);
+        JOptionPane.showMessageDialog(null, "Continue when vision setup is done");
 
+        RobotController controller = new RobotController(course.getRobot());
+        RoutingController routingController = new RoutingController(course);
         routingController.stopCurrentRoute();
 
         Thread.sleep(4000);
