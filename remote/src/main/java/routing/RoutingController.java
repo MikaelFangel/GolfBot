@@ -2,6 +2,8 @@ package routing;
 
 import courseObjects.Ball;
 import courseObjects.Course;
+import courseObjects.Cross;
+import math.Geometry;
 import org.jetbrains.annotations.NotNull;
 import org.opencv.core.Point;
 import vision.BallPickupStrategy;
@@ -89,11 +91,15 @@ public class RoutingController {
      * @return the projected point
      */
     public Point projectPoint(@NotNull final Ball ball, final double distance) {
-        //TODO: get margin from config
-        double borderDistance = 10 + distance;
+        double crossProjectionMargin = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("crossProjectionMargin"));
+        double borderProjectionMargin = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("borderProjectionMargin"));
+
+        double borderDistance = borderProjectionMargin + distance;
+        double crossDistance = crossProjectionMargin + course.getCross().getLongestSide() / 2 + distance;
 
         BallPickupStrategy strategy = ball.getStrategy();
-        Point projectedPoint = null;
+        Point projectedPoint;
+
         switch (strategy) {
             case FREE -> projectedPoint = ball.getCenter();
             case BORDER_TOP -> projectedPoint = new Point(
@@ -131,8 +137,39 @@ public class RoutingController {
                     ball.getCenter().y - borderDistance
             );
             case CROSS -> {
-                // TODO: Implement
-                System.out.println("HIT UNIMPLEMENTED STRATEGY");
+                Point ballCenter = ball.getCenter();
+                Cross cross = course.getCross();
+                Point crossCenter = cross.getMiddle(), crossMeasurePoint = cross.getMeasurePoint();
+
+                // Prepare angles and distances
+                double angleToBall = Geometry.angleBetweenTwoPoints(crossCenter.x, crossCenter.y, ballCenter.x, ballCenter.y);
+                double angleToMeasurePoint = Geometry.angleBetweenTwoPoints(crossCenter.x, crossCenter.y, crossMeasurePoint.x, crossMeasurePoint.y);
+                double distanceToBall = Geometry.distanceBetweenTwoPoints(crossCenter.x, crossCenter.y, ballCenter.x, ballCenter.y);
+
+                // If ball is NOT between two "legs"
+                if (distanceToBall > cross.getLongestSide() / 2) {
+                    projectedPoint = new Point(
+                            crossCenter.x + Math.cos(angleToBall) * crossDistance,
+                            crossCenter.y + Math.sin(angleToBall) * crossDistance
+                    );
+                } else { //  if ball IS between two "legs"
+
+                    // Calculate number of times to rotate 90 degrees.
+                    double diffAngle = angleToBall - angleToMeasurePoint;
+                    double numRotations = (int) (diffAngle / 90); // To remove decimals.
+                    int direction = (diffAngle >= 0) ? 1 : -1;
+
+                    double projectionAngle = angleToMeasurePoint + (direction * 45) + (90 * numRotations);
+                    // Convert to radians
+                    projectionAngle = projectionAngle * Math.PI / 180;
+
+                    projectedPoint = new Point(
+                            crossCenter.x + Math.cos(projectionAngle) * crossDistance,
+                            crossCenter.y + Math.sin(projectionAngle) * crossDistance
+                    );
+                }
+
+
             }
             default -> projectedPoint = ball.getCenter();
         }
