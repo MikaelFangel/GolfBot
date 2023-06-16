@@ -6,10 +6,8 @@ import org.jetbrains.annotations.NotNull;
 import org.opencv.core.Point;
 import vision.BallPickupStrategy;
 
-import java.sql.SQLOutput;
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.Queue;
 
 public class RoutingController {
 
