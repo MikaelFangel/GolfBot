@@ -35,7 +35,7 @@ public class RobotController {
         this.CLIENT = MotorsGrpc.newBlockingStub(CHANNEL);
         this.ASYNCCLIENT = MotorsGrpc.newStub(CHANNEL);
 
-        this.MAX_ITERATIONS = 100;
+        this.MAX_ITERATIONS = 100; // TODO: Make local if only used in drive?
 
         this.numberOfBallsOnCourseBeforeRoutine = 0;
         this.robot = robot;
@@ -51,10 +51,10 @@ public class RobotController {
     }
 
     /**
-     * Drive robot straight either forward or backwards by using the gyro and streaming distance to the robot
+     * Drive robot straight either forwardby using the gyro and streaming distance to the robot
      *
-     * @param target destination
-     * @throws RuntimeException if the robot was not reached
+     * @param target Destination
+     * @throws RuntimeException If the robot was not reached
      * @see <a href="https://github.com/grpc/grpc-java/blob/master/examples/src/main/java/io/grpc/examples/routeguide/RouteGuideClient.java">Example streaming client</a>
      */
     public void drive(Point target, boolean calculateFromFront) throws RuntimeException {
@@ -67,39 +67,31 @@ public class RobotController {
 
         try {
 
-            // Iterator used as a failsafe
-            int i = 0;
-            double distance;
-            double angle;
-            double lastDist = 10000;
+            double distanceToTarget = Algorithms.findRobotsDistanceToPoint(this.robot, target, calculateFromFront);
+            System.out.println("Distance to drive: " + distanceToTarget); // TODO: Delete
+            Point robotStartPos = calculateFromFront ? this.robot.getFront() : this.robot.getCenter();
+            double drivenDistance = 0.0;
 
-            // Continue to stream messages until reaching target
-            do {
-                distance = Algorithms.findRobotsDistanceToPoint(robot, target, calculateFromFront);
-                angle = Algorithms.findRobotShortestAngleToPoint(robot, target);
-
-                System.out.println("Distance " + distance + " Angle " + angle);
+            /* Continue to stream messages until reaching target
+             * Iterator used as a failsafe */
+            for (int i = 0; i < MAX_ITERATIONS || distanceToTarget >= drivenDistance; i++) {
+                // Distance from starting point of the robot and where the robot currently is
+                drivenDistance = Algorithms.findRobotsDistanceToPoint(this.robot, robotStartPos, calculateFromFront);
+                System.out.println("Distance driven so far: " + drivenDistance); // TODO: Delete
 
                 DrivePIDRequest drivePIDRequest = DrivePIDRequest.newBuilder()
                         .setMotors(motorsRequest)
-                        .setDistance((float) distance)
+                        .setDistance((float) (distanceToTarget - drivenDistance))
                         .setSpeed(speed) // This speed worked well, other speeds could be researched
                         .build();
 
                 // Send request
                 requestObserver.onNext(drivePIDRequest);
 
-                // Sleep for a bit before sending the next one. TODO: Research timing of the delay with the robot
+                // Sleep for a bit before sending the next one.
+                // TODO: Research timing of the delay with the robot. ALSO check if still needed
                 Thread.sleep(300);
-
-                i++;
-
-
-
-                lastDist = distance;
             }
-            while (distance > 0 && i < MAX_ITERATIONS);
-
         } catch (RuntimeException e) {
             // Cancel RPC
             requestObserver.onError(e);
