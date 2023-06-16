@@ -16,7 +16,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class HamiltonianRouteTest {
-    IRoutePlanner routePlanner;
+    HamiltonianRoute routePlanner;
 
     @BeforeEach
     void setUp() {
@@ -31,6 +31,27 @@ class HamiltonianRouteTest {
         course.getBalls().add(new Ball(new Point(10,10), BallColor.WHITE, BallPickupStrategy.FREE));
         course.getBalls().add(new Ball(new Point(11,10), BallColor.WHITE, BallPickupStrategy.FREE));
         course.getBalls().add(new Ball(new Point(10,18), BallColor.WHITE, BallPickupStrategy.FREE));
+
+        course.getBorder().setTopLeft(new Point(0,0));
+        course.getBorder().setTopRight(new Point(20,0));
+        course.getBorder().setBottomLeft(new Point(0,20));
+        course.getBorder().setBottomRight(new Point(20,20));
+
+        try{
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         routePlanner.computeFullRoute(course,0);
+
+        System.out.println("Robot\t" + course.getRobot().getCenter());
+        for (HamiltonianRoute.Vertex vertex : routePlanner.plan) {
+            if (vertex.ball == null)
+                continue;
+            else
+                System.out.println("ball\t " + vertex.ball.getCenter());
+        }
+        System.out.println("goal\t" + course.getBorder().getSmallGoalMiddlePoint());
     }
 }

@@ -1,28 +1,29 @@
 package routing.Algorithm;
 
 import courseObjects.Ball;
+import courseObjects.Border;
 import courseObjects.Course;
-import helperClasses.Pair;
 import math.Geometry;
 import org.jetbrains.annotations.NotNull;
 import org.opencv.core.Point;
 import routing.Algorithm.UnionFind.IUnionFind;
 import routing.Algorithm.UnionFind.QuickFind;
-import routing.Routine;
 import routing.RoutingController;
 import vision.BallPickupStrategy;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class HamiltonianRoute implements IRoutePlanner {
   //TODO: get these from the right place...
-  Point goal = new Point(200, 200);
-
-  List<Ball> plan;
+  Point goal;
+  Deque<Vertex> plan; //TODO: lav denne til en queue i stedet
   Course course;
 
   @Override
   public void computeFullRoute(Course course, int numberOfBallsInStorage) {
+    this.goal = course.getBorder().getSmallGoalMiddlePoint();
 
     //initialization, but not pushing to the actual one, as it might be used while recomputing route
     //List<Routine> planning = new ArrayList<>();
@@ -62,18 +63,22 @@ public class HamiltonianRoute implements IRoutePlanner {
     //update vertecies in order of visit
     vertices = listedByVisitingOrder(vertices, edges);
 
-
     //finally update the actual plan
-    plan = vertices.stream()
-            .map(v -> v.ball)
-            .filter(Objects::nonNull)
-            .toList();
+    plan = new ArrayDeque<>(vertices);
+
+
   }
 
   @Override
-  public void getComputedRoute(RoutingController rc) {
-    //if (plan.isEmpty()){
-    //}
+  public void getComputedRoute(RoutingController rc) throws IllegalStateException{
+    if (plan.isEmpty()){
+      throw new IllegalStateException("Queue is empty, run recompute");
+    }
+    Vertex next = plan.pop();
+    if (next.ball == null){
+      rc.addRoutine(goal);
+    } else
+      rc.addRoutine(next.ball);
   }
 
   private void setupVertex(final List<Vertex> vertices) {
@@ -198,7 +203,7 @@ public class HamiltonianRoute implements IRoutePlanner {
   }
 
   //used for data needed in each graph note
-  private class Vertex {
+  public class Vertex {
     Point position;
     Type type;
     Ball ball;
@@ -218,9 +223,9 @@ public class HamiltonianRoute implements IRoutePlanner {
 
   private class Edge implements Comparable<Edge> {
     Vertex start, end;
-    int cost;
+    double cost;
 
-    Edge(Vertex start, Vertex end, int cost) {
+    Edge(Vertex start, Vertex end, double cost) {
       this.start = start;
       this.end = end;
       this.cost = cost;
@@ -228,7 +233,7 @@ public class HamiltonianRoute implements IRoutePlanner {
 
     @Override
     public int compareTo(@NotNull HamiltonianRoute.Edge o) {
-      return this.cost - o.cost;
+      return (int) (this.cost - o.cost);
     }
   }
 
