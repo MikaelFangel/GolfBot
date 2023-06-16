@@ -1,9 +1,11 @@
+import courseObjects.Ball;
+import courseObjects.Course;
 import exceptions.MissingArgumentException;
-import courseObjects.*;
 import routing.RobotController;
+import routing.RoutingController;
 import vision.Algorithms;
-import vision.detection.DetectionConfiguration;
 import vision.DetectionController;
+import vision.detection.DetectionConfiguration;
 
 public class Main {
     public static void main(String[] args) throws MissingArgumentException, InterruptedException {
@@ -13,14 +15,28 @@ public class Main {
 
         int cameraIndex = Integer.parseInt(args[0]);
 
-        RobotController controller = new RobotController();
-
         Course course = new Course();
         new DetectionController(course, cameraIndex, false); // Runs in the background
+        RobotController controller = new RobotController(course.getRobot());
 
         DetectionConfiguration.DetectionConfiguration();
 
-        Routine.collectAllBallsRoutine(controller, course);
+        RoutingController routingController = new RoutingController(course);
+
+        routingController.stopCurrentRoute();
+
+        Thread.sleep(4000);
+        while (!course.getBalls().isEmpty()) {
+            Ball closestBall = Algorithms.findClosestBall(course.getBalls(), course.getRobot());
+
+            // This check also make sure program won't crash after collecting last ball
+            if (closestBall == null)
+                break;
+
+            System.out.println("Chosen collection strat: " + closestBall.getStrategy().toString());
+            routingController.addRoutine(closestBall);
+            routingController.driveRoutes();
+        }
 
         System.out.println("Done");
     }

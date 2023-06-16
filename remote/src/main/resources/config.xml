@@ -18,6 +18,7 @@
     <entry key="camHeight">184</entry>
     <entry key="camResolutionWidth">1024</entry>
     <entry key="camResolutionHeight">768</entry>
+    <entry key="maxBalls">11</entry>
 
     <!-- Cross measurements in cm -->
     <entry key="crossSideLong">20.1</entry>
@@ -28,6 +29,7 @@
     <entry key="robotLength">16.0</entry>
     <entry key="robotWidth">17.0</entry>
     <entry key="robotHeight">20.0</entry>
+    <entry key="magazineSize">7</entry>
 
 
 

@@ -1,16 +1,13 @@
-package vision.math;
+package math;
 
 import org.jetbrains.annotations.NotNull;
+import org.opencv.core.Mat;
 import org.opencv.core.Point;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Geometry {
-
-    public static double distanceBetweenTwoPoints(Point p1, Point p2) {
-        return distanceBetweenTwoPoints(p1.x, p1.y, p2.x, p2.y);
-    }
     public static double distanceBetweenTwoPoints(double x1, double y1, double x2, double y2) {
         return Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2));
     }
@@ -59,7 +56,7 @@ public class Geometry {
      * @param points the amount of points to draw the circle with
      * @return the list of points representing the circle
      */
-    public List<Point> generateCircle(@NotNull Point center, double radius, int points) throws ArithmeticException {
+    public static List<Point> generateCircle(@NotNull Point center, double radius, int points) throws ArithmeticException {
         if (points < 1)
             throw new ArithmeticException("A circle must consist of at least one point");
         double angle = 360. / points;
@@ -87,5 +84,19 @@ public class Geometry {
         // Calculate the distance from the center of the circle
         double dist = Math.abs(a*circleCenter.x + b - circleCenter.y) / Math.sqrt(Math.pow(a, 2) + 1);
         return dist < circleRadius;
+    }
+
+    public static PolarCoordinate cartesianToPolar(Point cartesian){
+        return new PolarCoordinate(
+                Math.sqrt(Math.pow(cartesian.x, 2) + Math.pow(cartesian.y, 2)),
+                Math.toDegrees(Math.atan2(cartesian.y, cartesian.x))
+        );
+    }
+
+    public static Point polarToCartesian(PolarCoordinate polar){
+        return new Point(
+                polar.getDistance() * Math.cos(Math.toRadians(polar.getAngel())),
+                polar.getDistance() * Math.sin(Math.toRadians(polar.getAngel()))
+        );
     }
 }

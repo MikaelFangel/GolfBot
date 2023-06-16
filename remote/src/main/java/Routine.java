@@ -22,7 +22,7 @@ public class Routine {
             controller.rotate(angle);
             controller.recalibrateGyro();
             controller.collectRelease(true);
-            controller.drive(course.getRobot(), closestBall.getCenter(), true);
+            controller.drive(closestBall.getCenter(), true);
             controller.stopCollectRelease();
             // Previous call is non-blocking, and we have to wait for it to end before sending new instruction
             Thread.sleep(300);
@@ -41,7 +41,7 @@ public class Routine {
         controller.recalibrateGyro();
         controller.rotate(angle);
         controller.recalibrateGyro();
-        controller.drive(course.getRobot(), closestBall.getCenter(), true);
+        controller.drive(closestBall.getCenter(), true);
         // Previous call is non-blocking, and we have to wait for it to end before sending new instruction
         Thread.sleep(300);
     }
@@ -66,7 +66,7 @@ public class Routine {
         controller.rotate(angleToStopover);
 
         controller.recalibrateGyro();
-        controller.drive(robot, border.getSmallGoalDestPoint(), false);
+        controller.drive(border.getSmallGoalDestPoint(), false);
 
         var angleToGoal = Algorithms.findRobotShortestAngleToPoint(robot, border.getSmallGoalMiddlePoint());
         controller.recalibrateGyro();
