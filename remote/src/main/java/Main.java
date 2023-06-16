@@ -20,13 +20,13 @@ public class Main {
         new DetectionController(course, cameraIndex, false); // Runs in the background
         DetectionConfiguration.DetectionConfiguration();
 
+        RobotController controller = new RobotController(course.getRobot());
+        reset(controller);
+        controller.recalibrateGyro();
+
         JOptionPane.showMessageDialog(null, "Continue when vision setup is done");
 
-        RobotController controller = new RobotController(course.getRobot());
         RoutingController routingController = new RoutingController(course);
-        routingController.stopCurrentRoute();
-
-        Thread.sleep(4000);
         while (!course.getBalls().isEmpty()) {
             Ball closestBall = Algorithms.findClosestBall(course.getBalls(), course.getRobot());
 
@@ -34,11 +34,19 @@ public class Main {
             if (closestBall == null)
                 break;
 
-            System.out.println("Chosen collection strat: " + closestBall.getStrategy().toString());
+            System.out.println("Chosen collection strategy: " + closestBall.getStrategy().toString());
             routingController.addRoutine(closestBall);
             routingController.driveRoutes();
         }
 
+        routingController.addRoutine(course.getBorder().getSmallGoalMiddlePoint(), true);
+        routingController.driveRoutes();
+
         System.out.println("Done");
+    }
+
+    public static void reset(RobotController robotController) {
+        robotController.stopCollectRelease();
+        robotController.stopMotors();
     }
 }

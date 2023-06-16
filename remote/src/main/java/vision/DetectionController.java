@@ -136,12 +136,7 @@ public class DetectionController {
                 System.out.println("Found Robot");
             }
 
-            if (!ballFound) {
-                ballFound = this.ballDetector.detectBalls(this.frame);
-                if (!ballFound) continue;
-
-                System.out.println("Found least a ball");
-            }
+            this.ballDetector.detectBalls(this.frame);
 
             updateCourse();
 
