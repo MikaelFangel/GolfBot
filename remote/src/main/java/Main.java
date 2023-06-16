@@ -40,7 +40,7 @@ public class Main {
         }
 
         routingController.addRoutine(course.getBorder().getSmallGoalMiddlePoint(), true);
-        routingController.driveRoutes();
+        //routingController.driveRoutes();
 
         System.out.println("Done");
     }
