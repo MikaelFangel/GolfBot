@@ -95,10 +95,10 @@ public class RoutingController {
         double borderProjectionMargin = Double.parseDouble(configs.GlobalConfig.getConfigProperties().getProperty("borderProjectionMargin"));
 
         double borderDistance = borderProjectionMargin + distance;
-        double crossDistance = crossProjectionMargin + course.getCross().getLongestSide() / 2;
+        double crossDistance = crossProjectionMargin + course.getCross().getLongestSide() / 2 + distance;
 
         BallPickupStrategy strategy = ball.getStrategy();
-        Point projectedPoint = null;
+        Point projectedPoint;
 
         switch (strategy) {
             case FREE -> projectedPoint = ball.getCenter();
