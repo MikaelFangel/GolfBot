@@ -155,7 +155,7 @@ public class RoutingController {
 
                     // Calculate number of times to rotate 90 degrees.
                     double diffAngle = angleToBall - angleToMeasurePoint;
-                    double numRotations = Math.floor(diffAngle / 90);
+                    double numRotations = (int) (diffAngle / 90); // To remove decimals.
                     int direction = (diffAngle >= 0) ? 1 : -1;
 
                     double projectionAngle = angleToMeasurePoint + (direction * 45) + (90 * numRotations);
