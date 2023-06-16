@@ -4,6 +4,7 @@ import courseObjects.*;
 import nu.pattern.OpenCV;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
@@ -135,9 +136,9 @@ public class DetectionController {
 
                 System.out.println("Found Robot");
             }
-
-            this.ballDetector.detectBalls(this.frame);
-
+            //this.ballDetector.detectBalls(this.frame);
+            //TODO
+            this.ballDetector.detectBalls(createSubmat(this.frame));
             updateCourse();
 
             // Exit when all objects are found
@@ -161,6 +162,13 @@ public class DetectionController {
         }).start();
     }
 
+    //TODO: Explain and clean. Region of interest
+    private Mat createSubmat(Mat frame) {
+        Rect roiRect = new Rect(course.getBorder().getBottomLeft(), course.getBorder().getTopRight());
+        Mat roi = frame.submat(roiRect);
+        return roi;
+    }
+
     /**
      * Runs all the sub detectors to detect objects on the course.
      * The objects gets corrected using different algorithms (E.g. height correction).
@@ -176,7 +184,9 @@ public class DetectionController {
         // Run sub detectors. They store the objects
         this.borderDetector.detectBorder(this.frame);
         this.robotDetector.detectRobot(this.frame);
-        this.ballDetector.detectBalls(this.frame);
+        //this.ballDetector.detectBalls(this.frame);
+        this.ballDetector.detectBalls(createSubmat(frame)); // TODO
+        this.borderDetector.getBorder().getSmallGoalMiddlePoint();
 
         categorizeBallsPickupStrategy(
                 this.ballDetector.getBalls(),
