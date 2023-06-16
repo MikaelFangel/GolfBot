@@ -8,13 +8,14 @@ import vision.BallPickupStrategy;
 
 import java.sql.SQLOutput;
 import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Queue;
 
 public class RoutingController {
 
     private final RobotController robotController;
     private final Course course;
-    private final Queue<Routine> fullRoute = new ArrayDeque<>();
+    private final Deque<Routine> fullRoute = new ArrayDeque<>();
     private Routine currentRoute;
 
 
@@ -30,7 +31,7 @@ public class RoutingController {
         if (fullRoute.isEmpty()) return;
 
         while (!fullRoute.isEmpty()) {
-            currentRoute = fullRoute.poll();
+            currentRoute = fullRoute.pop();
             if (currentRoute == null) return;
 
             currentRoute.run();
