@@ -160,6 +160,9 @@ public class RoutingController {
                     int direction = (diffAngle >= 0) ? 1 : -1;
 
                     double projectionAngle = angleToMeasurePoint + (direction * 45) + (90 * numRotations);
+                    // Convert to radians
+                    projectionAngle = projectionAngle * Math.PI / 180;
+
                     projectedPoint = new Point(
                             crossCenter.x + Math.cos(projectionAngle) * crossDistance,
                             crossCenter.y + Math.sin(projectionAngle) * crossDistance
