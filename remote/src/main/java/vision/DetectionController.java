@@ -366,14 +366,25 @@ public class DetectionController {
      */
     private void updateNewCourseCross(Cross newCross) {
         Cross pixelCross = this.borderDetector.getCross();
+
+        if (pixelCross.getEndPoints() != null) {
+            List<Point> correctedEndPointList = new ArrayList<>();
+            for (Point endPoint : pixelCross.getEndPoints()) {
+                Point correctedEndPoint = convertPixelPointToCmPoint(endPoint, this.pixelOffset);
+                correctedEndPoint = Algorithms.correctedCoordinatesOfObject(correctedEndPoint, this.courseCenter, newCross.getHeight(), this.camHeight);
+                correctedEndPointList.add(correctedEndPoint);
+            }
+            newCross.setEndPoints(correctedEndPointList);
+        }
+
         if (pixelCross.getMiddle() != null && pixelCross.getMeasurePoint() != null) {
             // Convert to CM
             Point correctedMiddle = convertPixelPointToCmPoint(pixelCross.getMiddle(), this.pixelOffset);
             Point correctedMeasurePoint = convertPixelPointToCmPoint(pixelCross.getMeasurePoint(), this.pixelOffset);
 
             // Correct using height
-            correctedMiddle = Algorithms.correctedCoordinatesOfObject(correctedMiddle, courseCenter, newCross.getHeight(), camHeight);
-            correctedMeasurePoint = Algorithms.correctedCoordinatesOfObject(correctedMeasurePoint, courseCenter, newCross.getHeight(), camHeight);
+            correctedMiddle = Algorithms.correctedCoordinatesOfObject(correctedMiddle, this.courseCenter, newCross.getHeight(), this.camHeight);
+            correctedMeasurePoint = Algorithms.correctedCoordinatesOfObject(correctedMeasurePoint, this.courseCenter, newCross.getHeight(), this.camHeight);
 
             newCross.setMiddle(correctedMiddle);
             newCross.setMeasurePoint(correctedMeasurePoint);
