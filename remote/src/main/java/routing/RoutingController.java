@@ -142,7 +142,7 @@ public class RoutingController {
 
                 // Prepare angles and distances
                 double angleToBall = Geometry.angleBetweenTwoPoints(crossCenter.x, crossCenter.y, ballCenter.x, ballCenter.y);
-                double angleToMeasurePoint = Geometry.angleBetweenTwoPoints(crossCenter.x, cross.y, crossMeasurePoint.x, crossMeasurePoint.y);
+                double angleToMeasurePoint = Geometry.angleBetweenTwoPoints(crossCenter.x, crossCenter.y, crossMeasurePoint.x, crossMeasurePoint.y);
                 double distanceToBall = Geometry.distanceBetweenTwoPoints(crossCenter.x, crossCenter.y, ballCenter.x, ballCenter.y);
 
                 // If ball is NOT between two "legs"
