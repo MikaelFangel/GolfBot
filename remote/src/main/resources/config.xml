@@ -36,7 +36,7 @@
 
 
     <!-- Detection Configurations - Used in vision -->
-    <entry key="ballSizeLower">9</entry>
+    <entry key="ballSizeLower">8</entry>
     <entry key="ballSizeUpper">12</entry>
     <entry key="ballDp">1</entry> <!--Don't question or change-->
     <entry key="ballMinDist">8</entry> <!--Minimum distance between balls-->
