@@ -61,7 +61,8 @@ public class RobotController {
      * @see <a href="https://github.com/grpc/grpc-java/blob/master/examples/src/main/java/io/grpc/examples/routeguide/RouteGuideClient.java">Example streaming client</a>
      */
     public void drive(Point target, boolean calculateFromFront) throws RuntimeException {
-        int speed = 100;
+        System.out.println("Target: " + target);
+        int speed = 30; // TODO: Experiment with speeds -> precision
         MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
                 new MotorPair(OutPort.D, speed));
 
@@ -70,7 +71,7 @@ public class RobotController {
 
         try {
             // Margin from the border in CM, that always should stop the robot from hitting the border
-            int borderMargin = 5; // TODO: Might need to be adjusted
+            double borderMargin = calculateFromFront ? 11 : 20; // TODO: Might need to be adjusted and make one for (right and left) and one for (top and bottom)
             // Get corners, TopLeft, BottomRight
             Point[] corners = this.course.getBorder().getCornersAsArray();
             Point TL = corners[0];
@@ -78,31 +79,58 @@ public class RobotController {
 
 
             double distanceToTarget = Algorithms.findRobotsDistanceToPoint(this.robot, target, calculateFromFront);
-            System.out.println("Distance to drive: " + distanceToTarget); // TODO: Delete
             Point robotStartPos = calculateFromFront ? this.robot.getFront() : this.robot.getCenter();
             Point robotNewPos;
-            double drivenDistance = 0.0;
+            double drivenDistance;
+            int distanceLeft;
+            // Offset from front marker to the front collector
+            int offset = calculateFromFront ? 3 : 0;
 
 
             /* Continue to stream messages until reaching target
              * Iterator used as a failsafe */
-            for (int i = 0; i < MAX_ITERATIONS || distanceToTarget >= drivenDistance; i++) {
-                robotNewPos = calculateFromFront ? this.robot.getFront() : this.robot.getCenter();
-                // Stop before top border or left border
-                if (robotNewPos.y <= TL.y + borderMargin || robotNewPos.x <= TL.x + borderMargin)
-                    break;
-                // Stop before bottom border or right border
-                if (robotNewPos.y >= BR.y - borderMargin || robotNewPos.x >= BR.x - borderMargin)
-                    break;
+            for (int i = 0; i < MAX_ITERATIONS; i++) {
+                drivenDistance = Algorithms.findRobotsDistanceToPoint(this.robot, robotStartPos, calculateFromFront);
+                distanceLeft = (int) (distanceToTarget - drivenDistance) - offset; // TODO: Test with int and double -> precision in when we break from the loop
+
+
+                System.err.println("DistanceLeft: " + distanceLeft); // TODO: Delete
 
 
                 // Distance from starting point of the robot and where the robot currently is
-                drivenDistance = Algorithms.findRobotsDistanceToPoint(this.robot, robotStartPos, calculateFromFront);
                 System.out.println("Distance driven so far: " + drivenDistance); // TODO: Delete
+                System.out.println("Distance to go: " + (distanceToTarget - drivenDistance)); // TODO: Delete
+
+                robotNewPos = calculateFromFront ? this.robot.getFront() : this.robot.getCenter();
+                // Stop before top border or left border
+                if (robotNewPos.y <= TL.y + borderMargin || robotNewPos.x <= TL.x + borderMargin) {
+                    System.out.println("TOP or LEFT border"); // TODO: Delete
+                    break;
+                }
+                // Stop before bottom border or right border
+                if (robotNewPos.y >= BR.y - borderMargin || robotNewPos.x >= BR.x - borderMargin) {
+                    System.out.println("BOTTOM or RIGHT border"); // TODO: Delete
+                    break;
+                }
+
+                if (distanceToTarget <= drivenDistance) { // Breaks here if distanceLeft didn't make it break a loop earlier
+                    System.out.println("THREE"); // TODO: Delete
+                    break;
+                }
+
+                if (distanceLeft <= 0) { // Usually breaks here unless stopping before hitting the border
+                    System.out.println("FOUR"); // TODO: Delete
+                    break;
+                }
+
+
+
+
+
 
                 DrivePIDRequest drivePIDRequest = DrivePIDRequest.newBuilder()
                         .setMotors(motorsRequest)
-                        .setDistance((float) (distanceToTarget - drivenDistance))
+                        .setDistance((float) (distanceLeft))
                         .setSpeed(speed) // This speed worked well, other speeds could be researched
                         .build();
 
@@ -111,7 +139,8 @@ public class RobotController {
 
                 // Sleep for a bit before sending the next one.
                 // TODO: Research timing of the delay with the robot. ALSO check if still needed
-                Thread.sleep(300);
+                Thread.sleep(400);
+                System.out.println("");
             }
         } catch (RuntimeException e) {
             // Cancel RPC
@@ -121,6 +150,7 @@ public class RobotController {
             throw new RuntimeException(e);
         }
 
+        System.out.println("STOP");
         // Mark the end of requests
         requestObserver.onCompleted();
     }
