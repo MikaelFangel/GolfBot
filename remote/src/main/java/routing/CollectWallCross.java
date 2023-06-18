@@ -19,7 +19,7 @@ public class CollectWallCross extends Routine {
         super.robotController.recalibrateGyro();
         super.robotController.rotate(super.getDegreesToTurn(super.projectedPoint));
         super.robotController.recalibrateGyro();
-        super.robotController.drive(super.projectedPoint, false);
+        super.robotController.drive(super.projectedPoint, false, 80, 3);
 
         // Correct the robot for collection
         super.robotController.recalibrateGyro();

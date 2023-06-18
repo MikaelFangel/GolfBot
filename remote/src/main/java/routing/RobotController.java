@@ -60,11 +60,10 @@ public class RobotController {
      * @throws RuntimeException If the robot was not reached
      * @see <a href="https://github.com/grpc/grpc-java/blob/master/examples/src/main/java/io/grpc/examples/routeguide/RouteGuideClient.java">Example streaming client</a>
      */
-    public void drive(Point target, boolean calculateFromFront) throws RuntimeException {
+    public void drive(Point target, boolean calculateFromFront, int defaultSpeed, int powerFactor) throws RuntimeException {
         System.out.println("Target: " + target);
-        int speed = 30; // TODO: Experiment with speeds -> precision
-        MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
-                new MotorPair(OutPort.D, speed));
+        MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, defaultSpeed),
+                new MotorPair(OutPort.D, defaultSpeed));
 
         // Use gRPCs StreamObserver interface
         StreamObserver<DrivePIDRequest> requestObserver = initStreamObserver();
@@ -126,7 +125,7 @@ public class RobotController {
                 DrivePIDRequest drivePIDRequest = DrivePIDRequest.newBuilder()
                         .setMotors(motorsRequest)
                         .setDistance((float) (distanceLeft))
-                        .setSpeed(speed) // This speed worked well, other speeds could be researched
+                        .setSpeed(setPowerInDrive(distanceLeft, powerFactor, defaultSpeed)) // This speed worked well, other speeds could be researched
                         .build();
 
                 // Send request
@@ -180,6 +179,27 @@ public class RobotController {
 
         // End of requests
         requestObserver.onCompleted();
+    }
+
+    private int setPowerInDrive(double distance, int powerFactor, int defaultSpeed) {
+        int power = defaultSpeed;
+        if (distance < 0) {
+            power *= -1;
+        }
+
+        if (Math.abs(distance) > 40) {
+            power *= powerFactor;
+        } else if (Math.abs(distance) > 15) {
+            power *= (double) powerFactor / 2;
+        } else if (Math.abs(distance) > 5) {
+            power *= (double) powerFactor / 4;
+        }
+
+        int powerCap = 400;
+        if(power > powerCap) power = powerCap;
+        if(power < -powerCap) power = -powerCap;
+
+        return power;
     }
 
     /**

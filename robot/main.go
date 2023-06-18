@@ -81,6 +81,8 @@ func (s *motorServer) Drive(stream pBuff.Motors_DriveServer) error {
 	// Prepare the motors for running
 	distance := float64(driveRequest.Distance)
 
+	power := -int(driveRequest.Speed)
+
 	gyro, err := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
 	if err != nil {
 		return err
@@ -101,8 +103,6 @@ func (s *motorServer) Drive(stream pBuff.Motors_DriveServer) error {
 		// "D term", trying to predict next error
 		correction := (kp * gyroErr) + (ki * integral) + (kd * derivative)
 
-		power := setPowerInDrive(int(distance), -int(driveRequest.Speed), 8)
-
 		// Slice the array to reuse positions
 		motorRequests = motorRequests[0:0]
 		// Prepare the motors for running
@@ -112,7 +112,6 @@ func (s *motorServer) Drive(stream pBuff.Motors_DriveServer) error {
 				return err
 			}
 
-			// TODO: Should ramp be set for all iterations or only first and last? I found that the these values worked well
 			motor.SetRampUpSetpoint(4 * time.Second)
 			motor.SetRampDownSetpoint(4 * time.Second)
 			switch request.GetMotorPort() {
@@ -127,7 +126,6 @@ func (s *motorServer) Drive(stream pBuff.Motors_DriveServer) error {
 			motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
 		}
 
-		// TODO: Maybe we could switch around the motor order for each iteration, so that the start/stop delay is evened out
 		// Start the motors
 		for _, motorRequest := range motorRequests {
 			motorRequest.motor.Command(run)
@@ -144,6 +142,7 @@ func (s *motorServer) Drive(stream pBuff.Motors_DriveServer) error {
 			break
 		}
 		distance = float64(driveRequest.Distance)
+		power = -int(driveRequest.Speed)
 	}
 
 	stopAllMotors(motorRequests)

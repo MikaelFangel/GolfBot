@@ -12,13 +12,13 @@ public class CollectCorner extends Routine {
 
     @Override
     public void run() {
-        avoidObstacle(10);
+        avoidObstacle(18);
 
         // Drive to a projected spot
         super.robotController.recalibrateGyro();
         super.robotController.rotate(super.getDegreesToTurn(super.projectedPoint));
         super.robotController.recalibrateGyro();
-        super.robotController.drive(super.projectedPoint, false);
+        super.robotController.drive(super.projectedPoint, false, 80, 3);
 
 
         // Run shooting routine
