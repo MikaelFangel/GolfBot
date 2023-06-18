@@ -79,7 +79,7 @@ func (s *motorServer) Drive(stream pBuff.Motors_DriveServer) error {
 	lastError := 0.0
 
 	// Prepare the motors for running
-	distance := int(driveRequest.Distance)
+	distance := float64(driveRequest.Distance)
 
 	gyro, err := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
 	if err != nil {
@@ -101,7 +101,7 @@ func (s *motorServer) Drive(stream pBuff.Motors_DriveServer) error {
 		// "D term", trying to predict next error
 		correction := (kp * gyroErr) + (ki * integral) + (kd * derivative)
 
-		power := setPowerInDrive(distance, -int(driveRequest.Speed), 3)
+		power := setPowerInDrive(int(distance), -int(driveRequest.Speed), 8)
 
 		// Slice the array to reuse positions
 		motorRequests = motorRequests[0:0]
@@ -113,8 +113,8 @@ func (s *motorServer) Drive(stream pBuff.Motors_DriveServer) error {
 			}
 
 			// TODO: Should ramp be set for all iterations or only first and last? I found that the these values worked well
-			motor.SetRampUpSetpoint(3 * time.Second)
-			motor.SetRampDownSetpoint(3 * time.Second)
+			motor.SetRampUpSetpoint(4 * time.Second)
+			motor.SetRampDownSetpoint(4 * time.Second)
 			switch request.GetMotorPort() {
 			case pBuff.OutPort_A:
 				motor.SetSpeedSetpoint(power + int(correction))
@@ -143,7 +143,7 @@ func (s *motorServer) Drive(stream pBuff.Motors_DriveServer) error {
 		if err != nil {
 			break
 		}
-		distance = int(driveRequest.Distance)
+		distance = float64(driveRequest.Distance)
 	}
 
 	stopAllMotors(motorRequests)
@@ -212,6 +212,11 @@ func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff
 	for math.Abs(gyroVal) != math.Abs(float64(in.Degrees)) {
 		gyroVal, _ = util.GetGyroValue(gyro)
 		target = gyroVal - float64(in.Degrees)
+
+		// Used as a failsafe for infinite rotation
+		if gyroVal < -360 || gyroVal > 360 {
+			break
+		}
 
 		derivative := target - lastError
 		lastError = target
@@ -285,10 +290,12 @@ func setPowerInDrive(distance int, power int, powerFactor int) int {
 		power *= -1
 	}
 
-	if math.Abs(float64(distance)) > 30 {
+	if math.Abs(float64(distance)) > 40 {
 		power *= powerFactor
 	} else if math.Abs(float64(distance)) > 15 {
 		power *= powerFactor / 2
+	} else if math.Abs(float64(distance)) > 5 {
+		power *= powerFactor / 4
 	}
 
 	powerCap := 400

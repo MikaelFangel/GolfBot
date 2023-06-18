@@ -13,7 +13,7 @@ public class CollectWallCross extends Routine {
     @Override
     public void run() {
         // Distance from border to rear marker of robot
-        avoidObstacle(20);
+        avoidObstacle(18);
 
         // Drive to a projected spot
         super.robotController.recalibrateGyro();
@@ -24,9 +24,17 @@ public class CollectWallCross extends Routine {
         // Correct the robot for collection
         super.robotController.recalibrateGyro();
         super.robotController.rotate(super.getDegreesToTurn(dest));
-        super.robotController.recalibrateGyro();
+
+
+        super.robotController.releaseOneBall();
         super.robotController.collectRelease(true);
-        super.robotController.drive(dest, true);
+
+        try {
+            Thread.sleep(2000); // Can be adjusted. How long we collect
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         super.robotController.stopCollectRelease();
 
         super.robotController.reverse();

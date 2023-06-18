@@ -82,16 +82,16 @@ public class RobotController {
             Point robotStartPos = calculateFromFront ? this.robot.getFront() : this.robot.getCenter();
             Point robotNewPos;
             double drivenDistance;
-            int distanceLeft;
+            double distanceLeft;
             // Offset from front marker to the front collector
-            int offset = calculateFromFront ? 3 : 0;
+            double offset = calculateFromFront ? 2 : 0;
 
 
             /* Continue to stream messages until reaching target
              * Iterator used as a failsafe */
             for (int i = 0; i < MAX_ITERATIONS; i++) {
                 drivenDistance = Algorithms.findRobotsDistanceToPoint(this.robot, robotStartPos, calculateFromFront);
-                distanceLeft = (int) (distanceToTarget - drivenDistance) - offset; // TODO: Test with int and double -> precision in when we break from the loop
+                distanceLeft = (distanceToTarget - drivenDistance) - offset; // TODO: Test with int and double -> precision in when we break from the loop
 
 
                 System.err.println("DistanceLeft: " + distanceLeft); // TODO: Delete
@@ -123,11 +123,6 @@ public class RobotController {
                     break;
                 }
 
-
-
-
-
-
                 DrivePIDRequest drivePIDRequest = DrivePIDRequest.newBuilder()
                         .setMotors(motorsRequest)
                         .setDistance((float) (distanceLeft))
@@ -139,8 +134,7 @@ public class RobotController {
 
                 // Sleep for a bit before sending the next one.
                 // TODO: Research timing of the delay with the robot. ALSO check if still needed
-                Thread.sleep(400);
-                System.out.println("");
+                Thread.sleep(300);
             }
         } catch (RuntimeException e) {
             // Cancel RPC
