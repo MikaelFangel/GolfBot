@@ -262,11 +262,11 @@ public class RobotController {
         int speed = 1200;
         MultipleMotors motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, speed), new MotorPair(OutPort.C, speed));
 
-        CLIENT.releaseOneBall(motorRequests);
+        this.CLIENT.releaseOneBall(motorRequests);
 
         // Remove one ball from magazine
-        robot.addOrRemoveNumberOfBallsInMagazine(-1);
-        numberOfBallsOnCourseBeforeRoutine++;
+        this.robot.addOrRemoveNumberOfBallsInMagazine(-1);
+        this.numberOfBallsOnCourseBeforeRoutine++;
     }
 
     /**
@@ -276,7 +276,7 @@ public class RobotController {
         int motorSpeed = 0;
         MultipleMotors motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, motorSpeed), new MotorPair(OutPort.C, motorSpeed));
         try {
-            StatusReply reply = CLIENT.stopMotors(motorRequests);
+            StatusReply reply = this.CLIENT.stopMotors(motorRequests);
             if (!reply.getReplyMessage())
                 System.out.println("An error occurred");
         } catch (RuntimeException e) {
