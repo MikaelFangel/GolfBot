@@ -52,6 +52,7 @@ public class RobotController {
      * Drive robot straight either forward by using the gyro and streaming distance to the robot
      *
      * @param target Destination
+     * @param calculateFromFront True if calculating distance from the front marker. False if from rear marker
      * @throws RuntimeException If the robot was not reached
      * @see <a href="https://github.com/grpc/grpc-java/blob/master/examples/src/main/java/io/grpc/examples/routeguide/RouteGuideClient.java">Example streaming client</a>
      */
