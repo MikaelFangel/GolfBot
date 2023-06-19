@@ -68,20 +68,24 @@ public class RobotController {
         try {
 
             double distanceToTarget = Algorithms.findRobotsDistanceToPoint(this.robot, target, calculateFromFront);
-            System.out.println("Distance to drive: " + distanceToTarget); // TODO: Delete
             Point robotStartPos = calculateFromFront ? this.robot.getFront() : this.robot.getCenter();
-            double drivenDistance = 0.0;
+            double drivenDistance;
+            int distanceLeft;
+            int offset = calculateFromFront ? 3 : 0; // Offset from front marker to the front collector
 
             /* Continue to stream messages until reaching target
              * Iterator used as a failsafe */
-            for (int i = 0; i < MAX_ITERATIONS || distanceToTarget >= drivenDistance; i++) {
+            for (int i = 0; i < MAX_ITERATIONS; i++) {
                 // Distance from starting point of the robot and where the robot currently is
                 drivenDistance = Algorithms.findRobotsDistanceToPoint(this.robot, robotStartPos, calculateFromFront);
-                System.out.println("Distance driven so far: " + drivenDistance); // TODO: Delete
+                distanceLeft = (int) (distanceToTarget - drivenDistance) - offset; // TODO: Test with in and double -> Precision in when we break from the loop
+
+                if (distanceToTarget <= drivenDistance || distanceLeft <= 0)
+                    break;
 
                 DrivePIDRequest drivePIDRequest = DrivePIDRequest.newBuilder()
                         .setMotors(motorsRequest)
-                        .setDistance((float) (distanceToTarget - drivenDistance))
+                        .setDistance((float) distanceLeft)
                         .setSpeed(speed) // This speed worked well, other speeds could be researched
                         .build();
 
