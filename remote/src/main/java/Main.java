@@ -31,7 +31,7 @@ public class Main {
         while (true) {
             Ball closestBall = Algorithms.findClosestBall(course.getBalls(), course.getRobot());
 
-            if(controller.getRobot().getNumberOfBallsInMagazine() > 4)
+            if (controller.getRobot().getNumberOfBallsInMagazine() > 4)
                 routingController.addRoutine(course.getBorder().getSmallGoalMiddlePoint(), true);
             else if (closestBall != null) {
                 routingController.addRoutine(closestBall);
