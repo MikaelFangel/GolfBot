@@ -1,6 +1,8 @@
 package routing.Algorithm;
 
+import configs.GlobalConfig;
 import courseObjects.Ball;
+import courseObjects.BallColor;
 import courseObjects.Course;
 import helperClasses.Pair;
 import math.Geometry;
@@ -14,33 +16,28 @@ import vision.BallPickupStrategy;
 import java.util.*;
 
 public class HamiltonianRoute implements IRoutePlanner {
-  //TODO: get these from the right place...
   Point goal;
-  Deque<Vertex> plan; //TODO: lav denne til en queue i stedet
+  Deque<Vertex> plan;
   Course course;
 
+  /**
+   * Generates the shortest path, based on a
+   *
+   * @param course course object where all elements can be found
+   * @param numberOfBallsInStorage actual amount of balls in the robots storage
+   */
   @Override
   public void computeFullRoute(Course course, int numberOfBallsInStorage) {
     this.goal = course.getBorder().getSmallGoalMiddlePoint();
-
-    System.out.println("TEST: started");
-
-    //initialization, but not pushing to the actual one, as it might be used while recomputing route
-    //List<Routine> planning = new ArrayList<>();
-
-
-    //saving the course in class for now, until i know how many private methods need it aswell
-    //TODO: remove?
     this.course = course;
+    int maxAmountOfBallsInRobot = Integer.parseInt(GlobalConfig.getConfigProperties().getProperty("magazineSize"));
 
-    List<Vertex> vertices = new ArrayList<>();
-    setupVertex(vertices);
+    List<Vertex> vertices = setupVertex();
 
     //if there is 1 or fewer vertices, there can't be made any path
     if (vertices.size() <= 1) return;
 
-    List<Edge> edges = new ArrayList<>();
-    setupEdge(edges, vertices);
+    List<Edge> edges = setupEdge(vertices);
 
     //if there is no balls in the robot, we can't visit a corner to begin with
     if (numberOfBallsInStorage == 0) {
@@ -63,20 +60,50 @@ public class HamiltonianRoute implements IRoutePlanner {
     //update vertecies in order of visit
     vertices = listedByVisitingOrder(vertices, edges);
 
+    //check if multiple goal runs are needed
+    if (maxAmountOfBallsInRobot < course.getBalls().size() + numberOfBallsInStorage){
+      int amountOfBallsToCollectBeforeFirstGoal = course.getBalls().size() - 1 - maxAmountOfBallsInRobot; //TODO: finish
+      vertices = planExtraGoal(vertices, amountOfBallsToCollectBeforeFirstGoal);
+    }
+
     //finally update the actual plan
     plan = new ArrayDeque<>(vertices);
     plan.pop();
 
-    plan.forEach(v -> System.out.println(v.type));
-
-    System.out.println("TEST: ended");
-
-
   }
 
+  private List<Vertex> planExtraGoal(List<Vertex> vertices, int amountBefore) {
+    //check if orange ball exsist
+    Ball orangeBall = course.getBalls().stream().filter(b -> b.getColor() == BallColor.ORANGE).findFirst().orElse(null);
+    List<Vertex> newRoute = new ArrayList<>();
+
+    //copy the elements before
+    for(int i = 0; i < amountBefore; i++) newRoute.add(vertices.get(i));
+
+    //deal if orangeBall is on field and adds the goal too
+    if (orangeBall != null)
+      newRoute.add(new Vertex(orangeBall));
+    newRoute.add(new Vertex(goal, Type.GOAL));
+
+    //set up the new remaining verticies to check if more optimal route exist.
+    vertices.add(new Vertex(goal, Type.GOAL));
+    List<Vertex> verteciesAfterGoal = vertices.subList(amountBefore, vertices.size());
+    List<Edge> edgesAfterGoal = setupEdge(verteciesAfterGoal);
+    edgesAfterGoal = findEdgesInShortestPath(verteciesAfterGoal, edgesAfterGoal);
+    verteciesAfterGoal = listedByVisitingOrder(verteciesAfterGoal, edgesAfterGoal);
+
+    newRoute.addAll(verteciesAfterGoal);
+    return newRoute;
+  }
+
+  /**
+   * pops the next element in the plan queue and makes the rc run it.
+   *
+   * @param rc need the routingcontroller to execute the next step
+   * @throws IllegalStateException - if the list is empty, a recompute is needed first. Reason that this is not doing it, is because the task might be done.
+   */
   @Override
   public void getComputedRoute(RoutingController rc) throws IllegalStateException{
-    System.out.println("TEST: POP");
     if (plan.isEmpty()){
       throw new IllegalStateException("Queue is empty, run recompute");
     }
@@ -87,7 +114,14 @@ public class HamiltonianRoute implements IRoutePlanner {
       rc.addRoutine(next.ball);
   }
 
-  private void setupVertex(final List<Vertex> vertices) {
+
+  /**
+   *
+   *
+   * @return - list of vertex in the graph
+   */
+  private List<Vertex> setupVertex() {
+    List<Vertex> vertices = new ArrayList<>();
     //placing robot as the first element
     vertices.add(new Vertex(course.getRobot().getCenter(), Type.ROBOT));
 
@@ -99,14 +133,16 @@ public class HamiltonianRoute implements IRoutePlanner {
     //if there is no balls, the robot should go to the goal
     if (balls.isEmpty()) {
       //TODO: write this shit!
-      return;
+      return vertices;
     }
     balls.forEach(ball -> {
-      vertices.add(new Vertex(ball.getCenter(), ball));
+      vertices.add(new Vertex(ball));
     });
+    return vertices;
   }
 
-  private void setupEdge(final List<Edge> edges, final List<Vertex> vertices) {
+  private List<Edge> setupEdge(final List<Vertex> vertices) {
+    List<Edge> edges = new ArrayList<>();
     for (int i = 0; i < vertices.size(); i++) {
       for (int j = i + 1; j < vertices.size(); j++) {
         //never make directly from robot to goal
@@ -121,14 +157,29 @@ public class HamiltonianRoute implements IRoutePlanner {
         );
       }
     }
+    return edges;
   }
 
+  /**
+   * computes the expected time a path would take
+   *
+   * @param src where it start
+   * @param dst where it ends
+   * @return expected cost
+   */
   private int PathCost(Point src, Point dst) {
     return (int) Geometry.distanceBetweenTwoPoints(src, dst);
     //TODO: actually compute this value
   }
 
-  private List<Edge> findEdgesInShortestPath(List<Vertex> vertices, List<Edge> edges) {
+  /**
+   * find the edges needed in the shortest path
+   *
+   * @param vertices - all vertex
+   * @param edges - must only points to objects from the passed vertex list.
+   * @return a sublist of edges, that is needed in shortest path.
+   */
+  private @NotNull List<Edge> findEdgesInShortestPath(List<Vertex> vertices, List<Edge> edges) {
     if (edges.size() == vertices.size() - 1){
       return edges;
     }
@@ -142,11 +193,11 @@ public class HamiltonianRoute implements IRoutePlanner {
 
     //list of how many vertex each at max can have.
     //balls can have 2, robot and goal have 1
-    Pair<Vertex, Integer>[] remainingVertices = new Pair[vertices.size()];
-    remainingVertices[0] = new Pair<>(vertices.get(0),1);
-    remainingVertices[1] = new Pair<>(vertices.get(1),1);
-    for (int i = 2; i < remainingVertices.length; i++){
-      remainingVertices[i] = new Pair<>(vertices.get(i), 2);
+    List<Pair<Vertex, Integer>> remainingVertices = new ArrayList<>();
+    remainingVertices.add(new Pair<>(vertices.get(0),1));
+    remainingVertices.add(new Pair<>(vertices.get(1),1));
+    for (int i = 2; i < vertices.size(); i++){
+      remainingVertices.add(new Pair<>(vertices.get(i), 2));
     }
 
     //sorting my edges by travel cost, and pushing it onto a queue instead
@@ -169,13 +220,13 @@ public class HamiltonianRoute implements IRoutePlanner {
         edgesInShortestPath.add(current);
         remainingElements--;
         int position = vertices.indexOf(current.start);
-        remainingVertices[position].setSecond(remainingVertices[position].getSecond() - 1);
-        if (remainingVertices[position].getSecond() == 0)
+        remainingVertices.get(position).setSecond(remainingVertices.get(position).getSecond() - 1);
+        if (remainingVertices.get(position).getSecond() == 0)
           queueOfEdges.removeIf(e ->
                   e.start.equals(current.start) || e.end.equals(current.start));
         position = vertices.indexOf(current.end);
-        remainingVertices[position].setSecond(remainingVertices[position].getSecond() - 1);
-        if (remainingVertices[position].getSecond() == 0)
+        remainingVertices.get(position).setSecond(remainingVertices.get(position).getSecond() - 1);
+        if (remainingVertices.get(position).getSecond() == 0)
           queueOfEdges.removeIf(e ->
                   e.start.equals(current.end) || e.end.equals(current.end));
 
@@ -185,11 +236,18 @@ public class HamiltonianRoute implements IRoutePlanner {
     return edgesInShortestPath;
   }
 
-  private List<Vertex> listedByVisitingOrder(List<Vertex> vertices, List<Edge> edges) {
+  /**
+   * figures out what order based on the original position of the robot
+   *
+   * @param vertices - list of all vertecies
+   * @param edges - list of edges between vertecies. each vertex must at max be reprecented in 2 edges.
+   * @return a sorted list of vertex, based on visiting order.
+   */
+  private @NotNull List<Vertex> listedByVisitingOrder(List<Vertex> vertices, List<Edge> edges) {
     //the new list needed to return
     List<Vertex> updatedOrder = new ArrayList<>();
 
-    //Make a copy, as we need to modify it but also use the original later. //TODO: maybe??
+    //Make a copy, as we need to modify it but also use the original later.
     List<Edge> myEdges = new ArrayList<>(edges);
 
     //always start at robot
@@ -217,7 +275,9 @@ public class HamiltonianRoute implements IRoutePlanner {
     return updatedOrder;
   }
 
-  //used for data needed in each graph note
+  /**
+   * used for data needed in each graph note
+   */
   public class Vertex {
     Point position;
     Type type;
@@ -229,13 +289,16 @@ public class HamiltonianRoute implements IRoutePlanner {
       ball = null;
     }
 
-    Vertex(Point position, Ball ball) {
-      this.position = position;
+    Vertex(Ball ball) {
+      this.position = ball.getCenter();
       this.type = Type.BALL;
       this.ball = ball;
     }
   }
 
+  /**
+   * This class is used to store all the data needed for the edges in the graph
+   */
   private class Edge implements Comparable<Edge> {
     Vertex start, end;
     double cost;
@@ -246,6 +309,12 @@ public class HamiltonianRoute implements IRoutePlanner {
       this.cost = cost;
     }
 
+    /**
+     * A way to compare edges in order of path cost.
+     *
+     * @param o the object to be compared.
+     * @return path cost
+     */
     @Override
     public int compareTo(@NotNull HamiltonianRoute.Edge o) {
       return (int) (this.cost - o.cost);
