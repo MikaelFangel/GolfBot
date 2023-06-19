@@ -17,6 +17,9 @@ public class BallDetector implements SubDetector {
 
     private final DetectionConfiguration config = DetectionConfiguration.DetectionConfiguration();
 
+    Mat maskWhite, maskOrange;
+    boolean init = true;
+
     /**
      * Detects the balls on the frame
      *
@@ -24,6 +27,12 @@ public class BallDetector implements SubDetector {
      * @return A boolean symbolizing if balls were found or not
      */
     public boolean detectBalls(Mat frame) {
+        if (init) {
+            maskWhite = new Mat();
+            maskOrange = new Mat();
+            init = false;
+        }
+
         // Initialize all OpenCV objects once to not have memory leaks
         Mat frameBlur = new Mat();
 
@@ -69,7 +78,6 @@ public class BallDetector implements SubDetector {
             }
         }
 
-        maskWhite.release();
         ballsMatW.release();
     }
 
@@ -80,7 +88,6 @@ public class BallDetector implements SubDetector {
      */
     private void findOrangeBalls(Mat frameBlur, List<Ball> balls) {
         Mat ballsMatO = new Mat();
-        Mat maskOrange = new Mat();
 
         // Create mask
         Core.inRange(frameBlur, config.getLowerOrangeBallThreshold(), config.getUpperOrangeBallThreshold(), maskOrange);
@@ -101,7 +108,6 @@ public class BallDetector implements SubDetector {
             }
         }
 
-        maskOrange.release();
         ballsMatO.release();
     }
 
