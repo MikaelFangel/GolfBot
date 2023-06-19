@@ -27,6 +27,7 @@ public class Main {
         JOptionPane.showMessageDialog(null, "Continue when vision setup is done");
 
         RoutingController routingController = new RoutingController(course);
+
         while (!course.getBalls().isEmpty()) {
             Ball closestBall = Algorithms.findClosestBall(course.getBalls(), course.getRobot());
 
@@ -36,7 +37,12 @@ public class Main {
 
             System.out.println("Chosen collection strategy: " + closestBall.getStrategy().toString());
             routingController.addRoutine(closestBall);
+
+            controller.startMagazineCounting(course.getBalls().size()); // Start ball counting
+
             routingController.driveRoutes();
+
+            controller.endMagazineCounting(course.getBalls().size()); // Stop ball counting
         }
 
         routingController.addRoutine(course.getBorder().getSmallGoalMiddlePoint(), true);

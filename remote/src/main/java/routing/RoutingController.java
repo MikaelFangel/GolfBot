@@ -103,20 +103,20 @@ public class RoutingController {
         switch (strategy) {
             case FREE -> projectedPoint = ball.getCenter();
             case BORDER_TOP -> projectedPoint = new Point(
-                    ball.getCenter().x,
+                    ball.getCenter().x + correctedProjectionAngle(course.getWidth(), ball.getCenter().x),
                     course.getBorder().getTopLeft().y + borderDistance
             );
             case BORDER_BOTTOM -> projectedPoint = new Point(
-                    ball.getCenter().x,
+                    ball.getCenter().x + correctedProjectionAngle(course.getWidth(), ball.getCenter().x),
                     course.getBorder().getBottomLeft().y - borderDistance
             );
             case BORDER_RIGHT -> projectedPoint = new Point(
                     course.getBorder().getTopRight().x - borderDistance,
-                    ball.getCenter().y
+                    ball.getCenter().y + correctedProjectionAngle(course.getHeight(), ball.getCenter().y)
             );
             case BORDER_LEFT -> projectedPoint = new Point(
                     course.getBorder().getTopLeft().x + borderDistance,
-                    ball.getCenter().y
+                    ball.getCenter().y + correctedProjectionAngle(course.getHeight(), ball.getCenter().y)
             );
 
             //TODO: make correction distance generic based on angel
@@ -175,6 +175,11 @@ public class RoutingController {
         }
 
         return projectedPoint;
+    }
+
+    private double correctedProjectionAngle(double lengthOfSide, double ballCoord) {
+        int moveDistance = 25;
+        return lengthOfSide / 2 > ballCoord ? moveDistance : -moveDistance;
     }
 
     public Point getSmallGoalMiddlePoint() {

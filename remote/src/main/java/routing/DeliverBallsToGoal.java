@@ -35,6 +35,9 @@ public class DeliverBallsToGoal extends Routine {
         releaseAllBalls();
 
         super.robotController.reverse();
+
+        // Set magazine to empty
+        super.robotController.getRobot().setNumberOfBallsInMagazine(0);
     }
 
     private void releaseAllBalls() {
