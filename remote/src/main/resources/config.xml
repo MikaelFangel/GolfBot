@@ -9,6 +9,7 @@
     <!-- Border measurements in cm -->
     <entry key="borderHeight">7</entry>
     <entry key="smallGoalPos">left</entry> <!-- left or right -->
+    <entry key="borderProjectionMargin">10</entry>
     <entry key="offsetFromBorderToRobot">25</entry> <!-- The distance in CM between the border and the point of the
     center of the rear marker of the robot, so the robot and the border don't collide -->
 
@@ -24,6 +25,7 @@
     <entry key="crossSideLong">20.1</entry>
     <entry key="crossSideShort">3.1</entry>
     <entry key="crossHeight">3.2</entry>
+    <entry key="crossProjectionMargin">10</entry>
 
     <!-- Robot measurements in cm -->
     <entry key="robotLength">16.0</entry>
