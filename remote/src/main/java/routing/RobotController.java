@@ -1,7 +1,7 @@
 package routing;
 
 import configs.GlobalConfig;
-import courseObjects.Ball;
+
 import courseObjects.Robot;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
@@ -13,14 +13,12 @@ import proto.*;
 import vision.Algorithms;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class RobotController {
     private final ManagedChannel CHANNEL;
     private final MotorsGrpc.MotorsBlockingStub CLIENT;
     private final MotorsGrpc.MotorsStub ASYNCCLIENT;
-    private final int MAX_ITERATIONS;
     private final Robot robot;
 
     private int numberOfBallsOnCourseBeforeRoutine;
@@ -34,8 +32,6 @@ public class RobotController {
         ).build();
         this.CLIENT = MotorsGrpc.newBlockingStub(CHANNEL);
         this.ASYNCCLIENT = MotorsGrpc.newStub(CHANNEL);
-
-        this.MAX_ITERATIONS = 100;
 
         this.numberOfBallsOnCourseBeforeRoutine = 0;
         this.robot = robot;
@@ -51,55 +47,55 @@ public class RobotController {
     }
 
     /**
-     * Drive robot straight either forward or backwards by using the gyro and streaming distance to the robot
+     * Drive robot straight either forwardby using the gyro and streaming distance to the robot
      *
-     * @param target destination
-     * @throws RuntimeException if the robot was not reached
+     * @param target Destination
+     * @param calculateFromFront if true, distances are calculated from front marker, otherwise from the center marker
+     * @param defaultSpeed speed to drive when distance < 5. Use low speed when accuracy is needed.
+     * @param powerFactor multiplier on default speed when far away from target
+     * @throws RuntimeException If the robot was not reached
      * @see <a href="https://github.com/grpc/grpc-java/blob/master/examples/src/main/java/io/grpc/examples/routeguide/RouteGuideClient.java">Example streaming client</a>
      */
-    public void drive(Point target, boolean calculateFromFront) throws RuntimeException {
-        int speed = 100;
-        MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
-                new MotorPair(OutPort.D, speed));
+    public void drive(Point target, boolean calculateFromFront, int defaultSpeed, int powerFactor) throws RuntimeException {
+        int MAX_ITERATIONS = 100; // Used for failsafe
+
+        MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, defaultSpeed),
+                new MotorPair(OutPort.D, defaultSpeed));
 
         // Use gRPCs StreamObserver interface
         StreamObserver<DrivePIDRequest> requestObserver = initStreamObserver();
 
         try {
 
-            // Iterator used as a failsafe
-            int i = 0;
-            double distance;
-            double angle;
-            double lastDist = 10000;
+            double distanceToTarget = Algorithms.findRobotsDistanceToPoint(this.robot, target, calculateFromFront);
+            Point robotStartPos = calculateFromFront ? this.robot.getFront() : this.robot.getCenter();
+            double drivenDistance;
+            int distanceLeft;
+            int offset = calculateFromFront ? 3 : 0; // Offset from front marker to the front collector
 
-            // Continue to stream messages until reaching target
-            do {
-                distance = Algorithms.findRobotsDistanceToPoint(robot, target, calculateFromFront);
-                angle = Algorithms.findRobotShortestAngleToPoint(robot, target);
+            /* Continue to stream messages until reaching target
+             * Iterator used as a failsafe */
+            for (int i = 0; i < MAX_ITERATIONS; i++) {
+                // Distance from starting point of the robot and where the robot currently is
+                drivenDistance = Algorithms.findRobotsDistanceToPoint(this.robot, robotStartPos, calculateFromFront);
+                distanceLeft = (int) (distanceToTarget - drivenDistance) - offset; // TODO: Test with in and double -> Precision in when we break from the loop
 
-                System.out.println("Distance " + distance + " Angle " + angle);
+                if (distanceToTarget <= drivenDistance || distanceLeft <= 0)
+                    break;
 
                 DrivePIDRequest drivePIDRequest = DrivePIDRequest.newBuilder()
                         .setMotors(motorsRequest)
-                        .setDistance((float) distance)
-                        .setSpeed(speed) // This speed worked well, other speeds could be researched
+                        .setDistance((float) (distanceLeft))
+                        .setSpeed(setPowerInDrive(distanceLeft, powerFactor, defaultSpeed))
                         .build();
 
                 // Send request
                 requestObserver.onNext(drivePIDRequest);
 
-                // Sleep for a bit before sending the next one. TODO: Research timing of the delay with the robot
+                // Sleep for a bit before sending the next one.
+                // TODO: Research timing of the delay with the robot. ALSO check if still needed
                 Thread.sleep(300);
-
-                i++;
-
-
-
-                lastDist = distance;
             }
-            while (distance > 0 && i < MAX_ITERATIONS);
-
         } catch (RuntimeException e) {
             // Cancel RPC
             requestObserver.onError(e);
@@ -143,6 +139,37 @@ public class RobotController {
 
         // End of requests
         requestObserver.onCompleted();
+    }
+
+    /**
+     * Calculates the power to motors, power is capped at 400
+     * @param distance distance left to drive. Used to power down to default speed when close to target
+     * @param powerFactor multiplier on default speed when far away from target
+     * @param defaultSpeed speed to drive when distance < 5. Use low speed when accuracy is needed.
+     * @return power value on motors, capped at 400
+     */
+    private int setPowerInDrive(double distance, int powerFactor, int defaultSpeed) {
+        int power = defaultSpeed;
+        // For reverse
+        if (distance < 0) {
+            power *= -1;
+        }
+
+        // Power down in 3 steps
+        if (Math.abs(distance) > 40) {
+            power *= powerFactor;
+        } else if (Math.abs(distance) > 15) {
+            power *= (double) powerFactor / 2;
+        } else if (Math.abs(distance) > 5) {
+            power *= (double) powerFactor / 4;
+        }
+
+        // Failsafe to avoid too much power
+        int powerCap = 400;
+        if(power > powerCap) power = powerCap;
+        if(power < -powerCap) power = -powerCap;
+
+        return power;
     }
 
     /**
@@ -262,10 +289,11 @@ public class RobotController {
         int speed = 1200;
         MultipleMotors motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, speed), new MotorPair(OutPort.C, speed));
 
-        CLIENT.releaseOneBall(motorRequests);
+        this.CLIENT.releaseOneBall(motorRequests);
 
         // Remove one ball from magazine
-        robot.addOrRemoveNumberOfBallsInMagazine(-1);
+        this.robot.addOrRemoveNumberOfBallsInMagazine(-1);
+        this.numberOfBallsOnCourseBeforeRoutine++;
     }
 
     /**
@@ -275,7 +303,7 @@ public class RobotController {
         int motorSpeed = 0;
         MultipleMotors motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, motorSpeed), new MotorPair(OutPort.C, motorSpeed));
         try {
-            StatusReply reply = CLIENT.stopMotors(motorRequests);
+            StatusReply reply = this.CLIENT.stopMotors(motorRequests);
             if (!reply.getReplyMessage())
                 System.out.println("An error occurred");
         } catch (RuntimeException e) {
@@ -285,21 +313,20 @@ public class RobotController {
 
     /**
      * Needs to be called before starting the collection routine.
-     * @param courseBalls The List of Balls from Course.
+     * @param numOfCourseBalls The number of balls on the course
      */
-    public void startMagazineCounting(List<Ball> courseBalls) {
-        this.numberOfBallsOnCourseBeforeRoutine = courseBalls.size();
+    public void startMagazineCounting(int numOfCourseBalls) {
+        this.numberOfBallsOnCourseBeforeRoutine = numOfCourseBalls;
     }
 
     /**
      * Should be called after the collection routine.
-     * @param courseBalls The List of Balls from Course.
+     * @param numOfCourseBalls The number of balls on the course.
      */
-    public void endMagazineCounting(List<Ball> courseBalls) {
-        int numberOfBallsOnCourseAfterRoutine = courseBalls.size();
+    public void endMagazineCounting(int numOfCourseBalls) {
 
-        if (numberOfBallsOnCourseAfterRoutine < this.numberOfBallsOnCourseBeforeRoutine) {
-            int diff = this.numberOfBallsOnCourseBeforeRoutine - numberOfBallsOnCourseAfterRoutine;
+        if (numOfCourseBalls < this.numberOfBallsOnCourseBeforeRoutine) {
+            int diff = this.numberOfBallsOnCourseBeforeRoutine - numOfCourseBalls;
 
             // Add diff to magazine counter
             this.robot.addOrRemoveNumberOfBallsInMagazine(diff);

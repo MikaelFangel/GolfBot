@@ -7,7 +7,6 @@ import (
 	"log"
 	"math"
 	"net"
-	"strconv"
 	"time"
 
 	"github.com/ev3go/ev3dev"
@@ -79,7 +78,9 @@ func (s *motorServer) Drive(stream pBuff.Motors_DriveServer) error {
 	lastError := 0.0
 
 	// Prepare the motors for running
-	distance := int(driveRequest.Distance)
+	distance := float64(driveRequest.Distance)
+
+	power := -int(driveRequest.Speed)
 
 	gyro, err := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
 	if err != nil {
@@ -101,8 +102,6 @@ func (s *motorServer) Drive(stream pBuff.Motors_DriveServer) error {
 		// "D term", trying to predict next error
 		correction := (kp * gyroErr) + (ki * integral) + (kd * derivative)
 
-		power := setPowerInDrive(distance, -int(driveRequest.Speed), 3)
-
 		// Slice the array to reuse positions
 		motorRequests = motorRequests[0:0]
 		// Prepare the motors for running
@@ -112,9 +111,8 @@ func (s *motorServer) Drive(stream pBuff.Motors_DriveServer) error {
 				return err
 			}
 
-			// TODO: Should ramp be set for all iterations or only first and last? I found that the these values worked well
-			motor.SetRampUpSetpoint(3 * time.Second)
-			motor.SetRampDownSetpoint(3 * time.Second)
+			motor.SetRampUpSetpoint(4 * time.Second)
+			motor.SetRampDownSetpoint(4 * time.Second)
 			switch request.GetMotorPort() {
 			case pBuff.OutPort_A:
 				motor.SetSpeedSetpoint(power + int(correction))
@@ -127,7 +125,6 @@ func (s *motorServer) Drive(stream pBuff.Motors_DriveServer) error {
 			motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
 		}
 
-		// TODO: Maybe we could switch around the motor order for each iteration, so that the start/stop delay is evened out
 		// Start the motors
 		for _, motorRequest := range motorRequests {
 			motorRequest.motor.Command(run)
@@ -143,7 +140,8 @@ func (s *motorServer) Drive(stream pBuff.Motors_DriveServer) error {
 		if err != nil {
 			break
 		}
-		distance = int(driveRequest.Distance)
+		distance = float64(driveRequest.Distance)
+		power = -int(driveRequest.Speed)
 	}
 
 	stopAllMotors(motorRequests)
@@ -278,30 +276,6 @@ func setPowerInRotate(target float64, power int, direction float64, powerFactor 
 	return power
 }
 
-// setPowerInDrive increase power when far from the target and also sets a powercap to avoid drifting from high speeds
-// powerFactor is used to increase the speed when we are more than 15cm from the target
-func setPowerInDrive(distance int, power int, powerFactor int) int {
-	if (float64(distance)) < 0 {
-		power *= -1
-	}
-
-	if math.Abs(float64(distance)) > 30 {
-		power *= powerFactor
-	} else if math.Abs(float64(distance)) > 15 {
-		power *= powerFactor / 2
-	}
-
-	powerCap := 400
-	switch {
-	case power > powerCap:
-		power = powerCap
-	case power < -powerCap:
-		power = -powerCap
-	}
-
-	return power
-}
-
 // CollectRelease Either collects or releases balls. Whether it is collecting or releasing is handled client side.
 //
 //	If speed > 0 then the balls are released
@@ -418,16 +392,4 @@ func (s *motorServer) ReleaseOneBall(_ context.Context, in *pBuff.MultipleMotors
 	time.Sleep(80 * time.Millisecond)
 
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
-}
-
-// GetDistanceInCm Returns the distance to the closest object from the ultrasonic sensor
-func GetDistanceInCm() float64 {
-	ultraSonicSensor, err := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_us.String())
-	if err != nil {
-		return -1
-	}
-
-	distanceString, _ := ultraSonicSensor.Value(0)
-	distance, _ := strconv.ParseFloat(distanceString, 64)
-	return distance / 10
 }

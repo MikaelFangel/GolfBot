@@ -10,7 +10,7 @@
     <entry key="borderHeight">7</entry>
     <entry key="smallGoalPos">left</entry> <!-- left or right -->
     <entry key="borderProjectionMargin">10</entry>
-    <entry key="offsetFromBorderToRobot">25</entry> <!-- The distance in CM between the border and the point of the
+    <entry key="offsetFromBorderToRobot">27</entry> <!-- The distance in CM between the border and the point of the
     center of the rear marker of the robot, so the robot and the border don't collide -->
 
     <!-- Course measurements in cm -->
@@ -36,8 +36,8 @@
 
 
     <!-- Detection Configurations - Used in vision -->
-    <entry key="ballSizeLower">6</entry>
-    <entry key="ballSizeUpper">15</entry>
+    <entry key="ballSizeLower">7</entry>
+    <entry key="ballSizeUpper">14</entry>
     <entry key="ballDp">1</entry> <!--Don't question or change-->
     <entry key="ballMinDist">8</entry> <!--Minimum distance between balls-->
     <entry key="ballParam1">30</entry> <!--Gradient value used in the edge detection-->

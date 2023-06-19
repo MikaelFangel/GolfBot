@@ -12,20 +12,20 @@ public class CollectWallCross extends Routine {
 
     @Override
     public void run() {
-        avoidObstacle(10);
+        avoidObstacle(5);
 
         // Drive to a projected spot
         super.robotController.recalibrateGyro();
         super.robotController.rotate(super.getDegreesToTurn(super.projectedPoint));
         super.robotController.recalibrateGyro();
-        super.robotController.drive(super.projectedPoint, false);
+        super.robotController.drive(super.projectedPoint, false, 80, 3);
 
         // Correct the robot for collection
         super.robotController.recalibrateGyro();
         super.robotController.rotate(super.getDegreesToTurn(dest));
         super.robotController.recalibrateGyro();
         super.robotController.collectRelease(true);
-        super.robotController.drive(dest, true);
+        super.robotController.drive(dest, true, 40, 4);
         super.robotController.stopCollectRelease();
 
         super.robotController.reverse();

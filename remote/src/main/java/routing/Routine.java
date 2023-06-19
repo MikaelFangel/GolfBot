@@ -6,6 +6,7 @@ import courseObjects.Cross;
 import math.Geometry;
 import org.opencv.core.Point;
 import vision.Algorithms;
+import vision.BallPickupStrategy;
 
 import java.util.List;
 
@@ -37,8 +38,11 @@ public abstract class Routine {
      * @param projectionDistance the distance to project the point if a projection is relevant
      */
     public void avoidObstacle(int projectionDistance) {
-        if (this.ballToCollect != null)
+        if (this.ballToCollect != null) {
+            if (this.ballToCollect.getStrategy() == BallPickupStrategy.CROSS)
+                projectionDistance += 5;
             this.projectedPoint = routingController.projectPoint(ballToCollect, projectionDistance);
+        }
         else if (dest == routingController.getSmallGoalMiddlePoint()) {
             this.projectedPoint = routingController.getSmallGoalProjectedPoint();
         } else
@@ -51,7 +55,7 @@ public abstract class Routine {
             robotController.recalibrateGyro();
             robotController.rotate(getDegreesToTurn(intermediate));
             robotController.recalibrateGyro();
-            robotController.drive(intermediate, false);
+            robotController.drive(intermediate, false, 70, 3);
         }
     }
 
