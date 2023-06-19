@@ -21,10 +21,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AlgorithmsTest {
     Course course;
+    Point[] corners;
 
     @BeforeEach
     public void setup(){
-        course = new Course();
+    //    course = new Course();
+        corners = new Point[]{new Point(3.214673913043484, 2.3529891304347714), new Point(165.785217950154, 2.165950789622464), new Point(0.21452546483843093, 121.30937388709077), new Point(167.28529217425648, 123.17975729521433)};
     }
 
     @Test
@@ -220,4 +222,33 @@ public class AlgorithmsTest {
 
         HighGui.waitKey();
     }
+
+    @Test
+    public void testIfLeftPointIsOutsideCourse(){
+        boolean result = Algorithms.isOutsideCourse(new Point(-100, 50), corners);
+        Assertions.assertTrue(result);
+    }
+    @Test
+    public void testIfRightPointIsOutsideCourse(){
+        boolean result = Algorithms.isOutsideCourse(new Point(400, 50), corners);
+        Assertions.assertTrue(result);
+    }
+    @Test
+    public void testIfTopPointIsOutsideCourse(){
+        boolean result = Algorithms.isOutsideCourse(new Point(80, -100), corners);
+        Assertions.assertTrue(result);
+    }
+    @Test
+    public void testIfBottomPointIsOutsideCourse(){
+        boolean result = Algorithms.isOutsideCourse(new Point(80, 300), corners
+        );
+        Assertions.assertTrue(result);
+    }
+    @Test
+    public void testIfMiddlePointIsOutsideCourse(){
+        boolean result = Algorithms.isOutsideCourse(new Point(80, 100), corners
+        );
+        Assertions.assertFalse(result);
+    }
+
 }

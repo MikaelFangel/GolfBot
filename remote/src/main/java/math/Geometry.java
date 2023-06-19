@@ -1,7 +1,6 @@
 package math;
 
 import org.jetbrains.annotations.NotNull;
-import org.opencv.core.Mat;
 import org.opencv.core.Point;
 
 import java.util.ArrayList;
@@ -73,7 +72,7 @@ public class Geometry {
      * @param from the starting point of the line
      * @param to the ending point of the line
      * @param circleCenter the center point of the circle (eg. course.getCross().getMiddle())
-     * @param circleRadius the radius of the circle to check if intersecting  (eg. course.getLongestSide() / 2)
+     * @param circleRadius the radius of the circle to check if intersecting  (e.g. course.getLongestSide() / 2)
      * @return true if the line is intersecting with the circle
      */
     public static boolean lineIsIntersectingCircle(@NotNull Point from, @NotNull Point to, @NotNull Point circleCenter, double circleRadius) {

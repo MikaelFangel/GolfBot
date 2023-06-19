@@ -169,7 +169,6 @@ public class RoutingController {
                     );
                 }
 
-
             }
             default -> projectedPoint = ball.getCenter();
         }
