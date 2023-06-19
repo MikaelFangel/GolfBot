@@ -1,6 +1,8 @@
 package routing;
 
+import courseObjects.Course;
 import org.opencv.core.Point;
+import vision.Algorithms;
 
 import java.util.List;
 
@@ -25,10 +27,12 @@ public class PathController {
             Point object2,
             List<Point> possibleSharedPoints,
             Point circle,
-            double circleRadius
+            double circleRadius,
+            Course course
     ){
         return possibleSharedPoints.stream()
                 .parallel()
+                .filter(point -> !Algorithms.isOutsideCourse(point, course.getBorder().getCornersAsArray()))
                 .filter(point -> !lineIsIntersectingCircle(object1, point, circle, circleRadius)) //removes all points that can't reach object 1
                 .filter(point -> !lineIsIntersectingCircle(object2, point, circle, circleRadius)) //removes all points that can't reach object 2
                 .toList(); //convert it into a list

@@ -1,14 +1,14 @@
 package routing;
 
 import courseObjects.Ball;
-import courseObjects.Cross;
+import courseObjects.Course;
 import org.opencv.core.Point;
 
 
 public class DriveToPoint extends Routine {
 
-    public DriveToPoint(Point start, Point dest, Ball ballToCollect, Cross cross, RobotController robotController, RoutingController routingController) {
-        super(start, dest, ballToCollect, cross, robotController, routingController);
+    public DriveToPoint(Point start, Point dest, Ball ballToCollect, RobotController robotController, RoutingController routingController, Course course) {
+        super(start, dest, ballToCollect, robotController, routingController, course);
     }
 
     @Override
