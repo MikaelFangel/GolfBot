@@ -10,7 +10,7 @@
     <entry key="borderHeight">7</entry>
     <entry key="smallGoalPos">left</entry> <!-- left or right -->
     <entry key="borderProjectionMargin">10</entry>
-    <entry key="offsetFromBorderToRobot">27</entry> <!-- The distance in CM between the border and the point of the
+    <entry key="offsetFromBorderToRobot">23</entry> <!-- The distance in CM between the border and the point of the
     center of the rear marker of the robot, so the robot and the border don't collide -->
 
     <!-- Course measurements in cm -->

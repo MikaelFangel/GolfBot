@@ -1,6 +1,8 @@
 import courseObjects.Ball;
 import courseObjects.Course;
 import exceptions.MissingArgumentException;
+import routing.Algorithm.HamiltonianRoute;
+import routing.Algorithm.IRoutePlanner;
 import routing.RobotController;
 import routing.RoutingController;
 import vision.Algorithms;
@@ -27,24 +29,22 @@ public class Main {
         JOptionPane.showMessageDialog(null, "Continue when vision setup is done");
 
         RoutingController routingController = new RoutingController(course);
-
-        while (true) {
-            Ball closestBall = Algorithms.findClosestBall(course.getBalls(), course.getRobot());
-
-            if (controller.getRobot().getNumberOfBallsInMagazine() > 4)
-                routingController.addRoutine(course.getBorder().getSmallGoalMiddlePoint(), true);
-            else if (closestBall != null) {
-                routingController.addRoutine(closestBall);
-                System.out.println("Chosen collection strategy: " + closestBall.getStrategy().toString());
-                controller.startMagazineCounting(course.getBalls().size()); // Start ball counting
+        IRoutePlanner routePlanner = new HamiltonianRoute();
+        while(true) {
+            try {
+                while (true) {
+                    routePlanner.computeFullRoute(course, controller.getRobot().getNumberOfBallsInMagazine());
+                    routePlanner.getComputedRoute(routingController);
+                    controller.startMagazineCounting(course.getBalls().size());
+                    routingController.driveRoutes();
+                    controller.endMagazineCounting(course.getBalls().size());
+                }
+            } catch (Exception e) {
+                System.out.println(e);
+                routingController.stopCurrentRoute();
+                controller.recalibrateGyro();
+                controller.reverse();
             }
-
-            routingController.driveRoutes();
-
-            if (closestBall != null)
-                controller.endMagazineCounting(course.getBalls().size()); // Stop ball counting
-
-            System.out.println("Balls in robot: " + controller.getRobot().getNumberOfBallsInMagazine());
         }
     }
 
