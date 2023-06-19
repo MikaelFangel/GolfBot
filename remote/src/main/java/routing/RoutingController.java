@@ -45,9 +45,9 @@ public class RoutingController {
     public void addRoutine(Ball ball) {
         Routine routine;
         switch (ball.getStrategy()) {
-            case CORNER_TOP_LEFT, CORNER_BOTTOM_LEFT, CORNER_BOTTOM_RIGHT, CORNER_TOP_RIGHT, CROSS ->
+            case CORNER_TOP_LEFT, CORNER_BOTTOM_LEFT, CORNER_BOTTOM_RIGHT, CORNER_TOP_RIGHT ->
                     routine = new CollectCorner(course.getRobot().getCenter(), ball.getCenter(), ball, this.robotController, this, course);
-            case BORDER_BOTTOM, BORDER_LEFT, BORDER_RIGHT, BORDER_TOP ->
+            case BORDER_BOTTOM, BORDER_LEFT, BORDER_RIGHT, BORDER_TOP, CROSS ->
                     routine = new CollectWallCross(course.getRobot().getCenter(), ball.getCenter(), ball, this.robotController, this, course);
             case FREE ->
                     routine = new DriveAndCollect(course.getRobot().getCenter(), ball.getCenter(), ball, this.robotController, this, course);

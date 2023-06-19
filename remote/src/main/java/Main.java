@@ -32,18 +32,22 @@ public class Main {
         IRoutePlanner routePlanner = new HamiltonianRoute();
         //routingController.addRoutine(course.getRobot().getCenter(), true);
         //routingController.driveRoutes();
-        while (!course.getBalls().isEmpty()) {
-            routePlanner.computeFullRoute(course,controller.getRobot().getNumberOfBallsInMagazine());
-            routePlanner.getComputedRoute(routingController);
-            controller.startMagazineCounting(course.getBalls().size());
-            routingController.driveRoutes();
-            controller.endMagazineCounting(course.getBalls().size());
+        while(true) {
+            try {
+                while (true) {
+                    routePlanner.computeFullRoute(course, controller.getRobot().getNumberOfBallsInMagazine());
+                    routePlanner.getComputedRoute(routingController);
+                    controller.startMagazineCounting(course.getBalls().size());
+                    routingController.driveRoutes();
+                    controller.endMagazineCounting(course.getBalls().size());
+                }
+            } catch (Exception e) {
+                System.out.println(e);
+                routingController.stopCurrentRoute();
+                controller.recalibrateGyro();
+                controller.reverse();
+            }
         }
-
-        routingController.addRoutine(course.getBorder().getSmallGoalMiddlePoint(), true);
-        routingController.driveRoutes();
-
-        System.out.println("Done");
     }
 
     public static void reset(RobotController robotController) {

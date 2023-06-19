@@ -14,7 +14,11 @@ import routing.PathController;
 import routing.RoutingController;
 import vision.BallPickupStrategy;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.List;
 
 public class HamiltonianRoute implements IRoutePlanner {
   Point goal;
@@ -67,7 +71,7 @@ public class HamiltonianRoute implements IRoutePlanner {
       System.out.println(v.type);
     });
 
-    System.out.println("");
+    System.out.println();
 
     //check if multiple goal runs are needed
     if (maxAmountOfBallsInRobot < course.getBalls().size() + numberOfBallsInStorage){
@@ -83,8 +87,6 @@ public class HamiltonianRoute implements IRoutePlanner {
       if (v.ball != null) System.out.print(v.ball.getColor());
       System.out.println(v.type);
     });
-
-    if (plan.peek().type == Type.ROBOT) plan.pop();
 
   }
 
@@ -125,6 +127,11 @@ public class HamiltonianRoute implements IRoutePlanner {
     if (plan.isEmpty()){
       throw new IllegalStateException("Queue is empty, run recompute");
     }
+    while (true) {
+      assert plan.peek() != null;
+      if (!(plan.peek().type == Type.ROBOT)) break;
+      plan.pop();
+    }
     Vertex next = plan.pop();
     if (next.ball == null){
       rc.addRoutine(goal, true);
@@ -161,6 +168,12 @@ public class HamiltonianRoute implements IRoutePlanner {
     return vertices;
   }
 
+  /**
+   * create the edges in the graph
+   *
+   * @param vertices - start point need to be in index 0, and end point in index 1
+   * @return - the edges for the graph
+   */
   private List<Edge> setupEdge(final List<Vertex> vertices) {
     List<Edge> edges = new ArrayList<>();
     for (int i = 0; i < vertices.size(); i++) {
@@ -192,7 +205,8 @@ public class HamiltonianRoute implements IRoutePlanner {
               src, dst, PathController.findCommonPoints(
                       src, dst, Geometry.generateCircle(
                               course.getCross().getMiddle(), course.getCross().getLongestSide() / 2 + 10, 360
-                      ), course.getCross().getMiddle(), course.getCross().getLongestSide() / 2 + 5
+                      ), course.getCross().getMiddle(), course.getCross().getLongestSide() / 2 + 5,
+                      course
               ));
       if (ekstraPoint == null) return Integer.MAX_VALUE;
       double distanceToTravel = Geometry.distanceBetweenTwoPoints(src, ekstraPoint);
@@ -218,9 +232,6 @@ public class HamiltonianRoute implements IRoutePlanner {
     IUnionFind<Vertex> unionFind = new QuickFind<>();
     unionFind.init(vertices);
 
-    //we make a fake connection between the robot and the goal
-    //unionFind.union(vertices.get(0), vertices.get(1));
-
     //list of how many vertex each at max can have.
     //balls can have 2, robot and goal have 1
     List<Pair<Vertex, Integer>> remainingVertices = new ArrayList<>();
@@ -233,13 +244,10 @@ public class HamiltonianRoute implements IRoutePlanner {
     //sorting my edges by travel cost, and pushing it onto a queue instead
     Collections.sort(edges);
 
-    //need to have vertex equal to numbers of elements on board - 1
-    int remainingElements = vertices.size() - 1;
-
     //saving the edges needed for shortest path.
     List<Edge> edgesInShortestPath = new ArrayList<>();
 
-    //make a union between 0 and 1 to ensure we don't get a subcycle
+    //make a union between 0 and 1 to ensure we don't get a sub cycle
     unionFind.union(vertices.get(0), vertices.get(1));
 
     for (Edge current: edges) {
@@ -253,7 +261,6 @@ public class HamiltonianRoute implements IRoutePlanner {
         edgesInShortestPath.add(current);
         remainingVertices.get(position1).setSecond(remainingVertices.get(position1).getSecond() - 1);
         remainingVertices.get(position2).setSecond(remainingVertices.get(position2).getSecond() - 1);
-        remainingElements--;
       }
     }
 
