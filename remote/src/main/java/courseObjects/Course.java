@@ -2,6 +2,7 @@ package courseObjects;
 
 import java.util.*;
 import org.opencv.core.Point;
+import vision.Algorithms;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -85,6 +86,7 @@ public class Course {
 
     /**
      * Add List<Ball> to Window. This window is used to average the list of ball to increase stability.
+     * Only adds balls to window if balls are inside the course.
      * @param balls
      */
     public void addBallListToWindow(List<Ball> balls) {
@@ -93,7 +95,17 @@ public class Course {
         if (this.ballWindow.size() >= BALL_WINDOW_SIZE)
             this.ballWindow.poll();
 
-        this.ballWindow.add(balls);
+        List<Ball> ballsInsideCourse = new ArrayList<>();
+        for (Ball ball : balls) {
+            boolean result = Algorithms.isOutsideCourse(ball.getCenter(), border.getCornersAsArray());
+            if(result) {
+                continue;
+            }
+            System.out.println("Result " + result + " Ball " + ball.getCenter());
+            ballsInsideCourse.add(ball);
+        }
+
+        this.ballWindow.add(ballsInsideCourse);
 
         // Find median list of balls, using size of list.
         List<List<Ball>> ballFrames = this.ballWindow.stream().sorted(Comparator.comparingInt(List::size)).toList();

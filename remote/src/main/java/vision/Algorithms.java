@@ -51,6 +51,34 @@ public class Algorithms {
     }
 
     /**
+     * Check if Point is outside of course
+     * Used to filter out inaccessible points outside the course
+     * @param point Point to check if it is outside the course
+     * @param corners Corner Points of the board in array:
+     *                [0], topLeft
+     *                [1], topRight
+     *                [2], bottomLeft
+     *                [3], bottomRight
+     * @return true if Point is outside of ROI (region of interest = course)
+     */
+    public static boolean isOutsideCourse(Point point, Point[] corners) {
+        Point topLeft, topRight, bottomLeft, bottomRight;
+        topLeft = corners[0];
+        topRight = corners[1];
+        bottomLeft = corners[2];
+        bottomRight = corners[3];
+        double min_x, max_x, min_y, max_y;
+
+        min_x = Math.min(topLeft.x, bottomLeft.x);
+        max_x = Math.max(topRight.x, bottomRight.x);
+        min_y = Math.max(topLeft.y, topRight.y); // OBS: y-axis is inverted
+        max_y = Math.min(bottomLeft.y, bottomRight.y);
+
+        return (!(min_x < point.x) || !(point.x < max_x))
+                || (!(min_y < point.y) || !(point.y < max_y));
+    }
+
+    /**
      * Finds the shortest angle between robot and point.
      * @param robot current Point position
      * @param p next Point
@@ -95,6 +123,7 @@ public class Algorithms {
             return distanceBetweenTwoPoints(robot.getFront().x, robot.getFront().y, p.x, p.y) - offset;
 
         return distanceBetweenTwoPoints(robot.getCenter().x, robot.getCenter().y, p.x, p.y) - offset;
+
     }
 
     public static double findRobotsDistanceToBall(Robot robot, Ball ball) {

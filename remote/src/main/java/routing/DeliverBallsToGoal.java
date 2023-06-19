@@ -1,13 +1,14 @@
 package routing;
 
 import courseObjects.Ball;
-import courseObjects.Cross;
+import courseObjects.Course;
 import org.opencv.core.Point;
 
 public class DeliverBallsToGoal extends Routine {
-
-    public DeliverBallsToGoal(Point start, Point dest, Ball ballToCollect, Cross cross, RobotController robotController, RoutingController routingController) {
-        super(start, dest, ballToCollect, cross, robotController, routingController);
+    private final Point intermediatePoint;
+    public DeliverBallsToGoal(Point start, Point intermediatePoint, Point dest, Ball ballToCollect, RobotController robotController, RoutingController routingController, Course course) {
+        super(start, dest, ballToCollect, robotController, routingController, course);
+        this.intermediatePoint = intermediatePoint;
     }
 
     /**
@@ -17,13 +18,24 @@ public class DeliverBallsToGoal extends Routine {
     public void run() {
         avoidObstacle(0);
 
+        // Drive to intermediate stop before projection to start from a more precise point
+        super.robotController.recalibrateGyro();
+        super.robotController.rotate(super.getDegreesToTurn(this.intermediatePoint));
+        super.robotController.recalibrateGyro();
+        super.robotController.drive(this.intermediatePoint, false, 80, 3);
+
         // Drive to a projected spot
         super.robotController.recalibrateGyro();
         super.robotController.rotate(super.getDegreesToTurn(super.projectedPoint));
+
         super.robotController.recalibrateGyro();
-        super.robotController.drive(super.projectedPoint, false);
+        super.robotController.drive(super.projectedPoint, false, 30, 10);
 
         // Correct the robot release to goal
+        super.robotController.recalibrateGyro();
+        super.robotController.rotate(super.getDegreesToTurn(super.dest));
+
+        // TODO: Check if this is really needed for always being precise
         super.robotController.recalibrateGyro();
         super.robotController.rotate(super.getDegreesToTurn(dest));
 
