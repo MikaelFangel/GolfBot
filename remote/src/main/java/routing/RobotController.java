@@ -266,6 +266,7 @@ public class RobotController {
 
         // Remove one ball from magazine
         robot.addOrRemoveNumberOfBallsInMagazine(-1);
+        numberOfBallsOnCourseBeforeRoutine++;
     }
 
     /**
@@ -285,21 +286,20 @@ public class RobotController {
 
     /**
      * Needs to be called before starting the collection routine.
-     * @param courseBalls The List of Balls from Course.
+     * @param numOfCourseBalls The number of balls on the course
      */
-    public void startMagazineCounting(List<Ball> courseBalls) {
-        this.numberOfBallsOnCourseBeforeRoutine = courseBalls.size();
+    public void startMagazineCounting(int numOfCourseBalls) {
+        this.numberOfBallsOnCourseBeforeRoutine = numOfCourseBalls;
     }
 
     /**
      * Should be called after the collection routine.
-     * @param courseBalls The List of Balls from Course.
+     * @param numOfCourseBalls The number of balls on the course.
      */
-    public void endMagazineCounting(List<Ball> courseBalls) {
-        int numberOfBallsOnCourseAfterRoutine = courseBalls.size();
+    public void endMagazineCounting(int numOfCourseBalls) {
 
-        if (numberOfBallsOnCourseAfterRoutine < this.numberOfBallsOnCourseBeforeRoutine) {
-            int diff = this.numberOfBallsOnCourseBeforeRoutine - numberOfBallsOnCourseAfterRoutine;
+        if (numOfCourseBalls < this.numberOfBallsOnCourseBeforeRoutine) {
+            int diff = this.numberOfBallsOnCourseBeforeRoutine - numOfCourseBalls;
 
             // Add diff to magazine counter
             this.robot.addOrRemoveNumberOfBallsInMagazine(diff);
