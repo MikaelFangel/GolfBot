@@ -65,14 +65,6 @@ public class HamiltonianRoute implements IRoutePlanner {
     //update vertecies in order of visit
     vertices = listedByVisitingOrder(vertices, edges);
 
-    vertices.forEach(v -> {
-      if (v.ball != null)
-        System.out.print(v.ball.getColor() + "\t");
-      System.out.println(v.type);
-    });
-
-    System.out.println();
-
     //check if multiple goal runs are needed
     if (maxAmountOfBallsInRobot < course.getBalls().size() + numberOfBallsInStorage){
       int amountOfBallsToCollectBeforeFirstGoal = course.getBalls().size() - 1 - maxAmountOfBallsInRobot;
@@ -83,15 +75,9 @@ public class HamiltonianRoute implements IRoutePlanner {
     //finally update the actual plan
     plan = new ArrayDeque<>(vertices);
 
-    plan.forEach(v -> {
-      if (v.ball != null) System.out.print(v.ball.getColor());
-      System.out.println(v.type);
-    });
-
   }
 
   private List<Vertex> planExtraGoal(List<Vertex> vertices, int amountBefore) {
-    System.out.println("amount before: " + amountBefore);
     //check if orange ball exsist
     Ball orangeBall = course.getBalls().stream().filter(b -> b.getColor() == BallColor.ORANGE).findFirst().orElse(null);
     List<Vertex> newRoute = new ArrayList<>();
