@@ -84,7 +84,7 @@ public class RobotController {
                 DrivePIDRequest drivePIDRequest = DrivePIDRequest.newBuilder()
                         .setMotors(motorsRequest)
                         .setDistance((float) (distanceLeft))
-                        .setSpeed(setPowerInDrive(distanceLeft, powerFactor, defaultSpeed)) // This speed worked well, other speeds could be researched
+                        .setSpeed(setPowerInDrive(distanceLeft, powerFactor, defaultSpeed))
                         .build();
 
                 // Send request
