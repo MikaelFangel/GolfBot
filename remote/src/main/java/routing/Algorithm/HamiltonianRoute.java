@@ -1,9 +1,7 @@
 package routing.Algorithm;
 
 import configs.GlobalConfig;
-import courseObjects.Ball;
-import courseObjects.BallColor;
-import courseObjects.Course;
+import courseObjects.*;
 import helperClasses.Pair;
 import math.Geometry;
 import org.jetbrains.annotations.NotNull;
@@ -12,7 +10,7 @@ import routing.Algorithm.UnionFind.IUnionFind;
 import routing.Algorithm.UnionFind.QuickFind;
 import routing.PathController;
 import routing.RoutingController;
-import vision.BallPickupStrategy;
+import vision.BallPickupStrategy
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -37,7 +35,7 @@ public class HamiltonianRoute implements IRoutePlanner {
     this.course = course;
     int maxAmountOfBallsInRobot = Integer.parseInt(GlobalConfig.getConfigProperties().getProperty("magazineSize"));
 
-    List<Vertex> vertices = setupVertex();
+    List<Vertex> vertices = setupVertices();
 
     //if there is 1 or fewer vertices, there can't be made any path
     if (vertices.size() <= 1) return;
@@ -127,11 +125,11 @@ public class HamiltonianRoute implements IRoutePlanner {
 
 
   /**
-   *
+   * turn all course objects into vertex for our graph
    *
    * @return - list of vertex in the graph
    */
-  private List<Vertex> setupVertex() {
+  private List<Vertex> setupVertices() {
     List<Vertex> vertices = new ArrayList<>();
     //placing robot as the first element
     vertices.add(new Vertex(course.getRobot().getCenter(), Type.ROBOT));
@@ -143,7 +141,6 @@ public class HamiltonianRoute implements IRoutePlanner {
     List<Ball> balls = new ArrayList<>(course.getBalls());
     //if there is no balls, the robot should go to the goal
     if (balls.isEmpty()) {
-      //TODO: write this shit!
       return vertices;
     }
     balls.stream()
@@ -187,14 +184,15 @@ public class HamiltonianRoute implements IRoutePlanner {
    */
   private double PathCost(Point src, Point dst) {
     if (Geometry.lineIsIntersectingCircle(src, dst, course.getCross().getMiddle(), course.getCross().getLongestSide() / 2 + 5)){
-      Point ekstraPoint = PathController.findLongestPath(
-              src, dst, PathController.findCommonPoints(
-                      src, dst, Geometry.generateCircle(
-                              course.getCross().getMiddle(), course.getCross().getLongestSide() / 2 + 10, 360
-                      ), course.getCross().getMiddle(), course.getCross().getLongestSide() / 2 + 5,
-                      course
-              ));
+      Cross cross = course.getCross();
+      //finds the support point that we would need to travel to inorder to go between these two points.
+      List<Point> commonPoints = Geometry.generateCircle(cross.getMiddle(), cross.getLongestSide() / 2 + 10, 360);
+      commonPoints = PathController.findCommonPoints(src, dst, commonPoints, cross.getMiddle(), cross.getLongestSide() / 2 + 5,course);
+      Point ekstraPoint = PathController.findLongestPath(src, dst, commonPoints);
+
+      //if no such point was found
       if (ekstraPoint == null) return Integer.MAX_VALUE;
+      
       double distanceToTravel = Geometry.distanceBetweenTwoPoints(src, ekstraPoint);
       distanceToTravel += Geometry.distanceBetweenTwoPoints(ekstraPoint, dst);
       return distanceToTravel + 100;
