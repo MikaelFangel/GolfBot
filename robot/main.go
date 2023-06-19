@@ -7,7 +7,6 @@ import (
 	"log"
 	"math"
 	"net"
-	"strconv"
 	"time"
 
 	"github.com/ev3go/ev3dev"
@@ -212,11 +211,6 @@ func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff
 		gyroVal, _ = util.GetGyroValue(gyro)
 		target = gyroVal - float64(in.Degrees)
 
-		// Used as a failsafe for infinite rotation
-		if gyroVal < -360 || gyroVal > 360 {
-			break
-		}
-
 		derivative := target - lastError
 		lastError = target
 
@@ -272,32 +266,6 @@ func setPowerInRotate(target float64, power int, direction float64, powerFactor 
 	}
 
 	powerCap := 180
-	switch {
-	case power > powerCap:
-		power = powerCap
-	case power < -powerCap:
-		power = -powerCap
-	}
-
-	return power
-}
-
-// setPowerInDrive increase power when far from the target and also sets a powercap to avoid drifting from high speeds
-// powerFactor is used to increase the speed when we are more than 15cm from the target
-func setPowerInDrive(distance int, power int, powerFactor int) int {
-	if (float64(distance)) < 0 {
-		power *= -1
-	}
-
-	if math.Abs(float64(distance)) > 40 {
-		power *= powerFactor
-	} else if math.Abs(float64(distance)) > 15 {
-		power *= powerFactor / 2
-	} else if math.Abs(float64(distance)) > 5 {
-		power *= powerFactor / 4
-	}
-
-	powerCap := 400
 	switch {
 	case power > powerCap:
 		power = powerCap
@@ -424,16 +392,4 @@ func (s *motorServer) ReleaseOneBall(_ context.Context, in *pBuff.MultipleMotors
 	time.Sleep(80 * time.Millisecond)
 
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
-}
-
-// GetDistanceInCm Returns the distance to the closest object from the ultrasonic sensor
-func GetDistanceInCm() float64 {
-	ultraSonicSensor, err := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_us.String())
-	if err != nil {
-		return -1
-	}
-
-	distanceString, _ := ultraSonicSensor.Value(0)
-	distance, _ := strconv.ParseFloat(distanceString, 64)
-	return distance / 10
 }

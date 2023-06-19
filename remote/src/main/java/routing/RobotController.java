@@ -181,12 +181,21 @@ public class RobotController {
         requestObserver.onCompleted();
     }
 
+    /**
+     * Calculates the power to motors, power is capped at 400
+     * @param distance distance left to drive. Used to power down to default speed when close to target
+     * @param powerFactor multiplier on default speed when far away from target
+     * @param defaultSpeed speed to drive when distance < 5. Use low speed when accuracy is needed.
+     * @return power value on motors, capped at 400
+     */
     private int setPowerInDrive(double distance, int powerFactor, int defaultSpeed) {
         int power = defaultSpeed;
+        // For reverse
         if (distance < 0) {
             power *= -1;
         }
 
+        // Power down in 3 steps
         if (Math.abs(distance) > 40) {
             power *= powerFactor;
         } else if (Math.abs(distance) > 15) {
@@ -195,6 +204,7 @@ public class RobotController {
             power *= (double) powerFactor / 4;
         }
 
+        // Failsafe to avoid too much power
         int powerCap = 400;
         if(power > powerCap) power = powerCap;
         if(power < -powerCap) power = -powerCap;
