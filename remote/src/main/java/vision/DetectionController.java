@@ -4,6 +4,7 @@ import courseObjects.*;
 import nu.pattern.OpenCV;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
@@ -135,9 +136,7 @@ public class DetectionController {
 
                 System.out.println("Found Robot");
             }
-
             this.ballDetector.detectBalls(this.frame);
-
             updateCourse();
 
             // Exit when all objects are found
@@ -177,6 +176,7 @@ public class DetectionController {
         this.borderDetector.detectBorder(this.frame);
         this.robotDetector.detectRobot(this.frame);
         this.ballDetector.detectBalls(this.frame);
+        this.borderDetector.getBorder().getSmallGoalMiddlePoint();
 
         categorizeBallsPickupStrategy(
                 this.ballDetector.getBalls(),
