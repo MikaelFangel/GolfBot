@@ -6,8 +6,10 @@ import org.opencv.core.Point;
 
 public class DeliverBallsToGoal extends Routine {
 
-    public DeliverBallsToGoal(Point start, Point dest, Ball ballToCollect, Cross cross, RobotController robotController, RoutingController routingController) {
+    private final Point intermediatePoint;
+    public DeliverBallsToGoal(Point start, Point intermediatePoint, Point dest, Ball ballToCollect, Cross cross, RobotController robotController, RoutingController routingController) {
         super(start, dest, ballToCollect, cross, robotController, routingController);
+        this.intermediatePoint = intermediatePoint;
     }
 
     /**
@@ -16,6 +18,12 @@ public class DeliverBallsToGoal extends Routine {
     @Override
     public void run() {
         avoidObstacle(0);
+
+        // Drive to intermediate stop before projection to start from a more precise point
+        super.robotController.recalibrateGyro();
+        super.robotController.rotate(super.getDegreesToTurn(this.intermediatePoint));
+        super.robotController.recalibrateGyro();
+        super.robotController.drive(this.intermediatePoint, false);
 
         // Drive to a projected spot
         super.robotController.recalibrateGyro();
@@ -26,7 +34,7 @@ public class DeliverBallsToGoal extends Routine {
 
         // Correct the robot release to goal
         super.robotController.recalibrateGyro();
-        super.robotController.rotate(super.getDegreesToTurn(dest));
+        super.robotController.rotate(super.getDegreesToTurn(super.dest));
 
         // TODO: Check if this is really needed for always being precise
         super.robotController.recalibrateGyro();

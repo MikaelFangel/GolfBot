@@ -64,9 +64,9 @@ public class RoutingController {
      */
     public void addRoutine(Point point, boolean deliverBalls) {
         if(deliverBalls)
-            fullRoute.add(new DeliverBallsToGoal(course.getRobot().getCenter(), point, null, course.getCross(), this.robotController, this));
+            this.fullRoute.add(new DeliverBallsToGoal(this.course.getRobot().getCenter(), this.course.getBorder().getSmallGoalDestProjectedPoint(), point , null, this.course.getCross(), this.robotController, this));
         else
-            fullRoute.add(new DriveToPoint(course.getRobot().getCenter(), point, null, course.getCross(), this.robotController, this));
+            this.fullRoute.add(new DriveToPoint(this.course.getRobot().getCenter(), point, null, this.course.getCross(), this.robotController, this));
     }
 
     /**
