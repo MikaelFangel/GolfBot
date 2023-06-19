@@ -95,6 +95,7 @@ public class Algorithms {
             return distanceBetweenTwoPoints(robot.getFront().x, robot.getFront().y, p.x, p.y) - offset;
 
         return distanceBetweenTwoPoints(robot.getCenter().x, robot.getCenter().y, p.x, p.y) - offset;
+
     }
 
     public static double findRobotsDistanceToBall(Robot robot, Ball ball) {

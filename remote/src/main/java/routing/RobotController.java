@@ -1,7 +1,7 @@
 package routing;
 
 import configs.GlobalConfig;
-import courseObjects.Ball;
+
 import courseObjects.Robot;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
@@ -13,7 +13,6 @@ import proto.*;
 import vision.Algorithms;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class RobotController {
@@ -34,7 +33,6 @@ public class RobotController {
         this.CLIENT = MotorsGrpc.newBlockingStub(CHANNEL);
         this.ASYNCCLIENT = MotorsGrpc.newStub(CHANNEL);
 
-
         this.numberOfBallsOnCourseBeforeRoutine = 0;
         this.robot = robot;
     }
@@ -49,19 +47,20 @@ public class RobotController {
     }
 
     /**
-     * Drive robot straight either forward by using the gyro and streaming distance to the robot
+     * Drive robot straight either forwardby using the gyro and streaming distance to the robot
      *
      * @param target Destination
-     * @param calculateFromFront True if calculating distance from the front marker. False if from rear marker
+     * @param calculateFromFront if true, distances are calculated from front marker, otherwise from the center marker
+     * @param defaultSpeed speed to drive when distance < 5. Use low speed when accuracy is needed.
+     * @param powerFactor multiplier on default speed when far away from target
      * @throws RuntimeException If the robot was not reached
      * @see <a href="https://github.com/grpc/grpc-java/blob/master/examples/src/main/java/io/grpc/examples/routeguide/RouteGuideClient.java">Example streaming client</a>
      */
-    public void drive(Point target, boolean calculateFromFront) throws RuntimeException {
+    public void drive(Point target, boolean calculateFromFront, int defaultSpeed, int powerFactor) throws RuntimeException {
         int MAX_ITERATIONS = 100; // Used for failsafe
 
-        int speed = 100;
-        MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
-                new MotorPair(OutPort.D, speed));
+        MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, defaultSpeed),
+                new MotorPair(OutPort.D, defaultSpeed));
 
         // Use gRPCs StreamObserver interface
         StreamObserver<DrivePIDRequest> requestObserver = initStreamObserver();
@@ -86,8 +85,8 @@ public class RobotController {
 
                 DrivePIDRequest drivePIDRequest = DrivePIDRequest.newBuilder()
                         .setMotors(motorsRequest)
-                        .setDistance((float) distanceLeft)
-                        .setSpeed(speed) // This speed worked well, other speeds could be researched
+                        .setDistance((float) (distanceLeft))
+                        .setSpeed(setPowerInDrive(distanceLeft, powerFactor, defaultSpeed))
                         .build();
 
                 // Send request
@@ -140,6 +139,37 @@ public class RobotController {
 
         // End of requests
         requestObserver.onCompleted();
+    }
+
+    /**
+     * Calculates the power to motors, power is capped at 400
+     * @param distance distance left to drive. Used to power down to default speed when close to target
+     * @param powerFactor multiplier on default speed when far away from target
+     * @param defaultSpeed speed to drive when distance < 5. Use low speed when accuracy is needed.
+     * @return power value on motors, capped at 400
+     */
+    private int setPowerInDrive(double distance, int powerFactor, int defaultSpeed) {
+        int power = defaultSpeed;
+        // For reverse
+        if (distance < 0) {
+            power *= -1;
+        }
+
+        // Power down in 3 steps
+        if (Math.abs(distance) > 40) {
+            power *= powerFactor;
+        } else if (Math.abs(distance) > 15) {
+            power *= (double) powerFactor / 2;
+        } else if (Math.abs(distance) > 5) {
+            power *= (double) powerFactor / 4;
+        }
+
+        // Failsafe to avoid too much power
+        int powerCap = 400;
+        if(power > powerCap) power = powerCap;
+        if(power < -powerCap) power = -powerCap;
+
+        return power;
     }
 
     /**
