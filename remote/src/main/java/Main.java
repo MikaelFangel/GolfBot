@@ -33,9 +33,11 @@ public class Main {
         //routingController.addRoutine(course.getRobot().getCenter(), true);
         //routingController.driveRoutes();
         while (!course.getBalls().isEmpty()) {
-            routePlanner.computeFullRoute(course,1);
+            routePlanner.computeFullRoute(course,controller.getRobot().getNumberOfBallsInMagazine());
             routePlanner.getComputedRoute(routingController);
+            controller.startMagazineCounting(course.getBalls().size());
             routingController.driveRoutes();
+            controller.endMagazineCounting(course.getBalls().size());
         }
 
         routingController.addRoutine(course.getBorder().getSmallGoalMiddlePoint(), true);

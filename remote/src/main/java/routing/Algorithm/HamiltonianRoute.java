@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.opencv.core.Point;
 import routing.Algorithm.UnionFind.IUnionFind;
 import routing.Algorithm.UnionFind.QuickFind;
+import routing.PathController;
 import routing.RoutingController;
 import vision.BallPickupStrategy;
 
@@ -83,7 +84,7 @@ public class HamiltonianRoute implements IRoutePlanner {
       System.out.println(v.type);
     });
 
-    //plan.pop();
+    if (plan.peek().type == Type.ROBOT) plan.pop();
 
   }
 
@@ -185,9 +186,20 @@ public class HamiltonianRoute implements IRoutePlanner {
    * @param dst where it ends
    * @return expected cost
    */
-  private int PathCost(Point src, Point dst) {
-    return (int) Geometry.distanceBetweenTwoPoints(src, dst);
-    //TODO: actually compute this value
+  private double PathCost(Point src, Point dst) {
+    if (Geometry.lineIsIntersectingCircle(src, dst, course.getCross().getMiddle(), course.getCross().getLongestSide() / 2 + 5)){
+      Point ekstraPoint = PathController.findLongestPath(
+              src, dst, PathController.findCommonPoints(
+                      src, dst, Geometry.generateCircle(
+                              course.getCross().getMiddle(), course.getCross().getLongestSide() / 2 + 10, 360
+                      ), course.getCross().getMiddle(), course.getCross().getLongestSide() / 2 + 5
+              ));
+      if (ekstraPoint == null) return Integer.MAX_VALUE;
+      double distanceToTravel = Geometry.distanceBetweenTwoPoints(src, ekstraPoint);
+      distanceToTravel += Geometry.distanceBetweenTwoPoints(ekstraPoint, dst);
+      return distanceToTravel + 100;
+    }
+    return Geometry.distanceBetweenTwoPoints(src,dst);
   }
 
   /**
