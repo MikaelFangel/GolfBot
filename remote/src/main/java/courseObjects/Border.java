@@ -8,6 +8,7 @@ public class Border {
     private String smallGoalDirection;
     private final Point smallGoalMiddlePoint = new Point();
     private final Point smallGoalDestPoint = new Point();
+    private final Point smallGoalDestProjectedPoint = new Point();
 
     public Border(Point topLeft, Point topRight, Point bottomLeft, Point bottomRight) {
         this(); // Call default constructor
@@ -103,15 +104,28 @@ public class Border {
 
         // The distance between the goal and the point where the rear end of the robot should stop
         int offset = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("offsetFromBorderToRobot"));
-
         this.smallGoalDestPoint.x = switch (this.smallGoalDirection) {
             case "left" -> this.smallGoalMiddlePoint.x + offset;
             case "right" -> this.smallGoalMiddlePoint.x - offset;
-            default -> this.smallGoalMiddlePoint.x;
+            default -> this.smallGoalMiddlePoint.x; // Should never happen
+        };
+
+        // How much of an offset the point should be projected with in CM
+        offset = 20;
+        this.smallGoalDestProjectedPoint.x = switch (this.smallGoalDirection) {
+            case "left" -> this.smallGoalDestPoint.x + offset;
+            case "right" -> this.smallGoalDestPoint.x - offset;
+            default -> this.smallGoalDestPoint.x; // Should never happen
         };
 
         this.smallGoalDestPoint.y = this.smallGoalMiddlePoint.y;
+        this.smallGoalDestProjectedPoint.y = this.smallGoalMiddlePoint.y;
 
         return this.smallGoalDestPoint;
+    }
+
+    public Point getSmallGoalDestProjectedPoint() {
+        getSmallGoalDestPoint();
+        return this.smallGoalDestProjectedPoint;
     }
 }
