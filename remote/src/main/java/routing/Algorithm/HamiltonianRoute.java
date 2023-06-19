@@ -60,34 +60,51 @@ public class HamiltonianRoute implements IRoutePlanner {
     //update vertecies in order of visit
     vertices = listedByVisitingOrder(vertices, edges);
 
+    vertices.forEach(v -> {
+      if (v.ball != null)
+        System.out.print(v.ball.getColor() + "\t");
+      System.out.println(v.type);
+    });
+
+    System.out.println("");
+
     //check if multiple goal runs are needed
     if (maxAmountOfBallsInRobot < course.getBalls().size() + numberOfBallsInStorage){
-      int amountOfBallsToCollectBeforeFirstGoal = course.getBalls().size() - 1 - maxAmountOfBallsInRobot; //TODO: finish
+      int amountOfBallsToCollectBeforeFirstGoal = course.getBalls().size() - 1 - maxAmountOfBallsInRobot;
       vertices = planExtraGoal(vertices, amountOfBallsToCollectBeforeFirstGoal);
     }
+    vertices.add(new Vertex(goal,Type.GOAL));
 
     //finally update the actual plan
     plan = new ArrayDeque<>(vertices);
-    plan.pop();
+
+    plan.forEach(v -> {
+      if (v.ball != null) System.out.print(v.ball.getColor());
+      System.out.println(v.type);
+    });
+
+    //plan.pop();
 
   }
 
   private List<Vertex> planExtraGoal(List<Vertex> vertices, int amountBefore) {
+    System.out.println("amount before: " + amountBefore);
     //check if orange ball exsist
     Ball orangeBall = course.getBalls().stream().filter(b -> b.getColor() == BallColor.ORANGE).findFirst().orElse(null);
     List<Vertex> newRoute = new ArrayList<>();
 
     //copy the elements before
-    for(int i = 0; i < amountBefore; i++) newRoute.add(vertices.get(i));
+    for(int i = 0; i < amountBefore; i++) newRoute.add(vertices.get(i + 1));
 
     //deal if orangeBall is on field and adds the goal too
     if (orangeBall != null)
       newRoute.add(new Vertex(orangeBall));
-    newRoute.add(new Vertex(goal, Type.GOAL));
 
     //set up the new remaining verticies to check if more optimal route exist.
-    vertices.add(new Vertex(goal, Type.GOAL));
-    List<Vertex> verteciesAfterGoal = vertices.subList(amountBefore, vertices.size());
+    List<Vertex> verteciesAfterGoal = new ArrayList<>();
+    verteciesAfterGoal.add(new Vertex(goal, Type.GOAL));
+    verteciesAfterGoal.add(new Vertex(goal, Type.GOAL));
+    verteciesAfterGoal.addAll(vertices.subList(amountBefore + 1, vertices.size()));
     List<Edge> edgesAfterGoal = setupEdge(verteciesAfterGoal);
     edgesAfterGoal = findEdgesInShortestPath(verteciesAfterGoal, edgesAfterGoal);
     verteciesAfterGoal = listedByVisitingOrder(verteciesAfterGoal, edgesAfterGoal);
@@ -135,7 +152,9 @@ public class HamiltonianRoute implements IRoutePlanner {
       //TODO: write this shit!
       return vertices;
     }
-    balls.forEach(ball -> {
+    balls.stream()
+            .filter(ball -> ball.getColor() == BallColor.WHITE)
+            .forEach(ball -> {
       vertices.add(new Vertex(ball));
     });
     return vertices;
@@ -147,7 +166,6 @@ public class HamiltonianRoute implements IRoutePlanner {
       for (int j = i + 1; j < vertices.size(); j++) {
         //never make directly from robot to goal
         if (i == 0 && j == 1) continue;
-
         //creates the edges
         edges.add(
                 new Edge(
@@ -202,7 +220,6 @@ public class HamiltonianRoute implements IRoutePlanner {
 
     //sorting my edges by travel cost, and pushing it onto a queue instead
     Collections.sort(edges);
-    Deque<Edge> queueOfEdges = new ArrayDeque<>(edges);
 
     //need to have vertex equal to numbers of elements on board - 1
     int remainingElements = vertices.size() - 1;
@@ -210,26 +227,34 @@ public class HamiltonianRoute implements IRoutePlanner {
     //saving the edges needed for shortest path.
     List<Edge> edgesInShortestPath = new ArrayList<>();
 
-    while (remainingElements != 0) {
-      //fail safe
-      if (queueOfEdges.isEmpty()) break; //TODO: throw error
+    //make a union between 0 and 1 to ensure we don't get a subcycle
+    unionFind.union(vertices.get(0), vertices.get(1));
 
-      Edge current = queueOfEdges.pop();
+    for (Edge current: edges) {
+
+      int position1 = vertices.indexOf(current.start);
+      int position2 = vertices.indexOf(current.end);
+      if (remainingVertices.get(position1).getSecond() == 0 || remainingVertices.get(position2).getSecond() == 0)
+        continue;
       boolean success = unionFind.union(current.start, current.end);
       if (success) {
         edgesInShortestPath.add(current);
+        remainingVertices.get(position1).setSecond(remainingVertices.get(position1).getSecond() - 1);
+        remainingVertices.get(position2).setSecond(remainingVertices.get(position2).getSecond() - 1);
         remainingElements--;
-        int position = vertices.indexOf(current.start);
-        remainingVertices.get(position).setSecond(remainingVertices.get(position).getSecond() - 1);
-        if (remainingVertices.get(position).getSecond() == 0)
-          queueOfEdges.removeIf(e ->
-                  e.start.equals(current.start) || e.end.equals(current.start));
-        position = vertices.indexOf(current.end);
-        remainingVertices.get(position).setSecond(remainingVertices.get(position).getSecond() - 1);
-        if (remainingVertices.get(position).getSecond() == 0)
-          queueOfEdges.removeIf(e ->
-                  e.start.equals(current.end) || e.end.equals(current.end));
+      }
+    }
 
+    //find the last remaining edge
+    boolean found = false;
+    for(int i = 0; i < vertices.size(); i++){
+      if (found) break;
+      for (int j = i + 1; j < vertices.size(); j++){
+        if (remainingVertices.get(i).getSecond() == 1 && remainingVertices.get(j).getSecond() == 1) {
+          edgesInShortestPath.add(new Edge(vertices.get(i), vertices.get(j), 0));
+          found = true;
+          break;
+        }
       }
     }
 

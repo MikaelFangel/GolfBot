@@ -226,6 +226,7 @@ public class DetectionController {
             if (position.x >= TR.x - pixelMarginX) closeTo[2] = true;
             else if (position.x <= TL.x + pixelMarginX) closeTo[3] = true;
 
+            // How many border are the ball close
             int amountCloseTo = 0;
             for (boolean b : closeTo){
                 if (b) amountCloseTo++;

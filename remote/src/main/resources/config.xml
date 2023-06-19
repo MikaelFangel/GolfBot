@@ -36,8 +36,8 @@
 
 
     <!-- Detection Configurations - Used in vision -->
-    <entry key="ballSizeLower">6</entry>
-    <entry key="ballSizeUpper">15</entry>
+    <entry key="ballSizeLower">9</entry>
+    <entry key="ballSizeUpper">12</entry>
     <entry key="ballDp">1</entry> <!--Don't question or change-->
     <entry key="ballMinDist">8</entry> <!--Minimum distance between balls-->
     <entry key="ballParam1">30</entry> <!--Gradient value used in the edge detection-->

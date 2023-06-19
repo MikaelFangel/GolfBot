@@ -3,11 +3,11 @@ package vision;
 import courseObjects.Ball;
 import courseObjects.Border;
 import courseObjects.Robot;
+import math.Geometry;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
-import math.Geometry;
 
 import java.util.List;
 import java.util.stream.IntStream;
@@ -90,7 +90,7 @@ public class Algorithms {
      */
     public static double findRobotsDistanceToPoint(Robot robot, Point p, boolean calculateFromFront) {
         // Distance from middle of front marker to middle of collecting front wheel in CM
-        int offset = 4;
+        int offset = 0; // TODO: Check if offset is still needed
         if (calculateFromFront)
             return distanceBetweenTwoPoints(robot.getFront().x, robot.getFront().y, p.x, p.y) - offset;
 
