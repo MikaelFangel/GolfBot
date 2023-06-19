@@ -34,7 +34,7 @@ public class DeliverBallsToGoal extends Routine {
 
         // Correct the robot release to goal
         super.robotController.recalibrateGyro();
-        super.robotController.rotate(super.getDegreesToTurn(this.dest));
+        super.robotController.rotate(super.getDegreesToTurn(super.dest));
 
         // TODO: Check if this is really needed for always being precise
         super.robotController.recalibrateGyro();
