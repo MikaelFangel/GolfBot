@@ -20,7 +20,6 @@ public class RobotController {
     private final ManagedChannel CHANNEL;
     private final MotorsGrpc.MotorsBlockingStub CLIENT;
     private final MotorsGrpc.MotorsStub ASYNCCLIENT;
-    private final int MAX_ITERATIONS;
     private final Robot robot;
 
     private int numberOfBallsOnCourseBeforeRoutine;
@@ -35,7 +34,6 @@ public class RobotController {
         this.CLIENT = MotorsGrpc.newBlockingStub(CHANNEL);
         this.ASYNCCLIENT = MotorsGrpc.newStub(CHANNEL);
 
-        this.MAX_ITERATIONS = 100; // TODO: Make local if only used in drive?
 
         this.numberOfBallsOnCourseBeforeRoutine = 0;
         this.robot = robot;
@@ -51,13 +49,15 @@ public class RobotController {
     }
 
     /**
-     * Drive robot straight either forwardby using the gyro and streaming distance to the robot
+     * Drive robot straight either forward by using the gyro and streaming distance to the robot
      *
      * @param target Destination
      * @throws RuntimeException If the robot was not reached
      * @see <a href="https://github.com/grpc/grpc-java/blob/master/examples/src/main/java/io/grpc/examples/routeguide/RouteGuideClient.java">Example streaming client</a>
      */
     public void drive(Point target, boolean calculateFromFront) throws RuntimeException {
+        int MAX_ITERATIONS = 100; // Used for failsafe
+
         int speed = 100;
         MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
                 new MotorPair(OutPort.D, speed));
