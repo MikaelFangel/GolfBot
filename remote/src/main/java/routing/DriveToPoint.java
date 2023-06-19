@@ -18,6 +18,6 @@ public class DriveToPoint extends Routine {
         super.robotController.recalibrateGyro();
         super.robotController.rotate(super.getDegreesToTurn(dest));
         super.robotController.recalibrateGyro();
-        super.robotController.drive(dest, true);
+        super.robotController.drive(dest, true, 100, 3);
     }
 }
