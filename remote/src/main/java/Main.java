@@ -28,27 +28,24 @@ public class Main {
 
         RoutingController routingController = new RoutingController(course);
 
-        while (!course.getBalls().isEmpty()) {
+        while (true) {
             Ball closestBall = Algorithms.findClosestBall(course.getBalls(), course.getRobot());
 
-            // This check also make sure program won't crash after collecting last ball
-            if (closestBall == null)
-                break;
-
-            System.out.println("Chosen collection strategy: " + closestBall.getStrategy().toString());
-            routingController.addRoutine(closestBall);
-
-            controller.startMagazineCounting(course.getBalls().size()); // Start ball counting
+            if(controller.getRobot().getNumberOfBallsInMagazine() > 4)
+                routingController.addRoutine(course.getBorder().getSmallGoalMiddlePoint(), true);
+            else if (closestBall != null) {
+                routingController.addRoutine(closestBall);
+                System.out.println("Chosen collection strategy: " + closestBall.getStrategy().toString());
+                controller.startMagazineCounting(course.getBalls().size()); // Start ball counting
+            }
 
             routingController.driveRoutes();
 
-            controller.endMagazineCounting(course.getBalls().size()); // Stop ball counting
+            if (closestBall != null)
+                controller.endMagazineCounting(course.getBalls().size()); // Stop ball counting
+
+            System.out.println("Balls in robot: " + controller.getRobot().getNumberOfBallsInMagazine());
         }
-
-        routingController.addRoutine(course.getBorder().getSmallGoalMiddlePoint(), true);
-        routingController.driveRoutes();
-
-        System.out.println("Done");
     }
 
     public static void reset(RobotController robotController) {

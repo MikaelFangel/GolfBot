@@ -23,7 +23,7 @@ public class DeliverBallsToGoal extends Routine {
         super.robotController.recalibrateGyro();
         super.robotController.rotate(super.getDegreesToTurn(this.intermediatePoint));
         super.robotController.recalibrateGyro();
-        super.robotController.drive(this.intermediatePoint, false);
+        super.robotController.drive(this.intermediatePoint, false, 80, 3);
 
         // Drive to a projected spot
         super.robotController.recalibrateGyro();
