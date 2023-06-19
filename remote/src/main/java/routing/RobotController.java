@@ -262,10 +262,11 @@ public class RobotController {
         int speed = 1200;
         MultipleMotors motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, speed), new MotorPair(OutPort.C, speed));
 
-        CLIENT.releaseOneBall(motorRequests);
+        this.CLIENT.releaseOneBall(motorRequests);
 
         // Remove one ball from magazine
-        robot.addOrRemoveNumberOfBallsInMagazine(-1);
+        this.robot.addOrRemoveNumberOfBallsInMagazine(-1);
+        this.numberOfBallsOnCourseBeforeRoutine++;
     }
 
     /**
@@ -275,7 +276,7 @@ public class RobotController {
         int motorSpeed = 0;
         MultipleMotors motorRequests = createMultipleMotorRequest(Type.m, new MotorPair(OutPort.B, motorSpeed), new MotorPair(OutPort.C, motorSpeed));
         try {
-            StatusReply reply = CLIENT.stopMotors(motorRequests);
+            StatusReply reply = this.CLIENT.stopMotors(motorRequests);
             if (!reply.getReplyMessage())
                 System.out.println("An error occurred");
         } catch (RuntimeException e) {
@@ -285,21 +286,20 @@ public class RobotController {
 
     /**
      * Needs to be called before starting the collection routine.
-     * @param courseBalls The List of Balls from Course.
+     * @param numOfCourseBalls The number of balls on the course
      */
-    public void startMagazineCounting(List<Ball> courseBalls) {
-        this.numberOfBallsOnCourseBeforeRoutine = courseBalls.size();
+    public void startMagazineCounting(int numOfCourseBalls) {
+        this.numberOfBallsOnCourseBeforeRoutine = numOfCourseBalls;
     }
 
     /**
      * Should be called after the collection routine.
-     * @param courseBalls The List of Balls from Course.
+     * @param numOfCourseBalls The number of balls on the course.
      */
-    public void endMagazineCounting(List<Ball> courseBalls) {
-        int numberOfBallsOnCourseAfterRoutine = courseBalls.size();
+    public void endMagazineCounting(int numOfCourseBalls) {
 
-        if (numberOfBallsOnCourseAfterRoutine < this.numberOfBallsOnCourseBeforeRoutine) {
-            int diff = this.numberOfBallsOnCourseBeforeRoutine - numberOfBallsOnCourseAfterRoutine;
+        if (numOfCourseBalls < this.numberOfBallsOnCourseBeforeRoutine) {
+            int diff = this.numberOfBallsOnCourseBeforeRoutine - numOfCourseBalls;
 
             // Add diff to magazine counter
             this.robot.addOrRemoveNumberOfBallsInMagazine(diff);
