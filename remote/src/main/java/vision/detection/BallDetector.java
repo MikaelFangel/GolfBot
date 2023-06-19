@@ -26,10 +26,10 @@ public class BallDetector implements SubDetector {
      * @param frame The frame to evaluated
      */
     public void detectBalls(Mat frame) {
-        if (init) {
-            maskWhite = new Mat();
-            maskOrange = new Mat();
-            init = false;
+        if (this.init) {
+            this.maskWhite = new Mat();
+            this.maskOrange = new Mat();
+            this.init = false;
         }
 
         // Initialize all OpenCV objects once to not have memory leaks
