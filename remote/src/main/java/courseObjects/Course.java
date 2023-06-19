@@ -101,7 +101,6 @@ public class Course {
             if(result) {
                 continue;
             }
-            //System.out.println("Result " + result + " Ball " + ball.getCenter());
             ballsInsideCourse.add(ball);
         }
 

@@ -30,8 +30,6 @@ public class Main {
 
         RoutingController routingController = new RoutingController(course);
         IRoutePlanner routePlanner = new HamiltonianRoute();
-        //routingController.addRoutine(course.getRobot().getCenter(), true);
-        //routingController.driveRoutes();
         while(true) {
             try {
                 while (true) {
