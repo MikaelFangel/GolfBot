@@ -5,9 +5,8 @@ import courseObjects.Course;
 import org.opencv.core.Point;
 
 public class DeliverBallsToGoal extends Routine {
-
     private final Point intermediatePoint;
-    public DeliverBallsToGoal(Point start, Point dest, Ball ballToCollect, RobotController robotController, RoutingController routingController, Course course) {
+    public DeliverBallsToGoal(Point start, Point intermediatePoint, Point dest, Ball ballToCollect, RobotController robotController, RoutingController routingController, Course course) {
         super(start, dest, ballToCollect, robotController, routingController, course);
         this.intermediatePoint = intermediatePoint;
     }
