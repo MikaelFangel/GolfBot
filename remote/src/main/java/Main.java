@@ -44,7 +44,8 @@ public class Main {
                     controller.endMagazineCounting(course.getBalls().size());
                 }
             } catch (Exception e) {
-                System.out.println(e);
+                System.out.println("Main Exception");
+                e.printStackTrace();
                 routingController.stopCurrentRoute();
                 controller.recalibrateGyro();
                 controller.reverse();

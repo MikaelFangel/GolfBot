@@ -24,15 +24,10 @@ public class QuickFind<T> implements IUnionFind<T>{
      * @throws IndexOutOfBoundsException If the object doesn't exsist
      */
     @Override
-    public boolean union(T i, T j) {
-        try {
-            if (find(i).equals(find(j))) return false;
-            parent.set(data.indexOf(find(j)), find(i));
-            return true;
-        } catch (IndexOutOfBoundsException e){
-            System.out.println(e.getMessage());
-        }
-        return false;
+    public boolean union(T i, T j) throws IndexOutOfBoundsException {
+        if (find(i).equals(find(j))) return false;
+        parent.set(data.indexOf(find(j)), find(i));
+        return true;
     }
 
     /**

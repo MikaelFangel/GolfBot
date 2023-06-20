@@ -30,7 +30,7 @@ public class HamiltonianRoute implements IRoutePlanner {
    * @param numberOfBallsInStorage actual amount of balls in the robots storage
    */
   @Override
-  public void computeFullRoute(Course course, int numberOfBallsInStorage) {
+  public void computeFullRoute(Course course, int numberOfBallsInStorage) throws IndexOutOfBoundsException{
     this.goal = course.getBorder().getSmallGoalMiddlePoint();
     this.course = course;
     int maxAmountOfBallsInRobot = Integer.parseInt(GlobalConfig.getConfigProperties().getProperty("magazineSize"));
@@ -215,7 +215,7 @@ public class HamiltonianRoute implements IRoutePlanner {
    * @param edges - must only points to objects from the passed vertex list.
    * @return a sublist of edges, that is needed in shortest path.
    */
-  private @NotNull List<Edge> findEdgesInShortestPath(List<Vertex> vertices, List<Edge> edges) {
+  private @NotNull List<Edge> findEdgesInShortestPath(List<Vertex> vertices, List<Edge> edges) throws IndexOutOfBoundsException {
     if (edges.size() == vertices.size() - 1){
       return edges;
     }

@@ -69,7 +69,7 @@ public abstract class Routine {
                     point1,
                     point2,
                     cross.getMiddle(),
-                    cross.getLongestSide() / 2 + ROBOT_PADDING);
+                    cross.getLongestSide() / 2 + ROBOT_PADDING + 5);
         } else
             return false;
     }
