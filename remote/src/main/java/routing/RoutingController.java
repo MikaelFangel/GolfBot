@@ -102,22 +102,39 @@ public class RoutingController {
 
         switch (strategy) {
             case FREE -> projectedPoint = ball.getCenter();
-            case BORDER_TOP -> projectedPoint = new Point(
-                    ball.getCenter().x + correctedProjectionAngle(course.getWidth(), ball.getCenter().x),
-                    course.getBorder().getTopLeft().y + borderDistance
-            );
-            case BORDER_BOTTOM -> projectedPoint = new Point(
-                    ball.getCenter().x + correctedProjectionAngle(course.getWidth(), ball.getCenter().x),
-                    course.getBorder().getBottomLeft().y - borderDistance
-            );
-            case BORDER_RIGHT -> projectedPoint = new Point(
-                    course.getBorder().getTopRight().x - borderDistance,
-                    ball.getCenter().y + correctedProjectionAngle(course.getHeight(), ball.getCenter().y)
-            );
-            case BORDER_LEFT -> projectedPoint = new Point(
-                    course.getBorder().getTopLeft().x + borderDistance,
-                    ball.getCenter().y + correctedProjectionAngle(course.getHeight(), ball.getCenter().y)
-            );
+            case BORDER_TOP -> {
+                projectedPoint = new Point(
+                        ball.getCenter().x + correctedProjectionAngle(course.getWidth(), ball.getCenter().x),
+                        course.getBorder().getTopLeft().y + borderDistance
+                );
+
+                ball.getCenter().x -= correctedProjectionAngle2(course.getWidth(), ball.getCenter().x, 10);
+                ball.getCenter().y += 3;
+            }
+            case BORDER_BOTTOM -> {
+                projectedPoint = new Point(
+                        ball.getCenter().x + correctedProjectionAngle(course.getWidth(), ball.getCenter().x),
+                        course.getBorder().getBottomLeft().y - borderDistance
+                );
+                ball.getCenter().x -= correctedProjectionAngle2(course.getWidth(), ball.getCenter().x, 10);
+                ball.getCenter().y -= 3;
+            }
+            case BORDER_RIGHT -> {
+                projectedPoint = new Point(
+                        course.getBorder().getTopRight().x - borderDistance,
+                        ball.getCenter().y + correctedProjectionAngle(course.getHeight(), ball.getCenter().y)
+                );
+                ball.getCenter().y -= correctedProjectionAngle2(course.getHeight(), ball.getCenter().y, 10);
+                ball.getCenter().x -= 3;
+            }
+            case BORDER_LEFT -> {
+                projectedPoint = new Point(
+                        course.getBorder().getTopLeft().x + borderDistance,
+                        ball.getCenter().y + correctedProjectionAngle(course.getHeight(), ball.getCenter().y)
+                );
+                ball.getCenter().y -= correctedProjectionAngle2(course.getHeight(), ball.getCenter().y, 10);
+                ball.getCenter().x += 3;
+            }
 
             //TODO: make correction distance generic based on angel
             case CORNER_TOP_RIGHT -> projectedPoint = new Point(
@@ -178,7 +195,11 @@ public class RoutingController {
     }
 
     private double correctedProjectionAngle(double lengthOfSide, double ballCoord) {
-        int moveDistance = 20;
+        int moveDistance = 27;
+        return lengthOfSide / 2 > ballCoord ? moveDistance : -moveDistance;
+    }
+
+    private double correctedProjectionAngle2(double lengthOfSide, double ballCoord, int moveDistance) {
         return lengthOfSide / 2 > ballCoord ? moveDistance : -moveDistance;
     }
 

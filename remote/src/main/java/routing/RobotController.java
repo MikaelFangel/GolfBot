@@ -114,7 +114,7 @@ public class RobotController {
      */
     public void reverse() {
         int speed = -100;
-        double distance = 2;
+        double distance = 3;
         MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, speed),
                 new MotorPair(OutPort.D, speed));
         StreamObserver<DrivePIDRequest> requestObserver = initStreamObserver();

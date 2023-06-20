@@ -20,7 +20,7 @@ public class Main {
         // Start Detection
         int cameraIndex = Integer.parseInt(args[0]);
         Course course = new Course();
-        new DetectionController(course, cameraIndex, true); // Runs in the background
+        new DetectionController(course, cameraIndex, false); // Runs in the background
         DetectionConfiguration.DetectionConfiguration();
 
         // Connect to robot and reset
