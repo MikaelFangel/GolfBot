@@ -17,6 +17,13 @@ public class Ball {
         this.strategy = strategy;
     }
 
+    public Ball(Ball ball){
+        this();
+        this.center = ball.getCenter();
+        this.color = ball.getColor();
+        this.strategy = ball.getStrategy();
+    }
+
     public Ball(){
         this.radius = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("ballRadius")); // CM
     }
