@@ -10,7 +10,7 @@ import routing.Algorithm.UnionFind.IUnionFind;
 import routing.Algorithm.UnionFind.QuickFind;
 import routing.PathController;
 import routing.RoutingController;
-import vision.BallPickupStrategy
+import vision.BallPickupStrategy;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;

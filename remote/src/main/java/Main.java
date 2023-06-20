@@ -17,17 +17,21 @@ public class Main {
             throw new MissingArgumentException("Please provide a camera index");
         }
 
+        // Start Detection
         int cameraIndex = Integer.parseInt(args[0]);
         Course course = new Course();
-        new DetectionController(course, cameraIndex, false); // Runs in the background
+        new DetectionController(course, cameraIndex, true); // Runs in the background
         DetectionConfiguration.DetectionConfiguration();
 
+        // Connect to robot and reset
         RobotController controller = new RobotController(course.getRobot());
         reset(controller);
         controller.recalibrateGyro();
 
+        // Wait for okay before driving route
         JOptionPane.showMessageDialog(null, "Continue when vision setup is done");
 
+        // Plan route
         RoutingController routingController = new RoutingController(course);
         IRoutePlanner routePlanner = new HamiltonianRoute();
         while(true) {

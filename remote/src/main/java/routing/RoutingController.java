@@ -178,7 +178,7 @@ public class RoutingController {
     }
 
     private double correctedProjectionAngle(double lengthOfSide, double ballCoord) {
-        int moveDistance = 25;
+        int moveDistance = 20;
         return lengthOfSide / 2 > ballCoord ? moveDistance : -moveDistance;
     }
 

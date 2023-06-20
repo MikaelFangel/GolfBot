@@ -36,11 +36,11 @@
 
 
     <!-- Detection Configurations - Used in vision -->
-    <entry key="ballSizeLower">2</entry>
+    <entry key="ballSizeLower">5</entry>
     <entry key="ballSizeUpper">13</entry>
     <entry key="ballDp">1</entry> <!--Don't question or change-->
     <entry key="ballMinDist">8</entry> <!--Minimum distance between balls-->
-    <entry key="ballParam1">30</entry> <!--Gradient value used in the edge detection-->
+    <entry key="ballParam1">20</entry> <!--Gradient value used in the edge detection-->
     <entry key="ballParam2">7</entry> <!--Lower values allow more circles to be detected (false positives)-->
 
     <entry key="robotSizeLower">300</entry>

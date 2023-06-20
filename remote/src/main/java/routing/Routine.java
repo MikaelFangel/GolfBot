@@ -38,11 +38,8 @@ public abstract class Routine {
      * @param projectionDistance the distance to project the point if a projection is relevant
      */
     public void avoidObstacle(int projectionDistance) {
-        if (this.ballToCollect != null) {
-            if (this.ballToCollect.getStrategy() == BallPickupStrategy.CROSS)
-                projectionDistance += 5;
+        if (this.ballToCollect != null)
             this.projectedPoint = routingController.projectPoint(ballToCollect, projectionDistance);
-        }
         else if (dest == routingController.getSmallGoalMiddlePoint()) {
             this.projectedPoint = routingController.getSmallGoalProjectedPoint();
         } else
