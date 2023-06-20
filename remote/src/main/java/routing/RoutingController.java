@@ -142,7 +142,7 @@ public class RoutingController {
             //TODO: make correction distance generic based on angel
             case CORNER_TOP_RIGHT -> projectedPoint = new Point(
                     ball.getCenter().x - borderDistance,
-                    ball.getCenter().y - borderDistance
+                    ball.getCenter().y + borderDistance
             );
             case CORNER_TOP_LEFT -> projectedPoint = new Point(
                     ball.getCenter().x + borderDistance,
@@ -150,7 +150,7 @@ public class RoutingController {
             );
             case CORNER_BOTTOM_RIGHT -> projectedPoint = new Point(
                     ball.getCenter().x - borderDistance,
-                    ball.getCenter().y + borderDistance
+                    ball.getCenter().y - borderDistance
             );
             case CORNER_BOTTOM_LEFT -> projectedPoint = new Point(
                     ball.getCenter().x + borderDistance,

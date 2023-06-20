@@ -14,6 +14,8 @@ public class CollectWall extends Routine {
     public void run() {
         avoidObstacle(15);
 
+        System.out.println("Wall: " + projectedPoint);
+
         // Drive to a projected spot
         super.robotController.recalibrateGyro();
         super.robotController.rotate(super.getDegreesToTurn(super.projectedPoint));

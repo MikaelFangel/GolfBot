@@ -84,6 +84,7 @@ func (s *motorServer) Drive(stream pBuff.Motors_DriveServer) error {
 
 	gyro, err := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
 	if err != nil {
+		println("Could not get gyro")
 		return err
 	}
 
@@ -91,6 +92,7 @@ func (s *motorServer) Drive(stream pBuff.Motors_DriveServer) error {
 	for distance > 0 {
 		// Read gyro values, eg. the current error
 		gyroErr, _ := util.GetGyroValue(gyro)
+
 		integral += gyroErr
 
 		// Error derivative try to predict the next error from the previous error
@@ -111,8 +113,14 @@ func (s *motorServer) Drive(stream pBuff.Motors_DriveServer) error {
 				return err
 			}
 
-			motor.SetRampUpSetpoint(4 * time.Second)
-			motor.SetRampDownSetpoint(4 * time.Second)
+			// Break if gyro goes wild
+			if math.Abs(gyroErr) > 60 {
+				println("Gyro broke when driving straight")
+				break
+			}
+
+			motor.SetRampUpSetpoint(3 * time.Second)
+			motor.SetRampDownSetpoint(3 * time.Second)
 			switch request.GetMotorPort() {
 			case pBuff.OutPort_A:
 				motor.SetSpeedSetpoint(power + int(correction))
@@ -203,12 +211,18 @@ func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff
 	target := 0.0
 
 	var motorRequests []motorRequest
-	gyro, _ := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
+	gyro, err := util.GetSensor(pBuff.InPort_in1.String(), pBuff.Sensor_gyro.String())
+	if err != nil {
+		println("Could not get gyro")
+		return nil, err
+	}
+
 	gyroVal, _ := util.GetGyroValue(gyro)
 
 	// Run until the input degrees match the gyro value.
 	for math.Abs(gyroVal) != math.Abs(float64(in.Degrees)) {
 		gyroVal, _ = util.GetGyroValue(gyro)
+
 		target = gyroVal - float64(in.Degrees)
 
 		derivative := target - lastError
@@ -224,10 +238,18 @@ func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff
 		motorRequests = motorRequests[0:0]
 
 		// Prepare the motors for running
+		shallBreak := false
 		for _, request := range in.GetMotors().GetMotor() {
 			motor, err := util.GetMotorHandle(request.GetMotorPort().String(), request.GetMotorType().String())
 			if err != nil {
 				return nil, err
+			}
+
+			// Break if gyro goes whacko mode
+			if hasRotatedToMuch(motor, 360) {
+				println("Gyro broke when rotating ", gyroVal)
+				shallBreak = true
+				break
 			}
 
 			switch request.GetMotorPort() {
@@ -240,6 +262,10 @@ func (s *motorServer) Rotate(_ context.Context, in *pBuff.RotateRequest) (*pBuff
 			}
 
 			motorRequests = append(motorRequests, motorRequest{request: request, motor: motor})
+		}
+
+		if shallBreak {
+			break
 		}
 
 		// Start the motors
@@ -392,4 +418,14 @@ func (s *motorServer) ReleaseOneBall(_ context.Context, in *pBuff.MultipleMotors
 	time.Sleep(80 * time.Millisecond)
 
 	return &pBuff.StatusReply{ReplyMessage: true}, nil
+}
+
+func hasRotatedToMuch(motor *ev3dev.TachoMotor, degreeLimit int) bool {
+	pos, _ := motor.Position()
+	println("Motor pos: ", pos)
+
+	if math.Abs(float64(pos)) > float64(degreeLimit) {
+		return true
+	}
+	return false
 }

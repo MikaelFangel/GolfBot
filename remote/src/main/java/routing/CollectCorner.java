@@ -14,6 +14,8 @@ public class CollectCorner extends Routine {
     public void run() {
         avoidObstacle(10);
 
+        System.out.println("Corner: " + projectedPoint);
+
         // Drive to a projected spot
         super.robotController.recalibrateGyro();
         super.robotController.rotate(super.getDegreesToTurn(super.projectedPoint));
