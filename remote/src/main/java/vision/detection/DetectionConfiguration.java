@@ -33,7 +33,7 @@ public class DetectionConfiguration {
 
     private DetectionConfiguration() {
         // Balls
-        this.lowerWhiteBallThreshold = new Scalar(150);
+        this.lowerWhiteBallThreshold = new Scalar(160);
         this.upperWhiteBallThreshold = new Scalar(230);
         this.lowerOrangeBallThreshold = new Scalar(0, 40, 130);
         this.upperOrangeBallThreshold = new Scalar(10, 120, 255);

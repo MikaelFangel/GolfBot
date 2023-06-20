@@ -23,7 +23,7 @@ public class DriveAndCollect extends Routine{
         super.robotController.drive(dest, true, 100, 3);
         super.robotController.stopCollectRelease();
 
-        if(super.ballToCollect.getStrategy() != BallPickupStrategy.FREE)
+        //if(super.ballToCollect.getStrategy() != BallPickupStrategy.FREE)
             super.robotController.reverse();
     }
 }

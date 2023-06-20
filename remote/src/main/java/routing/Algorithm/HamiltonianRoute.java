@@ -43,7 +43,9 @@ public class HamiltonianRoute implements IRoutePlanner {
     List<Edge> edges = setupEdge(vertices);
 
     //if there is no balls in the robot, we can't visit a corner to begin with
+
     if (numberOfBallsInStorage == 0) {
+      List<Edge> toRemove = new ArrayList<>();
       for (Edge e : edges) {
         //check if it's an edge from the robot to any corner balls
         if (e.start.equals(vertices.get(0))
@@ -53,8 +55,9 @@ public class HamiltonianRoute implements IRoutePlanner {
                 || e.end.ball.getStrategy() == BallPickupStrategy.CORNER_BOTTOM_RIGHT
                 || e.end.ball.getStrategy() == BallPickupStrategy.CORNER_TOP_RIGHT))
         )
-          e.cost = Integer.MAX_VALUE;
+          toRemove.add(e);
       }
+      edges.removeAll(toRemove);
     }
 
     //updates edges, so they only contain those needed in the shortestpath
@@ -67,6 +70,11 @@ public class HamiltonianRoute implements IRoutePlanner {
     if (maxAmountOfBallsInRobot < course.getBalls().size() + numberOfBallsInStorage){
       int amountOfBallsToCollectBeforeFirstGoal = course.getBalls().size() - 1 - maxAmountOfBallsInRobot;
       vertices = planExtraGoal(vertices, amountOfBallsToCollectBeforeFirstGoal);
+    }
+
+    for (Ball b: course.getBalls()){
+      if (b.getStrategy() == BallPickupStrategy.FREE || b.getStrategy() == BallPickupStrategy.CROSS) continue;
+      vertices.add(new Vertex(b));
     }
 
     for(Ball b : course.getBalls()){
@@ -155,6 +163,10 @@ public class HamiltonianRoute implements IRoutePlanner {
     balls.stream()
             .filter(ball -> ball.getColor() == BallColor.WHITE)
             .filter(ball -> ball.getStrategy() != BallPickupStrategy.CROSS)
+            .filter(ball -> ball.getStrategy() != BallPickupStrategy.CORNER_BOTTOM_LEFT ||
+                    ball.getStrategy() != BallPickupStrategy.CORNER_BOTTOM_RIGHT ||
+                    ball.getStrategy() != BallPickupStrategy.CORNER_TOP_LEFT ||
+                    ball.getStrategy() != BallPickupStrategy.CORNER_TOP_RIGHT)
             .forEach(ball -> {
       vertices.add(new Vertex(ball));
     });
