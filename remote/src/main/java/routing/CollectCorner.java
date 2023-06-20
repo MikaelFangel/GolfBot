@@ -1,13 +1,13 @@
 package routing;
 
 import courseObjects.Ball;
-import courseObjects.Cross;
+import courseObjects.Course;
 import org.opencv.core.Point;
 
 public class CollectCorner extends Routine {
 
-    public CollectCorner(Point start, Point dest, Ball ballToCollect, Cross cross, RobotController robotController, RoutingController routingController) {
-        super(start, dest, ballToCollect, cross, robotController, routingController);
+    public CollectCorner(Point start, Point dest, Ball ballToCollect, RobotController robotController, RoutingController routingController, Course course) {
+        super(start, dest, ballToCollect, robotController, routingController, course);
     }
 
     @Override
@@ -18,7 +18,7 @@ public class CollectCorner extends Routine {
         super.robotController.recalibrateGyro();
         super.robotController.rotate(super.getDegreesToTurn(super.projectedPoint));
         super.robotController.recalibrateGyro();
-        super.robotController.drive(super.projectedPoint, false);
+        super.robotController.drive(super.projectedPoint, false, 80, 3);
 
 
         // Run shooting routine

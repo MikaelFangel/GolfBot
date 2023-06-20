@@ -1,13 +1,13 @@
 package routing;
 
 import courseObjects.Ball;
-import courseObjects.Cross;
+import courseObjects.Course;
 import org.opencv.core.Point;
 
 public class CollectWallCross extends Routine {
 
-    public CollectWallCross(Point start, Point dest, Ball ballToCollect, Cross cross, RobotController robotController, RoutingController routingController) {
-        super(start, dest, ballToCollect, cross, robotController, routingController);
+    public CollectWallCross(Point start, Point dest, Ball ballToCollect, RobotController robotController, RoutingController routingController, Course course) {
+        super(start, dest, ballToCollect, robotController, routingController, course);
     }
 
     @Override
@@ -18,14 +18,14 @@ public class CollectWallCross extends Routine {
         super.robotController.recalibrateGyro();
         super.robotController.rotate(super.getDegreesToTurn(super.projectedPoint));
         super.robotController.recalibrateGyro();
-        super.robotController.drive(super.projectedPoint, false);
+        super.robotController.drive(super.projectedPoint, false, 80, 3);
 
         // Correct the robot for collection
         super.robotController.recalibrateGyro();
         super.robotController.rotate(super.getDegreesToTurn(dest));
         super.robotController.recalibrateGyro();
         super.robotController.collectRelease(true);
-        super.robotController.drive(dest, true);
+        super.robotController.drive(dest, true, 40, 4);
         super.robotController.stopCollectRelease();
 
         super.robotController.reverse();

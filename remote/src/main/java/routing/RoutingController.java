@@ -45,14 +45,14 @@ public class RoutingController {
     public void addRoutine(Ball ball) {
         Routine routine;
         switch (ball.getStrategy()) {
-            case CORNER_TOP_LEFT, CORNER_BOTTOM_LEFT, CORNER_BOTTOM_RIGHT, CORNER_TOP_RIGHT, CROSS ->
-                    routine = new CollectCorner(course.getRobot().getCenter(), ball.getCenter(), ball, course.getCross(), this.robotController, this);
-            case BORDER_BOTTOM, BORDER_LEFT, BORDER_RIGHT, BORDER_TOP ->
-                    routine = new CollectWallCross(course.getRobot().getCenter(), ball.getCenter(), ball, course.getCross(), this.robotController, this);
+            case CORNER_TOP_LEFT, CORNER_BOTTOM_LEFT, CORNER_BOTTOM_RIGHT, CORNER_TOP_RIGHT ->
+                    routine = new CollectCorner(course.getRobot().getCenter(), ball.getCenter(), ball, this.robotController, this, course);
+            case BORDER_BOTTOM, BORDER_LEFT, BORDER_RIGHT, BORDER_TOP, CROSS ->
+                    routine = new CollectWallCross(course.getRobot().getCenter(), ball.getCenter(), ball, this.robotController, this, course);
             case FREE ->
-                    routine = new DriveAndCollect(course.getRobot().getCenter(), ball.getCenter(), ball, course.getCross(), this.robotController, this);
+                    routine = new DriveAndCollect(course.getRobot().getCenter(), ball.getCenter(), ball, this.robotController, this, course);
             default ->
-                    routine = new DriveToPoint(course.getRobot().getCenter(), ball.getCenter(), ball, course.getCross(), this.robotController, this);
+                    routine = new DriveToPoint(course.getRobot().getCenter(), ball.getCenter(), ball, this.robotController, this, course);
         }
 
         fullRoute.add(routine);
@@ -64,9 +64,9 @@ public class RoutingController {
      */
     public void addRoutine(Point point, boolean deliverBalls) {
         if(deliverBalls)
-            fullRoute.add(new DeliverBallsToGoal(course.getRobot().getCenter(), point, null, course.getCross(), this.robotController, this));
+            this.fullRoute.add(new DeliverBallsToGoal(this.course.getRobot().getCenter(), this.course.getBorder().getSmallGoalDestProjectedPoint(), point , null, this.robotController, this, course));
         else
-            fullRoute.add(new DriveToPoint(course.getRobot().getCenter(), point, null, course.getCross(), this.robotController, this));
+            fullRoute.add(new DriveToPoint(course.getRobot().getCenter(), point, null, this.robotController, this, course));
     }
 
     /**

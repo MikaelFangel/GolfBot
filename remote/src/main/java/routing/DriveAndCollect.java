@@ -1,13 +1,15 @@
 package routing;
 
 import courseObjects.Ball;
-import courseObjects.Cross;
+import courseObjects.Course;
 import org.opencv.core.Point;
+import vision.BallPickupStrategy;
 
 public class DriveAndCollect extends Routine{
 
-    public DriveAndCollect(Point start, Point dest, Ball ballToCollect, Cross cross, RobotController robotController, RoutingController routingController) {
-        super(start, dest, ballToCollect, cross, robotController, routingController);
+
+    public DriveAndCollect(Point start, Point dest, Ball ballToCollect, RobotController robotController, RoutingController routingController, Course course) {
+        super(start, dest, ballToCollect, robotController, routingController, course);
     }
 
     @Override
@@ -18,9 +20,10 @@ public class DriveAndCollect extends Routine{
         super.robotController.rotate(super.getDegreesToTurn(dest));
         super.robotController.recalibrateGyro();
         super.robotController.collectRelease(true);
-        super.robotController.drive(dest, true);
+        super.robotController.drive(dest, true, 100, 3);
         super.robotController.stopCollectRelease();
 
-        super.robotController.reverse();
+        if(super.ballToCollect.getStrategy() != BallPickupStrategy.FREE)
+            super.robotController.reverse();
     }
 }

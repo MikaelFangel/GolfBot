@@ -4,6 +4,7 @@ import courseObjects.*;
 import nu.pattern.OpenCV;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
@@ -135,9 +136,7 @@ public class DetectionController {
 
                 System.out.println("Found Robot");
             }
-
             this.ballDetector.detectBalls(this.frame);
-
             updateCourse();
 
             // Exit when all objects are found
@@ -177,6 +176,7 @@ public class DetectionController {
         this.borderDetector.detectBorder(this.frame);
         this.robotDetector.detectRobot(this.frame);
         this.ballDetector.detectBalls(this.frame);
+        this.borderDetector.getBorder().getSmallGoalMiddlePoint();
 
         categorizeBallsPickupStrategy(
                 this.ballDetector.getBalls(),
@@ -218,7 +218,7 @@ public class DetectionController {
         balls.forEach(ball -> {
             Point position = ball.getCenter();
 
-            //order: top, Bottom, Right, Left
+            // Order: Top, Bottom, Right, Left
             boolean[] closeTo = new boolean[4];
 
             if (position.y <= TL.y + pixelMarginY) closeTo[0] = true;
@@ -226,6 +226,7 @@ public class DetectionController {
             if (position.x >= TR.x - pixelMarginX) closeTo[2] = true;
             else if (position.x <= TL.x + pixelMarginX) closeTo[3] = true;
 
+            // How many border are the ball close
             int amountCloseTo = 0;
             for (boolean b : closeTo){
                 if (b) amountCloseTo++;
