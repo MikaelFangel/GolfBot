@@ -33,8 +33,8 @@ public class DetectionConfiguration {
 
     private DetectionConfiguration() {
         // Balls
-        this.lowerWhiteBallThreshold = new Scalar(105, 105, 105);
-        this.upperWhiteBallThreshold = new Scalar(230, 230, 230);
+        this.lowerWhiteBallThreshold = new Scalar(130);
+        this.upperWhiteBallThreshold = new Scalar(230);
         this.lowerOrangeBallThreshold = new Scalar(0, 40, 130);
         this.upperOrangeBallThreshold = new Scalar(20, 170, 255);
 
@@ -47,7 +47,7 @@ public class DetectionConfiguration {
 
         // Robot
         this.lowerRobotThreshold = new Scalar(130, 80, 0);
-        this.upperRobotThreshold = new Scalar(250, 120, 60);
+        this.upperRobotThreshold = new Scalar(250, 120, 90);
         this.lowerRobotSize = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("robotSizeLower"));
         this.upperRobotSize = Integer.parseInt(configs.GlobalConfig.getConfigProperties().getProperty("robotSizeUpper"));
 

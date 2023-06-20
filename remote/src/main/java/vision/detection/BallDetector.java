@@ -17,6 +17,9 @@ public class BallDetector implements SubDetector {
 
     private final DetectionConfiguration config = DetectionConfiguration.DetectionConfiguration();
 
+    Mat maskWhite, maskOrange;
+    boolean init = true;
+
     /**
      * Detects the balls on the frame
      *
@@ -25,6 +28,11 @@ public class BallDetector implements SubDetector {
     public void detectBalls(Mat frame) {
         // Initialize all OpenCV objects once to not have memory leaks
         Mat frameBlur = new Mat();
+
+        if (init) {
+            maskWhite = new Mat();
+            maskOrange = new Mat();
+        }
 
         balls = new ArrayList<>();
 
@@ -43,12 +51,14 @@ public class BallDetector implements SubDetector {
      * @param balls List that gets updated with newly added balls
      */
     private void findWhiteBalls(Mat frameBlur, List<Ball> balls) {
-        Mat maskWhite = new Mat();
         Mat ballsMatW = new Mat();
+        Mat frameGray = new Mat();
+
+        // Gray scale to minimize noise from floor reflections.
+        Imgproc.cvtColor(frameBlur, frameGray, Imgproc.COLOR_BGR2GRAY);
 
         // Create mask
-        Core.inRange(frameBlur, config.getLowerWhiteBallThreshold(), config.getUpperWhiteBallThreshold(), maskWhite);
-
+        Core.inRange(frameGray, config.getLowerWhiteBallThreshold(), config.getUpperWhiteBallThreshold(), maskWhite);
         maskSets.add(new MaskSet("White Ball Mask", maskWhite));
 
         //Get white balls from frame
@@ -66,7 +76,7 @@ public class BallDetector implements SubDetector {
             }
         }
 
-        maskWhite.release();
+        frameGray.release();
         ballsMatW.release();
     }
 
@@ -77,7 +87,6 @@ public class BallDetector implements SubDetector {
      */
     private void findOrangeBalls(Mat frameBlur, List<Ball> balls) {
         Mat ballsMatO = new Mat();
-        Mat maskOrange = new Mat();
 
         // Create mask
         Core.inRange(frameBlur, config.getLowerOrangeBallThreshold(), config.getUpperOrangeBallThreshold(), maskOrange);
@@ -98,7 +107,6 @@ public class BallDetector implements SubDetector {
             }
         }
 
-        maskOrange.release();
         ballsMatO.release();
     }
 
