@@ -80,6 +80,8 @@ public class RobotController {
                 drivenDistance = Algorithms.findRobotsDistanceToPoint(this.robot, robotStartPos, calculateFromFront);
                 distanceLeft = (int) (distanceToTarget - drivenDistance) - offset; // TODO: Test with in and double -> Precision in when we break from the loop
 
+                System.out.println("Dist left: " + distanceLeft);
+
                 if (distanceToTarget <= drivenDistance || distanceLeft <= 0)
                     break;
 

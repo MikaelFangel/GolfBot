@@ -34,6 +34,7 @@ public class RoutingController {
             currentRoute = fullRoute.pop();
             if (currentRoute == null) return;
 
+            System.out.println("Target: " + currentRoute.dest);
             currentRoute.run();
         }
     }
@@ -47,8 +48,10 @@ public class RoutingController {
         switch (ball.getStrategy()) {
             case CORNER_TOP_LEFT, CORNER_BOTTOM_LEFT, CORNER_BOTTOM_RIGHT, CORNER_TOP_RIGHT ->
                     routine = new CollectCorner(course.getRobot().getCenter(), ball.getCenter(), ball, this.robotController, this, course);
-            case BORDER_BOTTOM, BORDER_LEFT, BORDER_RIGHT, BORDER_TOP, CROSS ->
-                    routine = new CollectWallCross(course.getRobot().getCenter(), ball.getCenter(), ball, this.robotController, this, course);
+            case BORDER_BOTTOM, BORDER_LEFT, BORDER_RIGHT, BORDER_TOP ->
+                    routine = new CollectWall(course.getRobot().getCenter(), ball.getCenter(), ball, this.robotController, this, course);
+            case CROSS ->
+                    routine = new CollectCross(course.getRobot().getCenter(), ball.getCenter(), ball, this.robotController, this, course);
             case FREE ->
                     routine = new DriveAndCollect(course.getRobot().getCenter(), ball.getCenter(), ball, this.robotController, this, course);
             default ->

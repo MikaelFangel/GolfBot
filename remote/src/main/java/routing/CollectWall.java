@@ -4,9 +4,9 @@ import courseObjects.Ball;
 import courseObjects.Course;
 import org.opencv.core.Point;
 
-public class CollectWallCross extends Routine {
+public class CollectWall extends Routine {
 
-    public CollectWallCross(Point start, Point dest, Ball ballToCollect, RobotController robotController, RoutingController routingController, Course course) {
+    public CollectWall(Point start, Point dest, Ball ballToCollect, RobotController robotController, RoutingController routingController, Course course) {
         super(start, dest, ballToCollect, robotController, routingController, course);
     }
 

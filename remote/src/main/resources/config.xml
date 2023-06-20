@@ -16,7 +16,7 @@
     <!-- Course measurements in cm -->
     <entry key="courseWidth">169.0</entry>
     <entry key="courseHeight">123.7</entry>
-    <entry key="camHeight">178.5</entry>
+    <entry key="camHeight">178.3</entry>
     <entry key="camResolutionWidth">1024</entry>
     <entry key="camResolutionHeight">768</entry>
     <entry key="maxBalls">11</entry>
