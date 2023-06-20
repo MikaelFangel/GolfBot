@@ -68,6 +68,13 @@ public class HamiltonianRoute implements IRoutePlanner {
       int amountOfBallsToCollectBeforeFirstGoal = course.getBalls().size() - 1 - maxAmountOfBallsInRobot;
       vertices = planExtraGoal(vertices, amountOfBallsToCollectBeforeFirstGoal);
     }
+
+    for(Ball b : course.getBalls()){
+      if (b.getStrategy() != BallPickupStrategy.CROSS) continue;
+      vertices.add(new Vertex(b));
+    }
+
+
     vertices.add(new Vertex(goal,Type.GOAL));
 
     //finally update the actual plan
@@ -147,6 +154,7 @@ public class HamiltonianRoute implements IRoutePlanner {
     }
     balls.stream()
             .filter(ball -> ball.getColor() == BallColor.WHITE)
+            .filter(ball -> ball.getStrategy() != BallPickupStrategy.CROSS)
             .forEach(ball -> {
       vertices.add(new Vertex(ball));
     });
