@@ -35,7 +35,7 @@ public class HamiltonianRoute implements IRoutePlanner {
     this.course = course;
     int maxAmountOfBallsInRobot = Integer.parseInt(GlobalConfig.getConfigProperties().getProperty("magazineSize"));
 
-    List<Vertex> vertices = setupVertices();
+    List<Vertex> vertices = setupVertices(numberOfBallsInStorage);
 
     //if there is 1 or fewer vertices, there can't be made any path
     if (vertices.size() <= 1) return;
@@ -79,6 +79,8 @@ public class HamiltonianRoute implements IRoutePlanner {
     //check if orange ball exsist
     Ball orangeBall = course.getBalls().stream().filter(b -> b.getColor() == BallColor.ORANGE).findFirst().orElse(null);
     List<Vertex> newRoute = new ArrayList<>();
+
+    if (orangeBall == null) amountBefore++;
 
     //copy the elements before
     for(int i = 0; i < amountBefore; i++) newRoute.add(vertices.get(i + 1));
@@ -129,7 +131,7 @@ public class HamiltonianRoute implements IRoutePlanner {
    *
    * @return - list of vertex in the graph
    */
-  private List<Vertex> setupVertices() {
+  private List<Vertex> setupVertices(int ballsOnRobot) {
     List<Vertex> vertices = new ArrayList<>();
     //placing robot as the first element
     vertices.add(new Vertex(course.getRobot().getCenter(), Type.ROBOT));
@@ -148,6 +150,12 @@ public class HamiltonianRoute implements IRoutePlanner {
             .forEach(ball -> {
       vertices.add(new Vertex(ball));
     });
+    if(ballsOnRobot + balls.size() != 11){
+      balls.stream()
+              .filter(ball -> ball.getColor() == BallColor.ORANGE)
+              .forEach(ball -> vertices.add(new Vertex(ball)));
+    }
+
     return vertices;
   }
 
