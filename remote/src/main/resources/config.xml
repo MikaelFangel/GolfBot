@@ -8,7 +8,7 @@
 
     <!-- Border measurements in cm -->
     <entry key="borderHeight">7</entry>
-    <entry key="smallGoalPos">left</entry> <!-- left or right -->
+    <entry key="smallGoalPos">right</entry> <!-- left or right -->
     <entry key="borderProjectionMargin">10</entry>
     <entry key="offsetFromBorderToRobot">23</entry> <!-- The distance in CM between the border and the point of the
     center of the rear marker of the robot, so the robot and the border don't collide -->
@@ -16,7 +16,7 @@
     <!-- Course measurements in cm -->
     <entry key="courseWidth">169.0</entry>
     <entry key="courseHeight">123.7</entry>
-    <entry key="camHeight">178.3</entry>
+    <entry key="camHeight">182.2</entry>
     <entry key="camResolutionWidth">1024</entry>
     <entry key="camResolutionHeight">768</entry>
     <entry key="maxBalls">11</entry>
