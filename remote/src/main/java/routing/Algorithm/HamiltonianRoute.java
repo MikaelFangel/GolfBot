@@ -33,6 +33,7 @@ public class HamiltonianRoute implements IRoutePlanner {
   public void computeFullRoute(Course course, int numberOfBallsInStorage) throws IndexOutOfBoundsException{
     this.goal = course.getBorder().getSmallGoalMiddlePoint();
     this.course = course;
+
     int maxAmountOfBallsInRobot = Integer.parseInt(GlobalConfig.getConfigProperties().getProperty("magazineSize"));
 
     List<Vertex> vertices = setupVertices(numberOfBallsInStorage);
@@ -155,7 +156,8 @@ public class HamiltonianRoute implements IRoutePlanner {
     vertices.add(new Vertex(goal, Type.GOAL));
 
     //placing all balls
-    List<Ball> balls = new ArrayList<>(course.getBalls());
+    List<Ball> balls = new ArrayList<>();
+    course.getBalls().forEach(ball -> balls.add(new Ball(ball)));
     //if there is no balls, the robot should go to the goal
     if (balls.isEmpty()) {
       return vertices;
