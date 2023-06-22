@@ -57,7 +57,7 @@ public class RobotController {
      * @see <a href="https://github.com/grpc/grpc-java/blob/master/examples/src/main/java/io/grpc/examples/routeguide/RouteGuideClient.java">Example streaming client</a>
      */
     public void drive(Point target, boolean calculateFromFront, int defaultSpeed, int powerFactor) throws RuntimeException {
-        int MAX_ITERATIONS = 100; // Used for failsafe
+        int MAX_ITERATIONS = 70; // Used for failsafe
 
         MultipleMotors motorsRequest = createMultipleMotorRequest(Type.l, new MotorPair(OutPort.A, defaultSpeed),
                 new MotorPair(OutPort.D, defaultSpeed));

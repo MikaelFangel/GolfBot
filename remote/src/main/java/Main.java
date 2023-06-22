@@ -34,6 +34,9 @@ public class Main {
         // Plan route
         RoutingController routingController = new RoutingController(course);
         IRoutePlanner routePlanner = new HamiltonianRoute();
+
+        int stopCounter = 0;
+
         while(true) {
             try {
                 while (true) {
@@ -48,7 +51,10 @@ public class Main {
                 e.printStackTrace();
                 routingController.stopCurrentRoute();
                 controller.recalibrateGyro();
-                controller.reverse();
+                if (stopCounter < 3)
+                    controller.reverse();
+
+                stopCounter++;
             }
         }
     }

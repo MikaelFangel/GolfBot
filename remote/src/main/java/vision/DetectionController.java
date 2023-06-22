@@ -205,7 +205,7 @@ public class DetectionController {
 
         if (border == null) return;
 
-        final double centimeterMargin = 7;
+        final double centimeterMargin = 8;
 
         // Convert margin to pixels
         final double pixelMarginX = centimeterMargin / conversionFactorX;
