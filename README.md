@@ -1,6 +1,16 @@
 # GolfBot
 A project in developing a robot for collecting golf balls using Lego Mindstorms.
 
+The robot competed in a competition where points are given for each succesfully delivered ball. There was 12 balls to collect within 8 minutes. Minus point were given when the robot collided with the course objects. 
+
+<div>
+      <a href="https://youtu.be/hQLTuFc165o" target="_blank">
+         <img src="https://img.youtube.com/vi/hQLTuFc165o/0.jpg">
+      </a>
+</div>
+
+Tech stack: Go language for the software to the robot using gRPC to communicate with a remote machine running Java. The remote machine calculates the coordinates for the robot to go, and runs a camera with OpenCV.
+
 ## Project Structure
 A description of how the project is structured
 
