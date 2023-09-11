@@ -4,8 +4,8 @@ A project in developing a robot for collecting golf balls using Lego Mindstorms.
 The robot competed in a competition where points are given for each succesfully delivered ball. There was 12 balls to collect within 8 minutes. Minus point were given when the robot collided with the course objects. 
 
 <div>
-      <a href="https://www.youtube.com/watch?v=hqltufc165o">
-         <img src="https://img.youtube.com/vi/hqltufc165/0.jpg" style="width:100%;">
+      <a href="https://youtu.be/hQLTuFc165o">
+         <img src="https://img.youtube.com/vi/hQLTuFc165o/0.jpg" style="width:100%;">
       </a>
 </div>
 
